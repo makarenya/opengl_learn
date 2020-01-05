@@ -37,9 +37,26 @@ public:
         return std::move(*this);
     }
 
-    int Skybox(float reflect) {
+    TSceneSetup &&Reflection(float reflect) {
         Set("material.reflection", reflect);
+        Set("material.refraction", 0.0f);
+        return std::move(*this);
+    }
+
+    TSceneSetup &&Refraction(float refract) {
+        Set("material.reflection", 0.0f);
+        Set("material.refraction", refract);
+        return std::move(*this);
+    }
+
+    int Skybox() {
         return TextureLoc("material.skybox");
+    }
+
+    TSceneSetup &&NoReflectRefract() {
+        Set("material.reflection", 0.0f);
+        Set("material.refraction", 0.0f);
+        return std::move(*this);
     }
 
     TSceneSetup &&DirectionalLight(glm::vec3 direction,

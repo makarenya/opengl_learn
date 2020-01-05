@@ -23,12 +23,12 @@ private:
             .SetMipmap(ETextureMipmap::Linear)};
     TCubeTexture SkyTex{
         TCubeTextureBuilder()
-            .SetPosX("images/skybox/right.jpg")
-            .SetNegX("images/skybox/left.jpg")
-            .SetPosY("images/skybox/top.jpg")
-            .SetNegY("images/skybox/bottom.jpg")
-            .SetPosZ("images/skybox/front.jpg")
-            .SetNegZ("images/skybox/back.jpg")};
+            .SetPosX("images/yokohama3/posx.jpg")
+            .SetNegX("images/yokohama3/negx.jpg")
+            .SetPosY("images/yokohama3/posy.jpg")
+            .SetNegY("images/yokohama3/negy.jpg")
+            .SetPosZ("images/yokohama3/posz.jpg")
+            .SetNegZ("images/yokohama3/negz.jpg")};
 
     TMaterial Asphalt{
         TMaterialBuilder()

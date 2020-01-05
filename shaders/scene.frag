@@ -9,6 +9,7 @@ struct Material {
     float shiness;
     samplerCube skybox;
     float reflection;
+    float refraction;
 };
 
 struct DirectionalLight {
@@ -79,7 +80,14 @@ void main() {
     if (material.reflection > 0) {
         vec3 reflectDir = reflect(-viewDir, norm);
         vec3 sky = vec3(texture(material.skybox, reflectDir));
-        result = sky * material.reflection + result * (1.0 - material.reflection);
+        float r = material.reflection * (specular.r + specular.g + specular.b) / 3;
+        result = sky * r + result * (1.0 - r);
+    }
+
+    if (material.refraction > 0) {
+        float ratio = 1.00 / 1.33;
+        vec3 ref = vec3(texture(material.skybox, refract(-viewDir, norm, ratio)));
+        result = ref * material.refraction + result * (1.0 - material.refraction);
     }
 
     if (canDiscard) {

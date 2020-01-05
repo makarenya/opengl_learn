@@ -57,17 +57,21 @@ void TScene::DrawObjects(glm::mat4 project, glm::mat4 view, glm::vec3 position) 
 
     setup.Model(Place(vec3(6, 7.0, 44.0), vec3(.2, .4, -.1), 30.0f, vec3(10.0f)));
     Container.Use(setup);
+    SkyTex.Bind(setup.Skybox());
+    setup.Reflection(0.1);
     SimpleCube.Draw();
 
     setup.Model(one<mat4>());
     Suit.Draw(setup, [this, &setup](const std::string &name, const TMesh &mesh) {
+        SkyTex.Bind(setup.Skybox());
         if (name == "Visor") {
-            SkyTex.Bind(setup.Skybox(0.8));
+            setup.Reflection(0.5);
         } else {
-            SkyTex.Bind(setup.Skybox(0.1));
+            setup.Reflection(0.2);
         }
         mesh.Draw();
     });
+    setup.NoReflectRefract();
 }
 
 void TScene::DrawOpaques(glm::mat4 project, glm::mat4 view, glm::vec3 position) {
