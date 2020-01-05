@@ -25,11 +25,7 @@ private:
 
 public:
 
-    TMaterial(TMaterialBuilder &&builder);
-    TMaterial(TMaterial &&src) noexcept;
-    TMaterial(const TMaterial &) = delete;
-    TMaterial &operator=(const TMaterial &) = delete;
-
+    TMaterial(const TMaterialBuilder &builder);
     TTextureBinder Bind(TProgramSetup &setup) const;
     void Draw(TProgramSetup &setup, TMesh &mesh);
 };

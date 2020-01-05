@@ -1,20 +1,11 @@
-#include <array>
 #include "material.h"
 #include "errors.h"
 
-TMaterial::TMaterial(TMaterialBuilder &&builder)
-    : Textures(std::move(builder.Textures_))
-      , CubeTextures(std::move(builder.CubeTextures_))
-      , Colors(std::move(builder.Colors_))
-      , Constants(std::move(builder.Constants_)) {
-}
-
-TMaterial::TMaterial(TMaterial &&src) noexcept {
-    Textures = std::move(src.Textures);
-    CubeTextures = std::move(src.CubeTextures);
-    Colors = std::move(src.Colors);
-    Constants = std::move(src.Constants);
-    src.Textures.clear();
+TMaterial::TMaterial(const TMaterialBuilder &builder)
+    : Textures(builder.Textures_)
+      , CubeTextures(builder.CubeTextures_)
+      , Colors(builder.Colors_)
+      , Constants(builder.Constants_) {
 }
 
 TTextureBinder TMaterial::Bind(TProgramSetup &setup) const {
