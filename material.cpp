@@ -8,13 +8,13 @@ TMaterial::TMaterial(const TMaterialBuilder &builder)
       , Constants(builder.Constants_) {
 }
 
-TTextureBinder TMaterial::Bind(TProgramSetup &setup) const {
-    TTextureBinder binder;
+void TMaterial::Use(TProgramSetup &setup) const {
+    setup.FlushTextures();
     for (auto &texture : Textures) {
-        setup.TrySet("material." + texture.first, binder.Attach(texture.second));
+        texture.second.Bind(setup.TryTextureLoc("material." + texture.first));
     }
     for (auto &texture : CubeTextures) {
-        setup.TrySet("material." + texture.first, binder.Attach(texture.second));
+        texture.second.Bind(setup.TryTextureLoc("material." + texture.first));
     }
     for (auto &color : Colors) {
         setup.TrySet("material." + color.first, color.second);
@@ -22,11 +22,5 @@ TTextureBinder TMaterial::Bind(TProgramSetup &setup) const {
     for (auto &constant : Constants) {
         setup.TrySet("material." + constant.first, constant.second);
     }
-    return binder;
-}
-
-void TMaterial::Draw(TProgramSetup &setup, TMesh &mesh) {
-    auto binder = Bind(setup);
-    mesh.Draw();
 }
 

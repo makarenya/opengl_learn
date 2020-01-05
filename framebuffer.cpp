@@ -63,10 +63,9 @@ TFrameBuffer::~TFrameBuffer() {
 }
 
 void TFrameBuffer::Draw(TProgramSetup &setup) {
-    TTextureBinder binder;
-    setup.Set("screenTexture", binder.Attach(Texture));
+    Texture.Bind(setup.TextureLoc("screenTexture"));
     if (DepthTexture.has_value()) {
-        setup.Set("depthTexture", binder.Attach(*DepthTexture));
+        DepthTexture->Bind(setup.TextureLoc("depthTexture"));
     }
     Mesh.Draw();
 }

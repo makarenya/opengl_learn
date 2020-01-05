@@ -51,6 +51,7 @@ private:
 public:
     TTexture(const TTextureBuilder &builder);
     GLuint GetTexture() const { return *Texture; }
+    void Bind(int location) const ;
 };
 
 class TCubeTextureBuilder {
@@ -72,21 +73,5 @@ private:
     std::shared_ptr<GLuint> Texture;
 public:
     TCubeTexture(const TCubeTextureBuilder &builder);
-    GLuint GetTexture() const { return *Texture; }
-};
-
-class TTextureBinder {
-private:
-    std::array<GLenum, 32> Attached {};
-    int Position = 0;
-
-public:
-    TTextureBinder() = default;
-    GLint Attach(const TTexture& texture);
-    GLint Attach(const TCubeTexture& texture);
-    TTextureBinder(TTextureBinder &&src) noexcept;
-    ~TTextureBinder();
-
-    TTextureBinder(const TTextureBinder &) = delete;
-    TTextureBinder &operator=(const TTextureBinder &) = delete;
+    void Bind(int location) const;
 };

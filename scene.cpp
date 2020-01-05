@@ -24,7 +24,8 @@ void TScene::DrawSkybox(glm::mat4 project, glm::mat4 view) {
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_LEQUAL);
     auto setup = SkyboxShader.Use(project, view);
-    Skybox.Draw(setup.Setup, Sky);
+    Skybox.Use(setup.Setup);
+    Sky.Draw();
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
 }
@@ -51,16 +52,20 @@ mat4 Place(vec3 position, vec3 axis, float angle, vec3 s) {
 
 void TScene::DrawObjects(TSceneSetup &&setup) {
     setup.Model(scale(translate(one<mat4>(), vec3(0.0f, -100.0f, 0.0f)), vec3(200.0f)));
-    Asphalt.Draw(setup.Setup, GroundCube);
+    Asphalt.Use(setup.Setup);
+    GroundCube.Draw();
 
     setup.Model(Place(vec3(6, 7.0, 44.0), vec3(.2, .4, -.1), 30.0f, vec3(10.0f)));
-    Container.Draw(setup.Setup, SimpleCube);
+    Container.Use(setup.Setup);
+    SimpleCube.Draw();
 
     setup.Model(one<mat4>());
-    Suit.Draw(setup.Setup, [this, &setup](const std::string& name, const TMesh& mesh, TTextureBinder& binder) {
-        setup.Setup
-            .TrySet("material.skybox", binder.Attach(SkyTex))
-            .TrySet("material.reflect", 1.0f);
+    Suit.Draw(setup.Setup, [this, &setup](const std::string& name, const TMesh& mesh) {
+        if (name == "Visor") {
+            SkyTex.Bind(setup.Skybox(0.8));
+        } else {
+            SkyTex.Bind(setup.Skybox(0.1));
+        }
         mesh.Draw();
     });
 }
@@ -72,8 +77,10 @@ void TScene::DrawOpaques(TSceneSetup &&setup, vec3 position) {
         objs.emplace(-glm::length(get<0>(obj) - position), obj);
     }
     for (auto obj : objs) {
-        setup.Model(NConstMath::Translate(get<0>(obj.second)) * get<1>(obj.second));
-        get<2>(obj.second).Draw(setup.Setup, get<3>(obj.second));
+        auto& [position, matrix, material, mesh] = obj.second;
+        setup.Model(NConstMath::Translate(position) * matrix);
+        material.Use(setup.Setup);
+        mesh.Draw();
     }
     setup.CanDiscard(false);
 }

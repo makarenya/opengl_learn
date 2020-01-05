@@ -7,6 +7,8 @@ struct Material {
     vec4 specular_col;
     sampler2D shiness_map;
     float shiness;
+    samplerCube skybox;
+    float reflection;
 };
 
 struct DirectionalLight {
@@ -73,6 +75,12 @@ void main() {
         result += CalcSpotLight(spots[i], norm, viewDir, diffuse.rgb, specular.rgb * specular.a, shiness);
     }
     result += CalcProjectorLight(projector, norm, viewDir, diffuse.rgb, specular.rgb * specular.a, shiness);
+
+    if (material.reflection > 0) {
+        vec3 reflectDir = reflect(-viewDir, norm);
+        vec3 sky = vec3(texture(material.skybox, reflectDir));
+        result = sky * material.reflection + result * (1.0 - material.reflection);
+    }
 
     if (canDiscard) {
         color = vec4(result, diffuse.a);

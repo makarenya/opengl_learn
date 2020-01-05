@@ -6,14 +6,22 @@
 
 TProgramSetup::TProgramSetup(TProgramSetup &&src) noexcept {
     Program = src.Program;
-    Textures = move(src.Textures);
+    Textures = std::move(src.Textures);
     src.Program = 0;
 }
 
 TProgramSetup::~TProgramSetup() {
+    FlushTextures();
     if (Program != 0) {
         glUseProgram(0);
     }
+}
+
+TProgramSetup &&TProgramSetup::Texture(const std::string& name, GLenum type) {
+    int index = Textures.size();
+    glUniform1i(Location(name), index);
+    Textures.emplace(name, std::forward_as_tuple(index, type));
+    return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, GLint value) {
@@ -70,10 +78,34 @@ TProgramSetup &&TProgramSetup::Set(const std::string &name, const glm::mat4 &mat
     return std::move(*this);
 }
 
-bool TProgramSetup::Has(const std::string &name) {
+bool TProgramSetup::Has(const std::string &name) const {
     auto location = glGetUniformLocation(Program, name.c_str());
     TGlError::Assert("uniform location " + name);
     return location != -1;
+}
+
+int TProgramSetup::TextureLoc(const std::string &name) const {
+    try {
+        return std::get<0>(Textures.at(name));
+    } catch (std::out_of_range&) {
+        throw TGlBaseError(name + " not found");
+    }
+}
+
+int TProgramSetup::TryTextureLoc(const std::string &name) const {
+    auto index = Textures.find(name);
+    if (index != Textures.end()) {
+        return std::get<0>(index->second);
+    }
+    return -1;
+}
+
+void TProgramSetup::FlushTextures() {
+    for (auto tex : Textures) {
+        glActiveTexture(GL_TEXTURE0 + std::get<0>(tex.second));
+        glBindTexture(std::get<1>(tex.second), 0);
+    }
+    glActiveTexture(GL_TEXTURE0);
 }
 
 GLint TProgramSetup::Location(const std::string &name) {

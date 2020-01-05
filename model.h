@@ -28,16 +28,16 @@ public:
 
     void Draw(TProgramSetup &setup) const {
         for (auto&[mesh, name, mat] : Meshes) {
-            auto binder = Materials[mat].Bind(setup);
+            Materials[mat].Use(setup);
             mesh.Draw();
         }
     }
 
     void Draw(TProgramSetup &setup,
-              const std::function<void(const std::string &, const TMesh &, TTextureBinder &)> &fn) const {
+              const std::function<void(const std::string &, const TMesh &)> &fn) const {
         for (auto&[mesh, name, mat] : Meshes) {
-            auto binder = Materials[mat].Bind(setup);
-            fn(name, mesh, binder);
+            Materials[mat].Use(setup);
+            fn(name, mesh);
         }
     }
 };

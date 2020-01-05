@@ -19,7 +19,6 @@ public:
     TSceneSetup(const TSceneSetup &) = delete;
     TSceneSetup &operator=(const TSceneSetup &) = delete;
 
-
     TSceneSetup &&Model(glm::mat4 model) {
         Setup.Set("model", model);
         return std::move(*this);
@@ -28,6 +27,11 @@ public:
     TSceneSetup &&CanDiscard(bool canDiscard) {
         Setup.Set("canDiscard", canDiscard);
         return std::move(*this);
+    }
+
+    int Skybox(float reflect) {
+        Setup.Set("material.reflection", reflect);
+        return Setup.TextureLoc("material.skybox");
     }
 
     TSceneSetup &&DirectionalLight(glm::vec3 direction,
@@ -85,7 +89,12 @@ public:
     }
 
     TSceneSetup Use(glm::mat4 projection, glm::mat4 view, glm::vec3 viewPos) {
-        return {Program.Use().Set("projection", projection)
+        return {Program.Use()
+                       .Texture("material.diffuse_map", GL_TEXTURE_2D)
+                       .Texture("material.specular_map", GL_TEXTURE_2D)
+                       .Texture("material.shiness_map", GL_TEXTURE_2D)
+                       .Texture("material.skybox", GL_TEXTURE_CUBE_MAP)
+                       .Set("projection", projection)
                        .Set("view", view)
                        .Set("viewPos", viewPos)};
     }

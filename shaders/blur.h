@@ -18,6 +18,8 @@ public:
     }
 
     TBlurSetup Use() {
-        return {Program.Use()};
+        return {Program.Use()
+                       .Texture("screenTexture", GL_TEXTURE_2D)
+                       .Texture("depthTexture", GL_TEXTURE_2D)};
     }
 };

@@ -26,8 +26,7 @@ private:
 public:
 
     TMaterial(const TMaterialBuilder &builder);
-    TTextureBinder Bind(TProgramSetup &setup) const;
-    void Draw(TProgramSetup &setup, TMesh &mesh);
+    void Use(TProgramSetup &setup) const;
 };
 
 

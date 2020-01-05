@@ -1,12 +1,12 @@
 #pragma once
-#include "binder.h"
 #include <vector>
+#include <map>
 #include <glm/fwd.hpp>
 
 class TProgramSetup {
 private:
     GLuint Program;
-    std::vector<TBinder> Textures;
+    std::map<std::string, std::tuple<int, GLenum>> Textures;
 
 public:
     explicit TProgramSetup(GLuint program)
@@ -18,6 +18,7 @@ public:
     TProgramSetup(const TProgramSetup &) = delete;
     TProgramSetup &operator=(const TProgramSetup &) = delete;
 
+    TProgramSetup &&Texture(const std::string &name, GLenum type);
     TProgramSetup &&Set(const std::string &name, GLint value);
     TProgramSetup &&Set(const std::string &name, GLfloat value);
     TProgramSetup &&Set(const std::string &name, glm::vec2 value);
@@ -27,7 +28,10 @@ public:
     TProgramSetup &&Set(const std::string &name, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
     TProgramSetup &&Set(const std::string &name, glm::vec4 value);
     TProgramSetup &&Set(const std::string &name, const glm::mat4 &mat);
-    bool Has(const std::string &name);
+    bool Has(const std::string &name) const;
+    int TextureLoc(const std::string &name) const;
+    int TryTextureLoc(const std::string &name) const;
+    void FlushTextures();
 
     template<typename ... T>
     TProgramSetup &&TrySet(const std::string &name, T... value) {

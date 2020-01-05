@@ -1,7 +1,6 @@
 #include "texture.h"
 #include "errors.h"
 #include <SOIL/SOIL.h>
-#include <iostream>
 
 GLenum MagFilter(bool magLinear) {
     return magLinear ? GL_LINEAR : GL_NEAREST;
@@ -103,6 +102,14 @@ TTexture::TTexture(const TTextureBuilder &builder)
     : Texture(new GLuint(CreateTexture(builder)), DropTexture) {
 }
 
+void TTexture::Bind(int location) const {
+    if (location < 0) return;
+    glActiveTexture(GL_TEXTURE0 + location);
+    TGlError::Assert("activate bind texture");
+    glBindTexture(GL_TEXTURE_2D, *Texture);
+    TGlError::Assert("process bind texture");
+}
+
 GLuint CreateCubeTexture(const TCubeTextureBuilder& builder) {
     GLuint texture;
     glGenTextures(1, &texture);
@@ -150,33 +157,10 @@ TCubeTexture::TCubeTexture(const TCubeTextureBuilder &builder)
     : Texture(new GLuint(CreateCubeTexture(builder)), DropTexture) {
 }
 
-GLint TTextureBinder::Attach(const TTexture &texture) {
-    glActiveTexture(GL_TEXTURE0 + Position);
-    TGlError::Assert("activate texture");
-    glBindTexture(GL_TEXTURE_2D, texture.GetTexture());
-    TGlError::Assert("bind texture");
-    Attached[Position] = GL_TEXTURE_2D;
-    return Position++;
-}
-
-GLint TTextureBinder::Attach(const TCubeTexture &texture) {
-    glActiveTexture(GL_TEXTURE0 + Position);
-    TGlError::Assert("activate texture");
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture.GetTexture());
-    TGlError::Assert("bind texture");
-    Attached[Position] = GL_TEXTURE_CUBE_MAP;
-    return Position++;
-}
-
-TTextureBinder::TTextureBinder(TTextureBinder &&src) noexcept
-    : Position(src.Position), Attached(src.Attached) {
-    src.Position = 0;
-}
-
-TTextureBinder::~TTextureBinder() {
-    for (int i = 0; i < Position; ++i) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(Attached[i], 0);
-    }
-    glActiveTexture(GL_TEXTURE0);
+void TCubeTexture::Bind(int location) const {
+    if (location < 0) return;
+    glActiveTexture(GL_TEXTURE0 + location);
+    TGlError::Assert("activate bind texture");
+    glBindTexture(GL_TEXTURE_CUBE_MAP, *Texture);
+    TGlError::Assert("process bind texture");
 }

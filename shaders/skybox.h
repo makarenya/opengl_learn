@@ -19,6 +19,9 @@ public:
     }
 
     TSkyboxSetup Use(glm::mat4 projection, glm::mat4 view) {
-        return Program.Use().TrySet("projection", projection).TrySet("view", glm::mat4(glm::mat3(view)));
+        return Program.Use()
+                      .Texture("material.skybox", GL_TEXTURE_CUBE_MAP)
+                      .Set("projection", projection)
+                      .Set("view", glm::mat4(glm::mat3(view)));
     }
 };
