@@ -29,6 +29,14 @@ public:
     TProgramSetup &&Set(const std::string &name, const glm::mat4 &mat);
     bool Has(const std::string &name);
 
+    template<typename ... T>
+    TProgramSetup &&TrySet(const std::string &name, T... value) {
+        if (Has(name)) {
+            Set(name, value...);
+        }
+        return std::move(*this);
+    }
+
 private:
     GLint Location(const std::string &name);
 };

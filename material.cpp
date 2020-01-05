@@ -11,28 +11,16 @@ TMaterial::TMaterial(const TMaterialBuilder &builder)
 TTextureBinder TMaterial::Bind(TProgramSetup &setup) const {
     TTextureBinder binder;
     for (auto &texture : Textures) {
-        auto name = "material." + texture.first;
-        if (setup.Has(name)) {
-            setup.Set(name, binder.Attach(texture.second));
-        }
+        setup.TrySet("material." + texture.first, binder.Attach(texture.second));
     }
     for (auto &texture : CubeTextures) {
-        auto name = "material." + texture.first;
-        if (setup.Has(name)) {
-            setup.Set(name, binder.Attach(texture.second));
-        }
+        setup.TrySet("material." + texture.first, binder.Attach(texture.second));
     }
     for (auto &color : Colors) {
-        auto name = "material." + color.first;
-        if (setup.Has(name)) {
-            setup.Set(name, color.second);
-        }
+        setup.TrySet("material." + color.first, color.second);
     }
     for (auto &constant : Constants) {
-        auto name = "material." + constant.first;
-        if (setup.Has(name)) {
-            setup.Set(name, constant.second);
-        }
+        setup.TrySet("material." + constant.first, constant.second);
     }
     return binder;
 }

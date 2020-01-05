@@ -19,9 +19,6 @@ public:
     }
 
     TSkyboxSetup Use(glm::mat4 projection, glm::mat4 view) {
-        auto setup = Program.Use();
-        if (setup.Has("projection")) setup.Set("projection", projection);
-        if (setup.Has("view")) setup.Set("view", glm::mat4(glm::mat3(view)));
-        return setup;
+        return Program.Use().TrySet("projection", projection).TrySet("view", glm::mat4(glm::mat3(view)));
     }
 };

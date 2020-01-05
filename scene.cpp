@@ -58,8 +58,9 @@ void TScene::DrawObjects(TSceneSetup &&setup) {
 
     setup.Model(one<mat4>());
     Suit.Draw(setup.Setup, [this, &setup](const std::string& name, const TMesh& mesh, TTextureBinder& binder) {
-        setup.Setup.Set("material.skybox", binder.Attach(SkyTex));
-        setup.Setup.Set("material.reflect", 1.0f);
+        setup.Setup
+            .TrySet("material.skybox", binder.Attach(SkyTex))
+            .TrySet("material.reflect", 1.0f);
         mesh.Draw();
     });
 }
