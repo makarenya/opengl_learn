@@ -46,6 +46,10 @@ public:
         if (code != GL_NO_ERROR) throw TGlError(code, context);
     }
 
+    static void Skip() {
+        glGetError();
+    }
+
 private:
     explicit TGlError(int code, const std::string &context)
         : TGlBaseError(ErrorMessage(code, context)) {

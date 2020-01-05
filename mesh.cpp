@@ -167,6 +167,7 @@ TMesh::~TMesh() {
     if (Vao != 0) {
         glDeleteVertexArrays(1, &Vao);
     }
+    TGlError::Skip();
 }
 
 void TMesh::Draw() const {
