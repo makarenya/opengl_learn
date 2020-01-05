@@ -1,30 +1,23 @@
 #pragma once
 #include <glm/glm.hpp>
 
-class TBorderSetup {
+class TBorderShader: public TShaderProgram {
 public:
-    TProgramSetup Setup;
-
-    TBorderSetup(TProgramSetup &&setup)
-        : Setup(std::move(setup)) {
-    }
-
-    TBorderSetup &&Color(glm::vec4 color) {
-        Setup.Set("borderColor", color);
-        return std::move(*this);
+    TBorderShader()
+        : TShaderProgram("shaders/border.vert", "shaders/border.frag") {
     }
 };
 
-class TBorderShader {
-    TShaderProgram Program;
+class TBorderSetup: public TProgramSetup {
 public:
-    TBorderShader()
-        : Program("shaders/border.vert", "shaders/border.frag") {
+    TBorderSetup(const TBorderShader &shader)
+        : TProgramSetup(shader) {
+        Texture("screenTexture", GL_TEXTURE_2D);
+        Texture("depthTexture", GL_TEXTURE_2D);
     }
 
-    TBorderSetup Use() {
-        return {Program.Use()
-                       .Texture("screenTexture", GL_TEXTURE_2D)
-                       .Texture("depthTexture", GL_TEXTURE_2D)};
+    TBorderSetup &&Color(glm::vec4 color) {
+        Set("borderColor", color);
+        return std::move(*this);
     }
 };

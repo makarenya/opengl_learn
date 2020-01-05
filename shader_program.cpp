@@ -4,6 +4,12 @@
 #include <array>
 #include <fstream>
 
+TProgramSetup::TProgramSetup(const TShaderProgram &program)
+    : Program(program.Program), Textures{} {
+    glUseProgram(Program);
+    TGlError::Assert("use program");
+}
+
 TProgramSetup::TProgramSetup(TProgramSetup &&src) noexcept {
     Program = src.Program;
     Textures = std::move(src.Textures);
@@ -152,12 +158,6 @@ TShaderProgram::TShaderProgram(const std::string& vertexFilename, const std::str
 
 TShaderProgram::~TShaderProgram() {
     glDeleteProgram(Program);
-}
-
-TProgramSetup TShaderProgram::Use() {
-    glUseProgram(Program);
-    TGlError::Assert("use program");
-    return TProgramSetup(Program);
 }
 
 GLuint TShaderProgram::CreateShader(GLenum type, const std::string &name, const std::string &filename) {

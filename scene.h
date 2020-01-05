@@ -91,10 +91,10 @@ public:
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position);
 
 private:
-    TSceneSetup SetupScene(glm::mat4 project, glm::mat4 view, glm::vec3 position);
+    void SetupLights(TSceneSetup& setup, glm::vec3 position);
     void DrawSkybox(glm::mat4 project, glm::mat4 view);
-    void DrawObjects(TSceneSetup &&setup);
-    void DrawOpaques(TSceneSetup &&setup, glm::vec3 position);
+    void DrawObjects(glm::mat4 project, glm::mat4 view, glm::vec3 position);
+    void DrawOpaques(glm::mat4 project, glm::mat4 view, glm::vec3 position);
     void DrawLightCubes(glm::mat4 project, glm::mat4 view);
     void DrawBorder(glm::mat4 project, glm::mat4 view, glm::vec3 position);
 };

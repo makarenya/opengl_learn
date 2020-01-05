@@ -1,32 +1,28 @@
 #pragma once
 #include <glm/glm.hpp>
 
-class TLightSetup {
+class TLightShader: public TShaderProgram {
 public:
-    TProgramSetup Setup;
+    TLightShader()
+        : TShaderProgram("shaders/light.vert", "shaders/light.frag") {
+    }
+};
 
-    TLightSetup(TProgramSetup &&setup) : Setup(std::move(setup)) {
+class TLightSetup: public TProgramSetup {
+public:
+    TLightSetup(const TLightShader &shader, glm::mat4 projection, glm::mat4 view)
+        : TProgramSetup(shader) {
+        Set("projection", projection);
+        Set("view", view);
     }
 
     TLightSetup &&Model(glm::mat4 model) {
-        Setup.Set("model", model);
+        Set("model", model);
         return std::move(*this);
     }
 
     TLightSetup &&Color(glm::vec3 color) {
-        Setup.Set("lightColor", color);
+        Set("lightColor", color);
         return std::move(*this);
-    }
-};
-
-class TLightShader {
-    TShaderProgram Program;
-public:
-    TLightShader()
-        : Program("shaders/light.vert", "shaders/light.frag") {
-    }
-
-    TLightSetup Use(glm::mat4 projection, glm::mat4 view) {
-        return {Program.Use().Set("projection", projection).Set("view", view)};
     }
 };

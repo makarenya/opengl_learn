@@ -3,15 +3,29 @@
 #include <map>
 #include <glm/fwd.hpp>
 
+
+class TShaderProgram {
+private:
+    GLuint Program;
+public:
+    TShaderProgram(const std::string &vertexFilename, const std::string &fragmentFilename);
+    TShaderProgram(const TShaderProgram &) = delete;
+    TShaderProgram &operator=(const TShaderProgram &) = delete;
+    ~TShaderProgram();
+
+private:
+    static GLuint CreateShader(GLenum type, const std::string &name, const std::string &filename);
+    friend class TProgramSetup;
+};
+
 class TProgramSetup {
 private:
     GLuint Program;
     std::map<std::string, std::tuple<int, GLenum>> Textures;
 
 public:
-    explicit TProgramSetup(GLuint program)
-        : Program(program), Textures{} {
-    }
+    explicit TProgramSetup(const TShaderProgram &program);
+
     TProgramSetup(TProgramSetup &&src) noexcept;
     ~TProgramSetup();
 
@@ -45,17 +59,3 @@ private:
     GLint Location(const std::string &name);
 };
 
-class TShaderProgram {
-private:
-    GLuint Program;
-public:
-    TShaderProgram(const std::string &vertexFilename, const std::string &fragmentFilename);
-    TShaderProgram(const TShaderProgram &) = delete;
-    TShaderProgram &operator=(const TShaderProgram &) = delete;
-    ~TShaderProgram();
-
-    TProgramSetup Use();
-
-private:
-    static GLuint CreateShader(GLenum type, const std::string &name, const std::string &filename);
-};

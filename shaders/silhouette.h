@@ -2,28 +2,23 @@
 #include <glm/glm.hpp>
 #include "../shader_program.h"
 
-class TSilhouetteSetup {
+class TSilhouetteShader: public TShaderProgram {
 public:
-    TProgramSetup Setup;
-
-    TSilhouetteSetup(TProgramSetup &&setup)
-        : Setup(std::move(setup)) {
-    }
-
-    TSilhouetteSetup &&Model(glm::mat4 model) {
-        Setup.Set("model", model);
-        return std::move(*this);
+    TSilhouetteShader()
+        : TShaderProgram("shaders/silhouette.vert", "shaders/silhouette.frag") {
     }
 };
 
-class TSilhouetteShader {
-    TShaderProgram Program;
+class TSilhouetteSetup: public TProgramSetup {
 public:
-    TSilhouetteShader()
-        : Program("shaders/silhouette.vert", "shaders/silhouette.frag") {
+    TSilhouetteSetup(const TSilhouetteShader &shader, glm::mat4 projection, glm::mat4 view)
+        : TProgramSetup(shader) {
+        Set("projection", projection);
+        Set("view", view);
     }
 
-    TSilhouetteSetup Use(glm::mat4 projection, glm::mat4 view) {
-        return {Program.Use().Set("projection", projection).Set("view", view)};
+    TSilhouetteSetup &&Model(glm::mat4 model) {
+        Set("model", model);
+        return std::move(*this);
     }
 };
