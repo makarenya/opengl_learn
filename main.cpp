@@ -133,7 +133,7 @@ void program() {
         TGlError::Assert("enable blend func");
 
         const float sensibility = .25f;
-        const float speed = 30.0f;
+        const float speed = 10.0f;
         double lastTime = glfwGetTime();
         vec3 position{0.0f, 14.0f, 22.0f};
         vec2 lastMouse = Mouse;
@@ -208,6 +208,9 @@ int main() {
     } catch (TGlBaseError &e) {
         cout << e.what() << endl;
         return 1;
+    } catch(std::exception &e) {
+        cout << e.what() << endl;
+        return 3;
     } catch (...) {
         return 2;
     }
