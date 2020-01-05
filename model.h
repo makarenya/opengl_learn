@@ -6,30 +6,38 @@
 
 class TModel {
 private:
-    std::vector<std::tuple<TMesh, int>> Meshes;
+    std::vector<std::tuple<TMesh, std::string, int>> Meshes;
     std::vector<TMaterial> Materials;
 
 public:
     TModel() = default;
-    TModel(TMaterialBuilder&& materialBuilder, TMeshBuilder &&meshBuilder) {
-        Materials.emplace_back(std::move(materialBuilder));
-        Meshes.emplace_back(std::forward_as_tuple(std::move(meshBuilder), 0));
+    TModel(const std::string &name, const TMaterialBuilder &materialBuilder, TMeshBuilder &&meshBuilder) {
+        Materials.emplace_back(materialBuilder);
+        Meshes.emplace_back(std::forward_as_tuple(std::move(meshBuilder), name, 0));
     }
 
-    TModel &&Material(TMaterialBuilder &&mat) {
-        Materials.emplace_back(std::move(mat));
+    TModel &&Material(const TMaterialBuilder &mat) {
+        Materials.emplace_back(mat);
         return std::move(*this);
     }
 
-    TModel &&Mesh(TMeshBuilder &&builder, int material) {
-        Meshes.emplace_back(std::forward_as_tuple(std::move(builder), material));
+    TModel &&Mesh(const std::string &name, TMeshBuilder &&builder, int material) {
+        Meshes.emplace_back(std::forward_as_tuple(std::move(builder), name, material));
         return std::move(*this);
     }
 
     void Draw(TProgramSetup &setup) const {
-        for (auto &mesh : Meshes) {
-            auto binder = Materials[std::get<1>(mesh)].Bind(setup);
-            std::get<0>(mesh).Draw();
+        for (auto&[mesh, name, mat] : Meshes) {
+            auto binder = Materials[mat].Bind(setup);
+            mesh.Draw();
+        }
+    }
+
+    void Draw(TProgramSetup &setup,
+              const std::function<void(const std::string &, const TMesh &, TTextureBinder &)> &fn) const {
+        for (auto&[mesh, name, mat] : Meshes) {
+            auto binder = Materials[mat].Bind(setup);
+            fn(name, mesh, binder);
         }
     }
 };

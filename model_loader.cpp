@@ -7,7 +7,6 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <algorithm>
-#include <iostream>
 
 using namespace std;
 using namespace glm;
@@ -105,12 +104,14 @@ TModel LoadMesh(const std::string &filename) {
             }
 
             model.Mesh(
+                mesh->mName.C_Str(),
                 TMeshBuilder()
                     .Vertices(EBufferUsage::Static, vertices)
                     .Indices(EBufferUsage::Static, indexes)
                     .Layout(EDataType::Float, 3)
                     .Layout(EDataType::Float, 3)
-                    .Layout(EDataType::Float, 2), material);
+                    .Layout(EDataType::Float, 2),
+                material);
         }
     }
     return model;

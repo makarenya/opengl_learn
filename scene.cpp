@@ -57,7 +57,11 @@ void TScene::DrawObjects(TSceneSetup &&setup) {
     Container.Draw(setup.Setup, SimpleCube);
 
     setup.Model(one<mat4>());
-    Suit.Draw(setup.Setup);
+    Suit.Draw(setup.Setup, [this, &setup](const std::string& name, const TMesh& mesh, TTextureBinder& binder) {
+        setup.Setup.Set("material.skybox", binder.Attach(SkyTex));
+        setup.Setup.Set("material.reflect", 1.0f);
+        mesh.Draw();
+    });
 }
 
 void TScene::DrawOpaques(TSceneSetup &&setup, vec3 position) {
