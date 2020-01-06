@@ -41,21 +41,23 @@ struct ProjectorLight {
 
     float innerCutoff;
     float outerCutoff;
+    float linear;
+    float quadratic;
 };
 
 in vec3 fragmentNormal;
 in vec3 fragmentPos;
 in vec2 fragmentCoord;
 
-#define SPOT_LIGHTS 8
-
 uniform vec3 viewPos;
-uniform int spotCount;
 uniform Material material;
-uniform DirectionalLight directional;
-uniform SpotLight spots[SPOT_LIGHTS];
-uniform ProjectorLight projector;
 uniform bool canDiscard;
+layout (std140) uniform Lights {
+    DirectionalLight directional;
+    SpotLight spots[8];
+    ProjectorLight projector;
+    int spotCount;
+};
 
 out vec4 color;
 
@@ -129,10 +131,11 @@ vec3 CalcProjectorLight(ProjectorLight light, vec3 norm, vec3 viewDir, vec3 diff
     vec3 reflectDir = reflect(-lightNorm, norm);
     vec3 lightDir = normalize(light.position - light.target);
 
-    float intensity = clamp(
-    (dot(lightNorm, lightDir) - light.outerCutoff) /
-    (light.innerCutoff - light.outerCutoff),
-    0.0f, 1.0f);
+    float distance = length(light.position - fragmentPos);
+    float intensity = 1.0f / (1.0f + light.linear * distance + light.quadratic * distance * distance) * clamp(
+        (dot(lightNorm, lightDir) - light.outerCutoff) /
+        (light.innerCutoff - light.outerCutoff),
+        0.0f, 1.0f);
 
     float diff = max(dot(norm, lightNorm), 0.0f);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0f), shiness);

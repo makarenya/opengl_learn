@@ -1,8 +1,5 @@
 #include "uniform_buffer.h"
 
-#define GL_MAP_READ_BIT 0x0001
-#define GL_MAP_WRITE_BIT 0x0002
-
 void TUniformBindingBase::Write(const void *data) {
     glBindBuffer(GL_UNIFORM_BUFFER, Buffer);
     TGlError::Assert("bind buffer while set");
@@ -43,18 +40,23 @@ void TUniformBindingBase::Read(void *data) {
 TUniformBuffer::TUniformBuffer(std::initializer_list<TUniformBindingBase *> buffers) {
     size_t total = 0;
     int index = 0;
+    GLint align{};
+    glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &align);
+    TGlError::Assert("get buffer alignment");
+
     for (auto &buffer : buffers) {
         buffer->Offset = total;
         buffer->BoundIndex = index++;
-        total += buffer->Size;
+        total = ((total + buffer->Size - 1) / align + 1) * align;
     }
+
     glGenBuffers(1, &Buffer);
     TGlError::Assert("gen uniform buffer");
     try {
         glBindBuffer(GL_UNIFORM_BUFFER, Buffer);
         TGlError::Assert("bind uniform buffer");
 
-        glBufferData(GL_UNIFORM_BUFFER, total, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_UNIFORM_BUFFER, total + 2, nullptr, GL_DYNAMIC_DRAW);
         TGlError::Assert("set uniform buffer data");
 
         glBindBuffer(GL_UNIFORM_BUFFER, 0);

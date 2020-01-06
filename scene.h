@@ -10,15 +10,97 @@
 #include "framebuffer.h"
 #include <glm/glm.hpp>
 
+struct TProjectionView {
+    glm::mat4 projection;
+    glm::mat4 view;
+};
+
+struct TDirectionalLight {
+    glm::vec4 Direction;
+    glm::vec4 Ambient;
+    glm::vec4 Diffuse;
+    glm::vec4 Specular;
+    TDirectionalLight() = default;
+    TDirectionalLight(glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
+        : Direction(direction, 1.0)
+          , Ambient(ambient, 1.0)
+          , Diffuse(diffuse, 1.0)
+          , Specular(specular, 1.0) {
+    }
+};
+
+struct TSpotLight {
+    glm::vec4 Position;
+    glm::vec4 Ambient;
+    glm::vec4 Diffuse;
+    glm::vec3 Specular;
+    float Linear;
+    float Quadratic;
+    float tmp[3];
+    TSpotLight() = default;
+    TSpotLight(glm::vec3 position,
+               glm::vec3 ambient,
+               glm::vec3 diffuse,
+               glm::vec3 specular,
+               float linear,
+               float quadratic)
+        : Position(position, 1.0)
+          , Ambient(ambient, 1.0)
+          , Diffuse(diffuse, 1.0)
+          , Specular(specular)
+          , Linear(linear)
+          , Quadratic(quadratic) {
+    }
+};
+
+struct TProjectorLight {
+    glm::vec4 Position;
+    glm::vec4 Target;
+
+    glm::vec4 Ambient;
+    glm::vec4 Diffuse;
+    glm::vec3 Specular;
+
+    float InnerCutoff;
+    float OuterCutoff;
+    float Linear;
+    float Quadratic;
+    float tmp;
+    TProjectorLight() = default;
+    TProjectorLight(glm::vec3 position,
+                    glm::vec3 target,
+                    glm::vec3 ambient,
+                    glm::vec3 diffuse,
+                    glm::vec3 specular,
+                    float innerCutoff,
+                    float outerCutoff,
+                    float linear,
+                    float quadratic)
+        : Position(position, 1.0f)
+          , Target(target, 1.0f)
+          , Ambient(ambient, 1.0f)
+          , Diffuse(diffuse, 1.0f)
+          , Specular(specular)
+          , InnerCutoff(std::cos(glm::radians(innerCutoff)))
+          , OuterCutoff(std::cos(glm::radians(outerCutoff)))
+          , Linear(linear)
+          , Quadratic(quadratic) {
+    }
+};
+
+struct TLights {
+    TDirectionalLight directional;
+    TSpotLight spots[8];
+    TProjectorLight projector;
+    uint32_t spotCount;
+};
+
 class TScene {
 private:
-    struct TProjectionView {
-        glm::mat4 projection;
-        glm::mat4 view;
-    };
 
     TUniformBinding<TProjectionView> ProjectionView;
-    TUniformBuffer Connector{&ProjectionView};
+    TUniformBinding<TLights> LightSetup;
+    TUniformBuffer Connector{&ProjectionView, &LightSetup};
     TSceneShader SceneShader{};
     TLightShader LightShader{};
     TSilhouetteShader SilhouetteShader{};
@@ -95,6 +177,7 @@ private:
 public:
     TScene(int width, int height)
         : FrameBuffer(width, height, true) {
+        SceneShader.Block("Lights", LightSetup);
         SceneShader.Block("Matrices", ProjectionView);
         LightShader.Block("Matrices", ProjectionView);
         SilhouetteShader.Block("Matrices", ProjectionView);
@@ -103,7 +186,7 @@ public:
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position);
 
 private:
-    void SetupLights(TSceneSetup& setup, glm::vec3 position);
+    void SetupLights(TSceneSetup &setup, glm::vec3 position);
     void DrawSkybox();
     void DrawObjects(glm::vec3 position);
     void DrawOpaques(glm::vec3 position);

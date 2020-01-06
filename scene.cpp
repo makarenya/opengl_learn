@@ -9,6 +9,24 @@ using namespace glm;
 
 void TScene::Draw(mat4 project, mat4 view, vec3 position) {
     ProjectionView = {project, view};
+    TLights setup{};
+    setup.directional = {{1.0f, -6.0f, 3.0f},
+                         vec3(.25), vec3(.6), vec3(.4)};
+    setup.spots[0] = {{position.x, 16.0, position.z},
+                      vec3(0.01f), vec3(0.3f), vec3(1.0f),
+                      0.02, 0.0002};
+    int k = 1;
+    for (auto &spot : Spots) {
+        setup.spots[k] = {spot.first,
+                          0.01f * spot.second,
+                          0.3f * spot.second,
+                          spot.second,
+                          0.04, 0.0012};
+        k++;
+    }
+    setup.spotCount = k;
+    LightSetup = setup;
+
     glClearColor(.05, .01, .07, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     TGlError::Assert("clear");
@@ -32,17 +50,7 @@ void TScene::DrawSkybox() {
 }
 
 void TScene::SetupLights(TSceneSetup &setup, glm::vec3 position) {
-    setup.DirectionalLight(vec3(1.0f, -6.0f, 3.0f),
-                           vec3(0.25f), vec3(0.6f), vec3(0.4f));
-    setup.SpotLight(vec3(position.x, 16.0, position.z),
-                    vec3(0.01f), vec3(0.3f), vec3(0.0f),
-                    0.02, 0.0002);
 
-    for (auto &spot : Spots) {
-        setup.SpotLight(spot.first,
-                        0.01f * spot.second, 0.3f * spot.second, spot.second,
-                        0.04, 0.0012);
-    }
 }
 
 mat4 Place(vec3 position, vec3 axis, float angle, vec3 s) {
