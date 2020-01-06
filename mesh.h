@@ -23,8 +23,12 @@ enum struct EDataType {
     Double
 };
 
-class TMesh;
+enum struct EDrawType {
+    Triangles = GL_TRIANGLES,
+    Points = GL_POINTS,
+};
 
+class TMesh;
 
 class TMeshBuilder {
 private:
@@ -83,12 +87,28 @@ private:
     unsigned IndexCount;
 
 public:
-    TMesh(TMeshBuilder&& builder);
+    TMesh(TMeshBuilder &&builder);
     TMesh(TMesh &&src) noexcept;
     ~TMesh();
     TMesh(const TMesh &) = delete;
     TMesh &operator=(const TMesh &) = delete;
 
-    void Draw() const;
+    void Draw(EDrawType type = EDrawType::Triangles) const;
+    friend class TVertexBufferMapper;
+};
+
+class TVertexBufferMapper {
+    void *Data;
+public:
+    explicit TVertexBufferMapper(TMesh &mesh);
+    TVertexBufferMapper(TVertexBufferMapper &&src) noexcept;
+    ~TVertexBufferMapper();
+    TVertexBufferMapper(const TVertexBufferMapper &) = delete;
+    TVertexBufferMapper &operator=(const TVertexBufferMapper &) = delete;
+
+    template<typename T>
+    T *Ptr() {
+        return static_cast<T *>(Data);
+    }
 };
 

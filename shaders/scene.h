@@ -4,7 +4,7 @@
 class TSceneShader: public TShaderProgram {
 public:
     TSceneShader()
-        : TShaderProgram("shaders/scene.vert", "shaders/scene.frag") {
+        : TShaderProgram("shaders/scene.vert", "shaders/scene.frag", "shaders/scene.geom") {
     }
 };
 
@@ -24,6 +24,11 @@ public:
 
     TSceneSetup(const TSceneSetup &) = delete;
     TSceneSetup &operator=(const TSceneSetup &) = delete;
+
+    TSceneSetup &&Explosion(float value) {
+        Set("explosion", value);
+        return std::move(*this);
+    }
 
     TSceneSetup &&Model(glm::mat4 model) {
         Set("model", model);

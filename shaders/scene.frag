@@ -45,9 +45,11 @@ struct ProjectorLight {
     float quadratic;
 };
 
-in vec3 fragmentNormal;
-in vec3 fragmentPos;
-in vec2 fragmentCoord;
+in GS_OUT {
+    vec3 normal;
+    vec3 position;
+    vec2 coord;
+} fs_in;
 
 uniform vec3 viewPos;
 uniform Material material;
@@ -66,12 +68,12 @@ vec3 CalcSpotLight(SpotLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 
 vec3 CalcProjectorLight(ProjectorLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
 
 void main() {
-    vec3 norm = normalize(fragmentNormal);
-    vec3 viewDir = normalize(viewPos - fragmentPos);
+    vec3 norm = normalize(fs_in.normal);
+    vec3 viewDir = normalize(viewPos - fs_in.position);
 
-    vec4 diffuse = material.diffuse_col.a > 0 ? material.diffuse_col : texture(material.diffuse_map, fragmentCoord);
-    vec4 specular = material.specular_col.a > 0 ? material.specular_col : texture(material.specular_map, fragmentCoord);
-    float shiness = material.shiness > 0 ? material.shiness : float(texture(material.shiness_map, fragmentCoord));
+    vec4 diffuse = material.diffuse_col.a > 0 ? material.diffuse_col : texture(material.diffuse_map, fs_in.coord);
+    vec4 specular = material.specular_col.a > 0 ? material.specular_col : texture(material.specular_map, fs_in.coord);
+    float shiness = material.shiness > 0 ? material.shiness : float(texture(material.shiness_map, fs_in.coord));
 
     vec3 result = CalcDirectionalLight(directional, norm, viewDir, diffuse.rgb, specular.rgb * specular.a, shiness);
     for (int i = 0; i < spotCount; i++) {
@@ -112,10 +114,10 @@ vec3 CalcDirectionalLight(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 
 }
 
 vec3 CalcSpotLight(SpotLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {
-    vec3 lightNorm = normalize(light.position - fragmentPos);
+    vec3 lightNorm = normalize(light.position - fs_in.position);
     vec3 reflectDir = reflect(-lightNorm, norm);
 
-    float distance = length(light.position - fragmentPos);
+    float distance = length(light.position - fs_in.position);
     float intensity = 1.0f / (1.0f + light.linear * distance + light.quadratic * distance * distance);
 
     float diff = max(dot(norm, lightNorm), 0.0f);
@@ -127,11 +129,11 @@ vec3 CalcSpotLight(SpotLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 
 }
 
 vec3 CalcProjectorLight(ProjectorLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {
-    vec3 lightNorm = normalize(light.position - fragmentPos);
+    vec3 lightNorm = normalize(light.position - fs_in.position);
     vec3 reflectDir = reflect(-lightNorm, norm);
     vec3 lightDir = normalize(light.position - light.target);
 
-    float distance = length(light.position - fragmentPos);
+    float distance = length(light.position - fs_in.position);
     float intensity = 1.0f / (1.0f + light.linear * distance + light.quadratic * distance * distance) * clamp(
         (dot(lightNorm, lightDir) - light.outerCutoff) /
         (light.innerCutoff - light.outerCutoff),

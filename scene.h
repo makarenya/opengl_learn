@@ -4,7 +4,9 @@
 #include "shaders/light.h"
 #include "shaders/border.h"
 #include "shaders/silhouette.h"
+#include "shaders/particles.h"
 #include "shaders/skybox.h"
+#include "shaders/normals.h"
 #include "shaders/blur.h"
 #include "cube.h"
 #include "framebuffer.h"
@@ -97,7 +99,6 @@ struct TLights {
 
 class TScene {
 private:
-
     TUniformBinding<TProjectionView> ProjectionView;
     TUniformBinding<TLights> LightSetup;
     TUniformBuffer Connector{&ProjectionView, &LightSetup};
@@ -106,6 +107,15 @@ private:
     TSilhouetteShader SilhouetteShader{};
     TBorderShader BorderShader{};
     TSkyboxShader SkyboxShader{};
+    TParticlesShader ParticlesShader{};
+    TNormalsShader NormalsShader{};
+    std::array<std::tuple<glm::vec3, glm::vec3>, 3000> Particles;
+    int CurrentParticles = 0;
+    double LastParticleTime = NAN;
+    const glm::ivec3 Maxims{53, 37, 47};
+    glm::ivec3 Currents{};
+    float ExplosionCounter = 0;
+    float ExplosionTime = 0;
 
     TTexture AsphaltTex{
         TTextureBuilder()
@@ -150,7 +160,11 @@ private:
             .Layout(EDataType::Float, 3)
             .Layout(EDataType::Float, 3)
             .Layout(EDataType::Float, 2)};
-
+    TMesh Points{
+        TMeshBuilder()
+            .Vertices(EBufferUsage::Stream, nullptr, sizeof(float) * 6 * Particles.size(), 6 * Particles.size())
+            .Layout(EDataType::Float, 3)
+            .Layout(EDataType::Float, 3)};
     TMesh QuadPoly{
         TMeshBuilder()
             .Vertices(EBufferUsage::Static, DoubleQuad())
@@ -181,12 +195,14 @@ public:
         SceneShader.Block("Matrices", ProjectionView);
         LightShader.Block("Matrices", ProjectionView);
         SilhouetteShader.Block("Matrices", ProjectionView);
+        ParticlesShader.Block("Matrices", ProjectionView);
+        NormalsShader.Block("Matrices", ProjectionView);
     }
 
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position);
 
 private:
-    void SetupLights(TSceneSetup &setup, glm::vec3 position);
+    void SetupLights(glm::vec3 position);
     void DrawSkybox();
     void DrawObjects(glm::vec3 position);
     void DrawOpaques(glm::vec3 position);

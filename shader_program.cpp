@@ -23,7 +23,7 @@ TProgramSetup::~TProgramSetup() {
     }
 }
 
-TShaderProgram &&TShaderProgram::Block(const std::string &name, const TUniformBindingBase& binding) {
+TShaderProgram &&TShaderProgram::Block(const std::string &name, const TUniformBindingBase &binding) {
     auto id = glGetUniformBlockIndex(Program, name.c_str());
     TGlError::Assert("block index for " + name);
     if (id < 0) throw TGlBaseError("can't find block index for " + name);
@@ -32,7 +32,7 @@ TShaderProgram &&TShaderProgram::Block(const std::string &name, const TUniformBi
     return std::move(*this);
 }
 
-TProgramSetup &&TProgramSetup::Texture(const std::string& name, GLenum type) {
+TProgramSetup &&TProgramSetup::Texture(const std::string &name, GLenum type) {
     int index = Textures.size();
     glUniform1i(Location(name), index);
     Textures.emplace(name, std::forward_as_tuple(index, type));
@@ -102,7 +102,7 @@ bool TProgramSetup::Has(const std::string &name) const {
 int TProgramSetup::TextureLoc(const std::string &name) const {
     try {
         return std::get<0>(Textures.at(name));
-    } catch (std::out_of_range&) {
+    } catch (std::out_of_range &) {
         throw TGlBaseError(name + " not found");
     }
 }
@@ -132,20 +132,30 @@ GLint TProgramSetup::Location(const std::string &name) {
     return location;
 }
 
-TShaderProgram::TShaderProgram(const std::string& vertexFilename, const std::string& fragmentFilename)
+TShaderProgram::TShaderProgram(const std::string &vertexFilename,
+                               const std::string &fragmentFilename,
+                               const std::string &geometryFilename)
     : Program(glCreateProgram()) {
     if (Program == 0) {
         throw TGlError("create program");
     }
     GLuint vertex{};
     GLuint fragment{};
+    GLuint geometry{};
     try {
         vertex = CreateShader(GL_VERTEX_SHADER, "vertex", vertexFilename);
-        fragment = CreateShader(GL_FRAGMENT_SHADER, "fragment", fragmentFilename);
         glAttachShader(Program, vertex);
         TGlError::Assert("attach vertex shader");
+
+        fragment = CreateShader(GL_FRAGMENT_SHADER, "fragment", fragmentFilename);
         glAttachShader(Program, fragment);
         TGlError::Assert("attach fragment shader");
+
+        if (!geometryFilename.empty()) {
+            geometry = CreateShader(GL_GEOMETRY_SHADER, "geometry", geometryFilename);
+            glAttachShader(Program, geometry);
+            TGlError::Assert("attach geometry shader");
+        }
         glLinkProgram(Program);
         TGlError::Assert("link program");
         GLint success;
@@ -157,9 +167,13 @@ TShaderProgram::TShaderProgram(const std::string& vertexFilename, const std::str
         }
         glDeleteShader(vertex);
         glDeleteShader(fragment);
+        if (geometry != 0) {
+            glDeleteShader(geometry);
+        }
     } catch (...) {
         if (vertex != 0) glDeleteShader(vertex);
         if (fragment != 0) glDeleteShader(fragment);
+        if (geometry != 0) glDeleteShader(geometry);
         glDeleteProgram(Program);
         throw;
     }

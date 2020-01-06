@@ -125,7 +125,7 @@ void program() {
 
         glEnable(GL_DEPTH_TEST);
         TGlError::Assert("enable depth test");
-        glEnable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
         TGlError::Assert("enable cull face test");
         glEnable(GL_BLEND);
         TGlError::Assert("enable blend");

@@ -148,10 +148,10 @@ TMesh::TMesh(TMeshBuilder &&builder)
 
 TMesh::TMesh(TMesh &&src) noexcept
     : Vao(src.Vao)
-    , Vbo(src.Vbo)
-    , Ebo(src.Ebo)
-    , VertexCount(src.VertexCount)
-    , IndexCount(src.IndexCount) {
+      , Vbo(src.Vbo)
+      , Ebo(src.Ebo)
+      , VertexCount(src.VertexCount)
+      , IndexCount(src.IndexCount) {
     src.Vao = 0;
     src.Vbo = 0;
     src.Ebo = 0;
@@ -170,15 +170,15 @@ TMesh::~TMesh() {
     TGlError::Skip();
 }
 
-void TMesh::Draw() const {
+void TMesh::Draw(EDrawType type) const {
     glBindVertexArray(Vao);
     TGlError::Assert("bind vao");
     try {
         if (Ebo == 0) {
-            glDrawArrays(GL_TRIANGLES, 0, VertexCount);
+            glDrawArrays(static_cast<GLenum>(type), 0, VertexCount);
             TGlError::Assert("draw arrays");
         } else {
-            glDrawElements(GL_TRIANGLES, IndexCount, GL_UNSIGNED_INT, nullptr);
+            glDrawElements(static_cast<GLenum>(type), IndexCount, GL_UNSIGNED_INT, nullptr);
             TGlError::Assert("draw elements");
         }
     } catch (...) {
@@ -189,3 +189,26 @@ void TMesh::Draw() const {
     TGlError::Assert("unbind vao");
 }
 
+TVertexBufferMapper::TVertexBufferMapper(TMesh &mesh) {
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.Vbo);
+    TGlError::Assert("bind array buffer while map");
+    try {
+        Data = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+        TGlError::Assert("map array buffer");
+    } catch (...) {
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        throw;
+    }
+}
+
+TVertexBufferMapper::TVertexBufferMapper(TVertexBufferMapper &&src) noexcept
+    : Data(src.Data) {
+    src.Data = nullptr;
+}
+
+TVertexBufferMapper::~TVertexBufferMapper() {
+    if (Data != nullptr) {
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+}

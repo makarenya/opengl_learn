@@ -8,12 +8,14 @@ class TShaderProgram {
 private:
     GLuint Program;
 public:
-    TShaderProgram(const std::string &vertexFilename, const std::string &fragmentFilename);
+    TShaderProgram(const std::string &vertexFilename,
+                   const std::string &fragmentFilename,
+                   const std::string &geometryFilename = {});
     TShaderProgram(const TShaderProgram &) = delete;
     TShaderProgram &operator=(const TShaderProgram &) = delete;
     ~TShaderProgram();
     [[nodiscard]] GLuint GetProgram() const { return Program; }
-    TShaderProgram &&Block(const std::string &name, const TUniformBindingBase& binding);
+    TShaderProgram &&Block(const std::string &name, const TUniformBindingBase &binding);
 
 private:
     static GLuint CreateShader(GLenum type, const std::string &name, const std::string &filename);
