@@ -17,8 +17,8 @@ private:
         glm::mat4 view;
     };
 
-    TUniformBuffer<TProjectionView> ProjectionView;
-    TUniformConnector Connector{{&ProjectionView}};
+    TUniformBinding<TProjectionView> ProjectionView;
+    TUniformBuffer Connector{&ProjectionView};
     TSceneShader SceneShader{};
     TLightShader LightShader{};
     TSilhouetteShader SilhouetteShader{};
@@ -95,9 +95,9 @@ private:
 public:
     TScene(int width, int height)
         : FrameBuffer(width, height, true) {
-        ProjectionView.Bind(SceneShader, "Matrices");
-        ProjectionView.Bind(LightShader, "Matrices");
-        ProjectionView.Bind(SilhouetteShader, "Matrices");
+        SceneShader.Block("Matrices", ProjectionView);
+        LightShader.Block("Matrices", ProjectionView);
+        SilhouetteShader.Block("Matrices", ProjectionView);
     }
 
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position);

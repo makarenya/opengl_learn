@@ -2,7 +2,7 @@
 #include <vector>
 #include <map>
 #include <glm/fwd.hpp>
-
+#include "uniform_buffer.h"
 
 class TShaderProgram {
 private:
@@ -13,6 +13,7 @@ public:
     TShaderProgram &operator=(const TShaderProgram &) = delete;
     ~TShaderProgram();
     [[nodiscard]] GLuint GetProgram() const { return Program; }
+    TShaderProgram &&Block(const std::string &name, const TUniformBindingBase& binding);
 
 private:
     static GLuint CreateShader(GLenum type, const std::string &name, const std::string &filename);

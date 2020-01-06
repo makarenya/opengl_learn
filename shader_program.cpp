@@ -23,6 +23,15 @@ TProgramSetup::~TProgramSetup() {
     }
 }
 
+TShaderProgram &&TShaderProgram::Block(const std::string &name, const TUniformBindingBase& binding) {
+    auto id = glGetUniformBlockIndex(Program, name.c_str());
+    TGlError::Assert("block index for " + name);
+    if (id < 0) throw TGlBaseError("can't find block index for " + name);
+    glUniformBlockBinding(Program, id, binding.GetIndex());
+    TGlError::Assert("uniform block binding for" + name);
+    return std::move(*this);
+}
+
 TProgramSetup &&TProgramSetup::Texture(const std::string& name, GLenum type) {
     int index = Textures.size();
     glUniform1i(Location(name), index);
