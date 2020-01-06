@@ -11,11 +11,9 @@ public:
 
 class TSkyboxSetup: public TProgramSetup {
 public:
-    TSkyboxSetup(const TSkyboxShader &shader, glm::mat4 projection, glm::mat4 view)
+    TSkyboxSetup(const TSkyboxShader &shader)
         : TProgramSetup(shader) {
         Texture("material.skybox", GL_TEXTURE_CUBE_MAP);
-        Set("projection", projection);
-        Set("view", glm::mat4(glm::mat3(view)));
     }
 };
 

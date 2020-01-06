@@ -13,14 +13,12 @@ private:
     int SpotCount{};
 
 public:
-    TSceneSetup(const TSceneShader &shader, glm::mat4 projection, glm::mat4 view, glm::vec3 viewPos)
+    TSceneSetup(const TSceneShader &shader, glm::vec3 viewPos)
         : TProgramSetup(shader) {
         Texture("material.diffuse_map", GL_TEXTURE_2D);
         Texture("material.specular_map", GL_TEXTURE_2D);
         Texture("material.shiness_map", GL_TEXTURE_2D);
         Texture("material.skybox", GL_TEXTURE_CUBE_MAP);
-        Set("projection", projection);
-        Set("view", view);
         Set("viewPos", viewPos);
     }
 

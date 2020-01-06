@@ -10,10 +10,8 @@ public:
 
 class TLightSetup: public TProgramSetup {
 public:
-    TLightSetup(const TLightShader &shader, glm::mat4 projection, glm::mat4 view)
+    TLightSetup(const TLightShader &shader)
         : TProgramSetup(shader) {
-        Set("projection", projection);
-        Set("view", view);
     }
 
     TLightSetup &&Model(glm::mat4 model) {

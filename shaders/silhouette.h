@@ -11,10 +11,8 @@ public:
 
 class TSilhouetteSetup: public TProgramSetup {
 public:
-    TSilhouetteSetup(const TSilhouetteShader &shader, glm::mat4 projection, glm::mat4 view)
+    TSilhouetteSetup(const TSilhouetteShader &shader)
         : TProgramSetup(shader) {
-        Set("projection", projection);
-        Set("view", view);
     }
 
     TSilhouetteSetup &&Model(glm::mat4 model) {

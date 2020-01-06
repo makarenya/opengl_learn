@@ -1,4 +1,5 @@
 #include "model_loader.h"
+#include "uniform_buffer.h"
 #include "shaders/scene.h"
 #include "shaders/light.h"
 #include "shaders/border.h"
@@ -11,6 +12,13 @@
 
 class TScene {
 private:
+    struct TProjectionView {
+        glm::mat4 projection;
+        glm::mat4 view;
+    };
+
+    TUniformBuffer<TProjectionView> ProjectionView;
+    TUniformConnector Connector{{&ProjectionView}};
     TSceneShader SceneShader{};
     TLightShader LightShader{};
     TSilhouetteShader SilhouetteShader{};
@@ -87,14 +95,18 @@ private:
 public:
     TScene(int width, int height)
         : FrameBuffer(width, height, true) {
+        ProjectionView.Bind(SceneShader, "Matrices");
+        ProjectionView.Bind(LightShader, "Matrices");
+        ProjectionView.Bind(SilhouetteShader, "Matrices");
     }
+
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position);
 
 private:
     void SetupLights(TSceneSetup& setup, glm::vec3 position);
-    void DrawSkybox(glm::mat4 project, glm::mat4 view);
-    void DrawObjects(glm::mat4 project, glm::mat4 view, glm::vec3 position);
-    void DrawOpaques(glm::mat4 project, glm::mat4 view, glm::vec3 position);
-    void DrawLightCubes(glm::mat4 project, glm::mat4 view);
-    void DrawBorder(glm::mat4 project, glm::mat4 view, glm::vec3 position);
+    void DrawSkybox();
+    void DrawObjects(glm::vec3 position);
+    void DrawOpaques(glm::vec3 position);
+    void DrawLightCubes();
+    void DrawBorder();
 };

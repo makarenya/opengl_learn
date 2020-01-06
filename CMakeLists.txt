@@ -27,6 +27,8 @@ add_executable(opengl
         scene.cpp
         framebuffer.h
         framebuffer.cpp
+        uniform_buffer.h
+        uniform_buffer.cpp
         shaders/light.h
         shaders/scene.h
         shaders/border.h

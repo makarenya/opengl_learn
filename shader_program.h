@@ -12,6 +12,7 @@ public:
     TShaderProgram(const TShaderProgram &) = delete;
     TShaderProgram &operator=(const TShaderProgram &) = delete;
     ~TShaderProgram();
+    [[nodiscard]] GLuint GetProgram() const { return Program; }
 
 private:
     static GLuint CreateShader(GLenum type, const std::string &name, const std::string &filename);
