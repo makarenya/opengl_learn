@@ -21,7 +21,7 @@ void main() {
     );
 
     float result = 0;
-    float depth = .99;
+    float depth = 1.0;
     for (int y = 0; y < size * 2 + 1; y++) {
         for (int x = 0; x < size * 2 + 1; x++) {
             vec2 offset = vec2(x - size, y - size) * dpi;
