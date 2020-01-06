@@ -34,8 +34,8 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
     DrawObjects(position);
     DrawLightCubes();
 
-    DrawBorder();
     DrawSkybox();
+    DrawBorder();
     DrawOpaques(position);
 }
 
@@ -70,7 +70,7 @@ void TScene::DrawObjects(glm::vec3 position) {
     setup.Reflection(0.1);
     SimpleCube.Draw();
 
-    setup.Model(one<mat4>());
+    setup.Model(NConstMath::Translate(0, 0, -15));
     Suit.Draw(setup, [this, &setup](const std::string &name, const TMesh &mesh) {
         SkyTex.Bind(setup.Skybox());
         if (name == "Visor") {
@@ -105,7 +105,7 @@ void TScene::DrawBorder() {
     {
         TSilhouetteSetup setup(SilhouetteShader);
         auto binder = FrameBuffer.Bind();
-        setup.Model(one<mat4>());
+        setup.Model(NConstMath::Translate(0, 0, -15));
         Suit.Draw(setup);
     }
     {

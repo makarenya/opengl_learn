@@ -67,7 +67,7 @@ void kernel() {
 }
 
 void spot() {
-    float radius = 1.2;
+    float radius = 2.0;
     int size = static_cast<int>(std::ceil(radius - 0.5));
     float r2 = radius * radius;
     for (int y = 0; y < 2 * size + 1; y++) {
@@ -88,7 +88,7 @@ void spot() {
 }
 
 void program() {
-    kernel();
+    spot();
 
     if (glfwInit() != GLFW_TRUE) {
         throw TGlfwError("init");
