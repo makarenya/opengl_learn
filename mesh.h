@@ -34,10 +34,13 @@ class TMeshBuilder {
 private:
     GLuint Vbo{};
     GLuint Ebo{};
-    std::vector<std::tuple<GLenum, unsigned, unsigned>> Locations{};
+    GLuint InstanceVbo{};
+    std::vector<std::tuple<GLenum, unsigned, unsigned, unsigned>> Locations{};
     unsigned Stride{};
+    unsigned InstanceStride{};
     unsigned VertexCount{};
     unsigned IndexCount{};
+    unsigned InstanceCount{};
 
 public:
     TMeshBuilder() = default;
@@ -48,7 +51,8 @@ public:
 
     TMeshBuilder &&Vertices(EBufferUsage usage, const void *data, unsigned length, unsigned count);
     TMeshBuilder &&Indices(EBufferUsage usage, const void *data, unsigned length, unsigned count);
-    TMeshBuilder &&Layout(EDataType type, unsigned count);
+    TMeshBuilder &&Instances(EBufferUsage usage, const void *data, unsigned length, unsigned count);
+    TMeshBuilder &&Layout(EDataType type, unsigned count, unsigned divisor = 0);
 
     template<typename T>
     TMeshBuilder &&Vertices(EBufferUsage usage, const T &src) {
@@ -78,13 +82,16 @@ private:
     friend class TMesh;
 };
 
+
 class TMesh {
 private:
     GLuint Vao;
     GLuint Vbo;
     GLuint Ebo;
+    GLuint InstanceVbo;
     unsigned VertexCount;
     unsigned IndexCount;
+    unsigned InstanceCount;
 
 public:
     TMesh(TMeshBuilder &&builder);
@@ -95,12 +102,13 @@ public:
 
     void Draw(EDrawType type = EDrawType::Triangles) const;
     friend class TVertexBufferMapper;
+    friend class TInstanceBufferMapper;
 };
 
 class TVertexBufferMapper {
     void *Data;
 public:
-    explicit TVertexBufferMapper(TMesh &mesh);
+    explicit TVertexBufferMapper(TMesh &mesh, bool instances);
     TVertexBufferMapper(TVertexBufferMapper &&src) noexcept;
     ~TVertexBufferMapper();
     TVertexBufferMapper(const TVertexBufferMapper &) = delete;
@@ -111,4 +119,3 @@ public:
         return static_cast<T *>(Data);
     }
 };
-

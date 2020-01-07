@@ -37,7 +37,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
         double now = glfwGetTime();
         auto interval = static_cast<float>(now - LastParticleTime);
         LastParticleTime = now;
-        if (now - ExplosionCounter > 5) {
+        if (now - ExplosionCounter > 15) {
             ExplosionCounter = now;
         }
         ExplosionTime = now - ExplosionCounter;
@@ -47,14 +47,14 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
                                                             std::round(vdist(e2)),
                                                             std::round(dist(e2))));
         }
-        TVertexBufferMapper mapper(Points);
+        TVertexBufferMapper mapper(Points, true);
         auto p = mapper.Ptr<vec3>();
         for (int i = 0; i < CurrentParticles; ++i) {
             auto[pos, speed] = Particles[i];
             speed = vec3(speed.x, speed.y - gravity * interval, speed.z);
             if (speed.y < -3 * meter) {
                 vec3 add = 3.0f * vec3(Currents - Maxims / 2) / vec3(Maxims);
-                Particles[i] = make_tuple(vec3(0, 0, 0),
+                Particles[i] = make_tuple(vec3(0, std::round(dist(e2)), 0),
                                           vec3(std::round(dist(e2)), std::round(vdist(e2)), std::round(dist(e2)))
                                               + add);
                 Currents = {Currents.x >= Maxims.x - 1 ? 0 : Currents.x + 1,
@@ -68,8 +68,10 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
         }
     }
     TParticlesSetup setup(ParticlesShader);
+    setup.Skybox(SkyTex);
+    setup.ViewPos(position);
     setup.Model(one<mat4>());
-    Points.Draw(EDrawType::Points);
+    Points.Draw();
 }
 
 void TScene::DrawSkybox() {
@@ -121,8 +123,8 @@ void TScene::DrawObjects(glm::vec3 position) {
         setup.Model(NConstMath::Translate(0, 0, -15));
         Suit.Draw(setup, [this, &setup](const std::string &name, const TMesh &mesh) {
             SkyTex.Bind(setup.Skybox());
-            if (ExplosionTime > 4) {
-                setup.Explosion(std::sin((ExplosionTime - 4) * M_PI_4) * 10);
+            if (ExplosionTime > 14) {
+                setup.Explosion(std::sin((ExplosionTime - 14) * M_PI_4) * 20);
             } else {
                 setup.Explosion(0);
             }
@@ -135,11 +137,6 @@ void TScene::DrawObjects(glm::vec3 position) {
         });
         setup.Explosion(0);
         setup.NoReflectRefract();
-    }
-    {
-        TNormalsSetup setup(NormalsShader);
-        setup.Model(NConstMath::Translate(0, 0, -15));
-        Suit.Draw(setup);
     }
 }
 

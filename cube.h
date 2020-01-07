@@ -62,6 +62,7 @@ namespace NConstMath {
     }
 
     constexpr double Sqrt(double x) {
+        if (x == 0) return 0;
         double a = x;
         for (int i = 0; i < 20; i++) {
             a = (a + x / a) / 2.0;
@@ -69,6 +70,11 @@ namespace NConstMath {
         return a;
     }
 
+    constexpr glm::vec2 Normalize(glm::vec2 v) {
+        double length = Sqrt(v.x * v.x + v.y * v.y);
+        return glm::vec2(v.x / length, v.y / length);
+
+    }
     constexpr glm::vec3 Normalize(glm::vec3 v) {
         double length = Sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
         return glm::vec3(v.x / length, v.y / length, v.z / length);
@@ -116,6 +122,26 @@ namespace NConstMath {
             0, 0, 0, 1
         };
     };
+
+    constexpr glm::mat4 RotateTo(glm::vec3 destination) {
+        glm::vec3 d = Normalize(destination);
+        if (d.z == 1 || d.z == -1) {
+            return glm::mat4{
+                1, 0, 0, 0,
+                0, 0, d.z, 0,
+                0, -d.z, 0, 0,
+                0, 0, 0, 1
+            };
+        } else {
+            float c = Sqrt(1 - d.z * d.z);
+            return glm::mat4{
+                d.y / c, d.x / c, 0, 0,
+                -d.x, d.y, d.z, 0,
+                d.x * d.z / c, - d.y * d.z / c, c, 0,
+                0, 0, 0, 1
+            };
+        }
+    }
 
     constexpr glm::mat4 Translate(double x, double y, double z) {
         return glm::mat4{
@@ -237,7 +263,7 @@ constexpr auto DoubleQuad(TGeomBuilder builder = {}) {
     constexpr int stride = (Normals ? 3 : 0) + (Texture ? 2 : 0) + 3 * 1.0f;
     std::array<GLfloat, 12 * stride> vertices{};
     size_t k = 0;
-    for (auto pset : { tuple(QuadPoints, vec3(0, 0, 1)), tuple(BackQuadPoints, vec3(0, 0, -1)) }) {
+    for (auto pset : {tuple(QuadPoints, vec3(0, 0, 1)), tuple(BackQuadPoints, vec3(0, 0, -1))}) {
         for (auto point : get<0>(pset)) {
             auto r = glm::vec3(std::get<0>(point), 0.0f) * builder.Size_ + pos;
             vertices[k++] = r.x;

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "mesh.h"
 #include "errors.h"
 
@@ -9,6 +10,9 @@ TMeshBuilder::~TMeshBuilder() {
     }
     if (Ebo != 0) {
         glDeleteBuffers(1, &Ebo);
+    }
+    if (InstanceVbo != 0) {
+        glDeleteBuffers(1, &InstanceVbo);
     }
 }
 
@@ -48,14 +52,33 @@ TMeshBuilder &&TMeshBuilder::Indices(EBufferUsage usage, const void *data, unsig
     return std::move(*this);
 }
 
-TMeshBuilder &&TMeshBuilder::Layout(EDataType type, unsigned count) {
+TMeshBuilder &&TMeshBuilder::Instances(EBufferUsage usage, const void *data, unsigned length, unsigned count) {
+    glGenBuffers(1, &InstanceVbo);
+    TGlError::Assert("gen instance vbo");
+    try {
+        glBindBuffer(GL_ARRAY_BUFFER, InstanceVbo);
+        TGlError::Assert("bind instance vbo");
+        glBufferData(GL_ARRAY_BUFFER, length, data, OpenGlAccess(usage));
+        TGlError::Assert("instance vbo data");
+        InstanceCount = count;
+    } catch (...) {
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        throw;
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    TGlError::Assert("unbind instance vbo");
+    return std::move(*this);
+}
+
+TMeshBuilder &&TMeshBuilder::Layout(EDataType type, unsigned count, unsigned divisor) {
     size_t length = count * DataSize(type);
-    Locations.emplace_back(std::forward_as_tuple(OpenGlDataType(type), length, count));
-    Stride += length;
+    Locations.emplace_back(std::forward_as_tuple(OpenGlDataType(type), length, count, divisor));
+    (divisor == 0 ? Stride : InstanceStride) += length;
     return std::move(*this);
 }
 
 GLuint TMeshBuilder::BuildVao() {
+    std::cout << "build vao" << std::endl;
     GLuint vao;
     glGenVertexArrays(1, &vao);
     TGlError::Assert("gen vao");
@@ -67,23 +90,39 @@ GLuint TMeshBuilder::BuildVao() {
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo);
                 TGlError::Assert("bind ebo");
             }
-            glBindBuffer(GL_ARRAY_BUFFER, Vbo);
-            TGlError::Assert("bind vbo");
             GLubyte *offset = nullptr;
-            for (size_t i = 0; i < Locations.size(); ++i) {
-                GLenum dataType = std::get<0>(Locations[i]);
-                size_t length = std::get<1>(Locations[i]);
-                size_t count = std::get<2>(Locations[i]);
+            GLubyte *instanceOffset = nullptr;
+            int location = 0;
+            for (auto[dataType, length, count, divisor] : Locations) {
+                if (divisor > 0) {
+                    glBindBuffer(GL_ARRAY_BUFFER, InstanceVbo);
+                    TGlError::Assert("bind instance vbo while build");
 
-                glVertexAttribPointer(i, count, dataType, GL_FALSE, Stride, offset);
-                TGlError::Assert("vertex attrib pointer");
+                    glVertexAttribPointer(location, count, dataType, GL_FALSE, InstanceStride, instanceOffset);
+                    TGlError::Assert("vertex attrib pointer");
+                    instanceOffset += length;
+                } else {
+                    glBindBuffer(GL_ARRAY_BUFFER, Vbo);
+                    TGlError::Assert("bind vbo while build");
 
-                glEnableVertexAttribArray(i);
+                    std::cout << "location " << location << " count " << count << " data type " << dataType
+                              << " stride " << Stride << " offset " << reinterpret_cast<size_t>(offset) << endl;
+                    glVertexAttribPointer(location, count, dataType, GL_FALSE, Stride, offset);
+                    TGlError::Assert("vertex attrib pointer");
+                    offset += length;
+                }
+
+                glVertexAttribDivisor(location, divisor);
+                TGlError::Assert("attrib divisor");
+
+                glEnableVertexAttribArray(location);
                 TGlError::Assert("enable vertex attrib array");
-                offset += length;
+                location++;
             }
             glBindVertexArray(0);
+            TGlError::Assert("unbind vao while build");
             glBindBuffer(GL_ARRAY_BUFFER, 0);
+            TGlError::Assert("unbind vbo while build");
             if (Ebo != 0) {
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
             }
@@ -140,21 +179,27 @@ TMesh::TMesh(TMeshBuilder &&builder)
     : Vao(builder.BuildVao())
       , Vbo(builder.Vbo)
       , Ebo(builder.Ebo)
+      , InstanceVbo(builder.InstanceVbo)
       , VertexCount(builder.VertexCount)
-      , IndexCount(builder.IndexCount) {
+      , IndexCount(builder.IndexCount)
+      , InstanceCount(builder.InstanceCount) {
     builder.Vbo = 0;
     builder.Ebo = 0;
+    builder.InstanceVbo = 0;
 }
 
 TMesh::TMesh(TMesh &&src) noexcept
     : Vao(src.Vao)
       , Vbo(src.Vbo)
       , Ebo(src.Ebo)
+      , InstanceVbo(src.InstanceVbo)
       , VertexCount(src.VertexCount)
-      , IndexCount(src.IndexCount) {
+      , IndexCount(src.IndexCount)
+      , InstanceCount(src.InstanceCount) {
     src.Vao = 0;
     src.Vbo = 0;
     src.Ebo = 0;
+    src.InstanceVbo = 0;
 }
 
 TMesh::~TMesh() {
@@ -167,6 +212,9 @@ TMesh::~TMesh() {
     if (Vao != 0) {
         glDeleteVertexArrays(1, &Vao);
     }
+    if (InstanceVbo != 0) {
+        glDeleteBuffers(1, &InstanceVbo);
+    }
     TGlError::Skip();
 }
 
@@ -175,10 +223,18 @@ void TMesh::Draw(EDrawType type) const {
     TGlError::Assert("bind vao");
     try {
         if (Ebo == 0) {
-            glDrawArrays(static_cast<GLenum>(type), 0, VertexCount);
+            if (InstanceCount > 0) {
+                glDrawArraysInstanced(static_cast<GLenum>(type), 0, VertexCount, InstanceCount);
+            } else {
+                glDrawArrays(static_cast<GLenum>(type), 0, VertexCount);
+            }
             TGlError::Assert("draw arrays");
         } else {
-            glDrawElements(static_cast<GLenum>(type), IndexCount, GL_UNSIGNED_INT, nullptr);
+            if (InstanceCount > 0) {
+                glDrawElementsInstanced(static_cast<GLenum>(type), IndexCount, GL_UNSIGNED_INT, nullptr, InstanceCount);
+            } else {
+                glDrawElements(static_cast<GLenum>(type), IndexCount, GL_UNSIGNED_INT, nullptr);
+            }
             TGlError::Assert("draw elements");
         }
     } catch (...) {
@@ -189,8 +245,8 @@ void TMesh::Draw(EDrawType type) const {
     TGlError::Assert("unbind vao");
 }
 
-TVertexBufferMapper::TVertexBufferMapper(TMesh &mesh) {
-    glBindBuffer(GL_ARRAY_BUFFER, mesh.Vbo);
+TVertexBufferMapper::TVertexBufferMapper(TMesh &mesh, bool instances) {
+    glBindBuffer(GL_ARRAY_BUFFER, instances ? mesh.InstanceVbo : mesh.Vbo);
     TGlError::Assert("bind array buffer while map");
     try {
         Data = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);

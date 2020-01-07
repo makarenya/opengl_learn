@@ -109,7 +109,7 @@ private:
     TSkyboxShader SkyboxShader{};
     TParticlesShader ParticlesShader{};
     TNormalsShader NormalsShader{};
-    std::array<std::tuple<glm::vec3, glm::vec3>, 3000> Particles;
+    std::array<std::tuple<glm::vec3, glm::vec3>, 10000> Particles;
     int CurrentParticles = 0;
     double LastParticleTime = NAN;
     const glm::ivec3 Maxims{53, 37, 47};
@@ -162,9 +162,12 @@ private:
             .Layout(EDataType::Float, 2)};
     TMesh Points{
         TMeshBuilder()
-            .Vertices(EBufferUsage::Stream, nullptr, sizeof(float) * 6 * Particles.size(), 6 * Particles.size())
+            .Vertices(EBufferUsage::Static, Cube<true, false>(TGeomBuilder().SetSize(.05)))
+            .Instances(EBufferUsage::Stream, nullptr, sizeof(float) * 6 * Particles.size(), 6 * Particles.size())
             .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 3)};
+            .Layout(EDataType::Float, 3)
+            .Layout(EDataType::Float, 3, 1)
+            .Layout(EDataType::Float, 3, 1)};
     TMesh QuadPoly{
         TMeshBuilder()
             .Vertices(EBufferUsage::Static, DoubleQuad())
@@ -173,6 +176,7 @@ private:
             .Layout(EDataType::Float, 2)};
 
     TModel Suit{LoadMesh("nanosuit/nanosuit.obj")};
+    TModel Drop{LoadMesh("images/drop.obj")};
 
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {
         std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, 2.0f}, glm::vec3{1.0f, 0.2f, 0.1f}),
