@@ -106,11 +106,11 @@ TModel LoadMesh(const std::string &filename) {
             model.Mesh(
                 mesh->mName.C_Str(),
                 TMeshBuilder()
-                    .Vertices(EBufferUsage::Static, vertices)
-                    .Indices(EBufferUsage::Static, indexes)
-                    .Layout(EDataType::Float, 3)
-                    .Layout(EDataType::Float, 3)
-                    .Layout(EDataType::Float, 2),
+                    .SetVertices(EBufferUsage::Static, vertices)
+                    .SetIndices(EBufferUsage::Static, indexes)
+                    .AddLayout(EDataType::Float, 3)
+                    .AddLayout(EDataType::Float, 3)
+                    .AddLayout(EDataType::Float, 2),
                 material);
         }
     }

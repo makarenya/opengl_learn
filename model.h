@@ -16,14 +16,14 @@ public:
         Meshes.emplace_back(std::forward_as_tuple(std::move(meshBuilder), name, 0));
     }
 
-    TModel &&Material(const TMaterialBuilder &mat) {
+    TModel &Material(const TMaterialBuilder &mat) {
         Materials.emplace_back(mat);
-        return std::move(*this);
+        return *this;
     }
 
-    TModel &&Mesh(const std::string &name, TMeshBuilder &&builder, int material) {
-        Meshes.emplace_back(std::forward_as_tuple(std::move(builder), name, material));
-        return std::move(*this);
+    TModel &Mesh(const std::string &name, const TMeshBuilder &builder, int material) {
+        Meshes.emplace_back(std::forward_as_tuple(builder, name, material));
+        return *this;
     }
 
     void Draw(TProgramSetup &setup) const {
@@ -39,5 +39,9 @@ public:
             Materials[mat].Use(setup);
             fn(name, mesh);
         }
+    }
+
+    TMesh &GetMesh(int index) {
+        return std::get<0>(Meshes[index]);
     }
 };

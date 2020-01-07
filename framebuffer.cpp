@@ -14,13 +14,13 @@ TFrameBufferBinder::~TFrameBufferBinder() {
 TFrameBuffer::TFrameBuffer(int width, int height, bool depthAsTexture)
     : Mesh(
     TMeshBuilder()
-        .Vertices(EBufferUsage::Static, Quad<false, true>(
+        .SetVertices(EBufferUsage::Static, Quad<false, true>(
             TGeomBuilder()
                 .SetTextureMul(1, -1)
                 .SetTextureOffset(0, 1)
                 .SetSize(1.0f)))
-        .Layout(EDataType::Float, 3)
-        .Layout(EDataType::Float, 2))
+        .AddLayout(EDataType::Float, 3)
+        .AddLayout(EDataType::Float, 2))
       , Texture(TTextureBuilder()
                     .SetWrap(ETextureWrap::ClampToEdge)
                     .SetEmpty(width, height))

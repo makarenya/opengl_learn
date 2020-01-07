@@ -1,26 +1,17 @@
 #pragma once
-
-#include <GL/glew.h>
-#include <map>
-#include <string>
-#include <vector>
+#include "common.h"
+#include "buffer.h"
 #include "shader_program.h"
 
-enum struct EBufferUsage {
-    Static,
-    Dynamic,
-    Stream
-};
-
 enum struct EDataType {
-    Byte,
-    UByte,
-    Short,
-    UShort,
-    Int,
-    UInt,
-    Float,
-    Double
+    Byte = GL_BYTE,
+    UByte = GL_UNSIGNED_BYTE,
+    Short = GL_SHORT,
+    UShort = GL_UNSIGNED_SHORT,
+    Int = GL_INT,
+    UInt = GL_UNSIGNED_INT,
+    Float = GL_FLOAT,
+    Double = GL_DOUBLE
 };
 
 enum struct EDrawType {
@@ -28,94 +19,55 @@ enum struct EDrawType {
     Points = GL_POINTS,
 };
 
-class TMesh;
-
 class TMeshBuilder {
-private:
-    GLuint Vbo{};
-    GLuint Ebo{};
-    GLuint InstanceVbo{};
-    std::vector<std::tuple<GLenum, unsigned, unsigned, unsigned>> Locations{};
-    unsigned Stride{};
-    unsigned InstanceStride{};
-    unsigned VertexCount{};
-    unsigned IndexCount{};
-    unsigned InstanceCount{};
-
 public:
-    TMeshBuilder() = default;
-    ~TMeshBuilder();
-
-    TMeshBuilder(const TMeshBuilder &) = delete;
-    TMeshBuilder &operator=(const TMeshBuilder &) = delete;
-
-    TMeshBuilder &&Vertices(EBufferUsage usage, const void *data, unsigned length, unsigned count);
-    TMeshBuilder &&Indices(EBufferUsage usage, const void *data, unsigned length, unsigned count);
-    TMeshBuilder &&Instances(EBufferUsage usage, const void *data, unsigned length, unsigned count);
-    TMeshBuilder &&Layout(EDataType type, unsigned count, unsigned divisor = 0);
+    BUILDER_PROPERTY2(TArrayBuffer, unsigned, Vertices);
+    BUILDER_PROPERTY2(TIndexBuffer, unsigned, Indices);
+    BUILDER_PROPERTY2(TArrayBuffer, unsigned, Instances);
+    BUILDER_LIST3(EDataType, unsigned, unsigned, Layout);
 
     template<typename T>
-    TMeshBuilder &&Vertices(EBufferUsage usage, const T &src) {
-        return Vertices(usage, src.data(), sizeof(typename T::value_type) * src.size(), src.size());
-    }
-
-    template<typename T, int N>
-    TMeshBuilder &&Vertices(EBufferUsage usage, const T src[N]) {
-        return Vertices(usage, src, sizeof(T) * N);
+    TMeshBuilder &SetVertices(EBufferUsage usage, T &&src) {
+        SetVertices({usage, std::forward<T>(src)}, src.size());
+        return *this;
     }
 
     template<typename T>
-    TMeshBuilder &&Indices(EBufferUsage usage, const T &src) {
-        return Indices(usage, src.data(), sizeof(typename T::value_type) * src.size(), src.size());
+    TMeshBuilder &SetIndices(EBufferUsage usage, T &&src) {
+        SetIndices({usage, std::forward<T>(src)}, src.size());
+        return *this;
     }
 
-    template<typename T, int N>
-    TMeshBuilder &&Indices(EBufferUsage usage, const T src[N]) {
-        return Indices(usage, src, sizeof(T) * N);
+    template<typename T>
+    TMeshBuilder &SetInstances(EBufferUsage usage, T &&src) {
+        SetInstances({usage, std::forward<T>(src)}, src.size());
+        return *this;
     }
 
-private:
-    static GLenum OpenGlAccess(EBufferUsage usage);
-    static GLenum OpenGlDataType(EDataType type);
-    static GLenum DataSize(EDataType type);
-    GLuint BuildVao();
-    friend class TMesh;
+    TMeshBuilder &AddLayout(EDataType dataType, unsigned count) {
+        AddLayout(dataType, count, 0);
+        return *this;
+    }
 };
-
 
 class TMesh {
 private:
-    GLuint Vao;
-    GLuint Vbo;
-    GLuint Ebo;
-    GLuint InstanceVbo;
+    std::shared_ptr<GLuint> VertexArrayObject;
+    TArrayBuffer Vertices;
+    TIndexBuffer Indices;
+    TArrayBuffer Instances;
     unsigned VertexCount;
     unsigned IndexCount;
     unsigned InstanceCount;
 
 public:
-    TMesh(TMeshBuilder &&builder);
-    TMesh(TMesh &&src) noexcept;
-    ~TMesh();
-    TMesh(const TMesh &) = delete;
-    TMesh &operator=(const TMesh &) = delete;
-
+    TMesh(const TMeshBuilder &builder);
     void Draw(EDrawType type = EDrawType::Triangles) const;
-    friend class TVertexBufferMapper;
-    friend class TInstanceBufferMapper;
-};
 
-class TVertexBufferMapper {
-    void *Data;
-public:
-    explicit TVertexBufferMapper(TMesh &mesh, bool instances);
-    TVertexBufferMapper(TVertexBufferMapper &&src) noexcept;
-    ~TVertexBufferMapper();
-    TVertexBufferMapper(const TVertexBufferMapper &) = delete;
-    TVertexBufferMapper &operator=(const TVertexBufferMapper &) = delete;
-
-    template<typename T>
-    T *Ptr() {
-        return static_cast<T *>(Data);
-    }
+    [[nodiscard]] const TArrayBuffer &GetVertices() const { return Vertices; }
+    [[nodiscard]] const TIndexBuffer &GetIndices() const { return Indices; }
+    [[nodiscard]] const TArrayBuffer &GetInstances() const { return Instances; }
+    [[nodiscard]] unsigned GetVertexCount() const { return VertexCount; }
+    [[nodiscard]] unsigned GetIndexCount() const { return IndexCount; }
+    [[nodiscard]] unsigned GetInstanceCount() const { return InstanceCount; }
 };

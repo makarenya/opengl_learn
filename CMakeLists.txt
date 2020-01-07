@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(GLEW_USE_STATIC_LIBS TRUE)
 add_executable(opengl
         main.cpp
+        buffer.h
+        buffer.cpp
         common.h
         errors.h
         errors.cpp

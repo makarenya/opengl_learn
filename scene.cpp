@@ -46,8 +46,8 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
                                                             std::round(vdist(e2)),
                                                             std::round(dist(e2))));
         }
-        TVertexBufferMapper mapper(Points, true);
-        auto p = mapper.Ptr<vec3>();
+        TArrayBufferMapper<vec3> mapper(Points.GetInstances());
+        auto p = *mapper;
         for (int i = 0; i < CurrentParticles; ++i) {
             auto[pos, speed] = Particles[i];
             speed = vec3(speed.x, speed.y - gravity * interval, speed.z);
@@ -70,7 +70,8 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
     setup.Skybox(SkyTex);
     setup.ViewPos(position);
     setup.Model(one<mat4>());
-    Points.Draw();
+    //Points.Draw();
+    Drop.Draw(setup);
 }
 
 void TScene::DrawSkybox() {

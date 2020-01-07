@@ -142,42 +142,43 @@ private:
             .SetConstant("shiness", 64)};
     TMesh Sky{
         TMeshBuilder()
-            .Vertices(EBufferUsage::Static, Cube<false, false>(
+            .SetVertices(EBufferUsage::Static, Cube<false, false>(
                 TGeomBuilder().SetSize(1).SetBackward(true)))
-            .Layout(EDataType::Float, 3)};
+            .AddLayout(EDataType::Float, 3)};
     TMaterial Skybox{TMaterialBuilder().SetTexture("skybox", SkyTex)};
     TMaterial Grass{TMaterialBuilder().SetTexture("diffuse_map", TTextureBuilder().SetFile("images/grass.png"))};
     TMaterial Window{TMaterialBuilder().SetTexture("diffuse_map", TTextureBuilder().SetFile("images/window.png"))};
     TMesh GroundCube{
         TMeshBuilder()
-            .Vertices(EBufferUsage::Static, Cube(TGeomBuilder().SetTextureMul(10, 10)))
-            .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 2)};
+            .SetVertices(EBufferUsage::Static, Cube(TGeomBuilder().SetTextureMul(10, 10)))
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 2)};
     TMesh SimpleCube{
         TMeshBuilder()
-            .Vertices(EBufferUsage::Static, Cube())
-            .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 2)};
-    TMesh Points{
-        TMeshBuilder()
-            .Vertices(EBufferUsage::Static, Cube<true, false>(TGeomBuilder().SetSize(.05)))
-            .Instances(EBufferUsage::Stream, nullptr, sizeof(float) * 6 * Particles.size(), 6 * Particles.size())
-            .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 3, 1)
-            .Layout(EDataType::Float, 3, 1)};
+            .SetVertices(EBufferUsage::Static, Cube())
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 2)};
+
     TMesh QuadPoly{
         TMeshBuilder()
-            .Vertices(EBufferUsage::Static, DoubleQuad())
-            .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 3)
-            .Layout(EDataType::Float, 2)};
+            .SetVertices(EBufferUsage::Static, DoubleQuad())
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 2)};
 
     TModel Suit{LoadMesh("nanosuit/nanosuit.obj")};
     TModel Drop{LoadMesh("images/drop.obj")};
-
+    TMesh Points{
+        TMeshBuilder()
+            .SetVertices(Drop.GetMesh(0).GetVertices(), Drop.GetMesh(0).GetVertexCount())
+            .SetIndices(Drop.GetMesh(0).GetIndices(), Drop.GetMesh(0).GetIndexCount())
+            .SetInstances(TArrayBuffer(EBufferUsage::Stream, nullptr, sizeof(float) * 6 * Particles.size()), 6 * Particles.size())
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 3, 1)
+            .AddLayout(EDataType::Float, 3, 1)};
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {
         std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, 2.0f}, glm::vec3{1.0f, 0.2f, 0.1f}),
         std::forward_as_tuple(glm::vec3{2.0f, 2.0f, 40.0f}, glm::vec3{2.0f, 1.0f, 0.1f})
