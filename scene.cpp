@@ -15,8 +15,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
     SetupLights(position);
 
     glClearColor(.05, .01, .07, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    TGlError::Assert("clear");
+    GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 
     DrawObjects(position);
     DrawLightCubes();

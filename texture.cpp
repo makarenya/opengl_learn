@@ -39,8 +39,7 @@ void LoadTextureImage(const std::string &file, GLenum what, ETextureUsage usage)
     }
     try {
         auto format = static_cast<GLenum>(usage);
-        glTexImage2D(what, 0, format, width, height, 0, format, ByteFormat(usage), data);
-        TGlError::Assert("set texture image");
+        GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, format, ByteFormat(usage), data));
     } catch (...) {
         SOIL_free_image_data(data);
     }
@@ -53,26 +52,20 @@ void DropTexture(GLuint *texture) {
 
 GLuint CreateTexture(const TTextureBuilder& builder) {
     GLuint texture;
-    glGenTextures(1, &texture);
-    TGlError::Assert("gen texture");
+    GL_ASSERT(glGenTextures(1, &texture));
     try {
-        glBindTexture(GL_TEXTURE_2D, texture);
-        TGlError::Assert("bind texture while create");
+        GL_ASSERT(glBindTexture(GL_TEXTURE_2D, texture));
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, MinFilter(builder.MinLinear_, builder.Mipmap_));
-        TGlError::Assert("set texture min filter");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, MinFilter(builder.MinLinear_, builder.Mipmap_)));
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MagFilter(builder.MagLinear_));
-        TGlError::Assert("set texture mag filter");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MagFilter(builder.MagLinear_)));
 
         ETextureWrap wrapS = builder.WrapS_ == ETextureWrap::Undefined ? builder.Wrap_ : builder.WrapS_;
         ETextureWrap wrapT = builder.WrapT_ == ETextureWrap::Undefined ? builder.Wrap_ : builder.WrapT_;
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLenum>(wrapS));
-        TGlError::Assert("set texture wrap s");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLenum>(wrapS)));
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLenum>(wrapT));
-        TGlError::Assert("set texture wrap t");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, static_cast<GLenum>(wrapT)));
 
         if (!builder.File_.empty()) {
             LoadTextureImage(builder.File_, GL_TEXTURE_2D, builder.Usage_);
@@ -80,15 +73,12 @@ GLuint CreateTexture(const TTextureBuilder& builder) {
             int width, height;
             std::tie(width, height) = builder.Empty_;
             auto format = static_cast<GLenum>(builder.Usage_);
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, ByteFormat(builder.Usage_), nullptr);
+            GL_ASSERT(glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, ByteFormat(builder.Usage_), nullptr));
         }
-
-        TGlError::Assert("set texture image");
         if (builder.Mipmap_ != ETextureMipmap::None) {
-            glGenerateMipmap(GL_TEXTURE_2D);
-            TGlError::Assert("generate mipmap");
+            GL_ASSERT(glGenerateMipmap(GL_TEXTURE_2D));
         }
-        glBindTexture(GL_TEXTURE_2D, 0);
+        GL_ASSERT(glBindTexture(GL_TEXTURE_2D, 0));
     } catch (...) {
         glBindTexture(GL_TEXTURE_2D, 0);
         glDeleteTextures(1, &texture);
@@ -104,34 +94,25 @@ TTexture::TTexture(const TTextureBuilder &builder)
 
 void TTexture::Bind(int location) const {
     if (location < 0) return;
-    glActiveTexture(GL_TEXTURE0 + location);
-    TGlError::Assert("activate bind texture");
-    glBindTexture(GL_TEXTURE_2D, *Texture);
-    TGlError::Assert("process bind texture");
+    GL_ASSERT(glActiveTexture(GL_TEXTURE0 + location));
+    GL_ASSERT(glBindTexture(GL_TEXTURE_2D, *Texture));
 }
 
 GLuint CreateCubeTexture(const TCubeTextureBuilder& builder) {
     GLuint texture;
-    glGenTextures(1, &texture);
-    TGlError::Assert("gen texture");
+    GL_ASSERT(glGenTextures(1, &texture));
     try {
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
-        TGlError::Assert("bind texture while create");
+        GL_ASSERT(glBindTexture(GL_TEXTURE_CUBE_MAP, texture));
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, MinFilter(builder.MinLinear_, builder.Mipmap_));
-        TGlError::Assert("set texture min filter");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, MinFilter(builder.MinLinear_, builder.Mipmap_)));
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, MagFilter(builder.MagLinear_));
-        TGlError::Assert("set texture mag filter");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, MagFilter(builder.MagLinear_)));
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        TGlError::Assert("set texture wrap s");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        TGlError::Assert("set texture wrap t");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        TGlError::Assert("set texture wrap r");
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
 
         LoadTextureImage(builder.PosX_, GL_TEXTURE_CUBE_MAP_POSITIVE_X, builder.Usage_);
         LoadTextureImage(builder.NegX_, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, builder.Usage_);
@@ -140,8 +121,7 @@ GLuint CreateCubeTexture(const TCubeTextureBuilder& builder) {
         LoadTextureImage(builder.PosZ_, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, builder.Usage_);
         LoadTextureImage(builder.NegZ_, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, builder.Usage_);
         if (builder.Mipmap_ != ETextureMipmap::None) {
-            glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-            TGlError::Assert("generate mipmap");
+            GL_ASSERT(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));
         }
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     } catch (...) {
@@ -159,8 +139,6 @@ TCubeTexture::TCubeTexture(const TCubeTextureBuilder &builder)
 
 void TCubeTexture::Bind(int location) const {
     if (location < 0) return;
-    glActiveTexture(GL_TEXTURE0 + location);
-    TGlError::Assert("activate bind texture");
-    glBindTexture(GL_TEXTURE_CUBE_MAP, *Texture);
-    TGlError::Assert("process bind texture");
+    GL_ASSERT(glActiveTexture(GL_TEXTURE0 + location));
+    GL_ASSERT(glBindTexture(GL_TEXTURE_CUBE_MAP, *Texture));
 }

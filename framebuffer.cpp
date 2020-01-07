@@ -71,17 +71,11 @@ void TFrameBuffer::Draw(TProgramSetup &setup) {
 }
 
 void TFrameBuffer::MakeRenderBuffer(int width, int height) {
-    glGenRenderbuffers(1, &RenderBuffer);
-    TGlError::Assert("gen renderbuffer");
+    GL_ASSERT(glGenRenderbuffers(1, &RenderBuffer));
     try {
-        glBindRenderbuffer(GL_RENDERBUFFER, RenderBuffer);
-        TGlError::Assert("bind renderbuffer");
-
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        TGlError::Assert("set renderbuffer storage");
-
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        TGlError::Assert("unbind renderbuffer");
+        GL_ASSERT(glBindRenderbuffer(GL_RENDERBUFFER, RenderBuffer));
+        GL_ASSERT(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height));
+        GL_ASSERT(glBindRenderbuffer(GL_RENDERBUFFER, 0));
     } catch (...) {
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         throw;
@@ -90,21 +84,14 @@ void TFrameBuffer::MakeRenderBuffer(int width, int height) {
 
 void TFrameBuffer::MakeFrameBuffer(bool depthAsTexture) {
     try {
-        glGenFramebuffers(1, &FrameBuffer);
-        TGlError::Assert("gen framebuffer");
-
-        glBindFramebuffer(GL_FRAMEBUFFER, FrameBuffer);
-        TGlError::Assert("bind framebuffer");
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, Texture.GetTexture(), 0);
-        TGlError::Assert("bind texture to framebuffer");
+        GL_ASSERT(glGenFramebuffers(1, &FrameBuffer));
+        GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, FrameBuffer));
+        GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, Texture.GetTexture(), 0));
 
         if (depthAsTexture) {
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, DepthTexture->GetTexture(), 0);
-            TGlError::Assert("bind texture to framebuffer");
+            GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, DepthTexture->GetTexture(), 0));
         } else {
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RenderBuffer);
-            TGlError::Assert("bind renderbuffer to framebuffer");
+            GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RenderBuffer));
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -114,6 +101,5 @@ void TFrameBuffer::MakeFrameBuffer(bool depthAsTexture) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         throw;
     }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    TGlError::Assert("unbind framebuffer");
+    GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }

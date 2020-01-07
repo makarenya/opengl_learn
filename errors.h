@@ -59,3 +59,12 @@ private:
 
     static std::string ErrorMessage(int code, const std::string &context);
 };
+
+template<typename T>
+T &&ReturnGlAssert(T &&value, std::string file, int line) {
+    TGlError::Assert(file + ": " + std::to_string(line));
+    return std::forward<T>(value);
+}
+
+#define GL_ASSERT(EQ) (EQ); TGlError::Assert(std::string(__FILE__) + ": " + std::to_string(__LINE__))
+#define GL_ASSERTR(EQ) ReturnGlAssert((EQ), __FILE__, __LINE__)

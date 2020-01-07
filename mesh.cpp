@@ -17,56 +17,44 @@ TMeshBuilder::~TMeshBuilder() {
 }
 
 TMeshBuilder &&TMeshBuilder::Vertices(EBufferUsage usage, const void *data, unsigned length, unsigned count) {
-    glGenBuffers(1, &Vbo);
-    TGlError::Assert("gen vbo");
+    GL_ASSERT(glGenBuffers(1, &Vbo));
     try {
-        glBindBuffer(GL_ARRAY_BUFFER, Vbo);
-        TGlError::Assert("bind vbo");
-        glBufferData(GL_ARRAY_BUFFER, length, data, OpenGlAccess(usage));
-        TGlError::Assert("vbo data");
+        GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, Vbo));
+        GL_ASSERT(glBufferData(GL_ARRAY_BUFFER, length, data, OpenGlAccess(usage)));
         VertexCount = count;
     } catch (...) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         throw;
     }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    TGlError::Assert("unbind vbo");
+    GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, 0));
     return std::move(*this);
 }
 
 TMeshBuilder &&TMeshBuilder::Indices(EBufferUsage usage, const void *data, unsigned length, unsigned count) {
-    glGenBuffers(1, &Ebo);
-    TGlError::Assert("gen ebo");
+    GL_ASSERT(glGenBuffers(1, &Ebo));
     try {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo);
-        TGlError::Assert("bind ebo");
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, length, data, OpenGlAccess(usage));
-        TGlError::Assert("ebo data");
+        GL_ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo));
+        GL_ASSERT(glBufferData(GL_ELEMENT_ARRAY_BUFFER, length, data, OpenGlAccess(usage)));
         IndexCount = count;
     } catch (...) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         throw;
     }
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    TGlError::Assert("unbind ebo");
+    GL_ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
     return std::move(*this);
 }
 
 TMeshBuilder &&TMeshBuilder::Instances(EBufferUsage usage, const void *data, unsigned length, unsigned count) {
-    glGenBuffers(1, &InstanceVbo);
-    TGlError::Assert("gen instance vbo");
+    GL_ASSERT(glGenBuffers(1, &InstanceVbo));
     try {
-        glBindBuffer(GL_ARRAY_BUFFER, InstanceVbo);
-        TGlError::Assert("bind instance vbo");
-        glBufferData(GL_ARRAY_BUFFER, length, data, OpenGlAccess(usage));
-        TGlError::Assert("instance vbo data");
+        GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, InstanceVbo));
+        GL_ASSERT(glBufferData(GL_ARRAY_BUFFER, length, data, OpenGlAccess(usage)));
         InstanceCount = count;
     } catch (...) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         throw;
     }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    TGlError::Assert("unbind instance vbo");
+    GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, 0));
     return std::move(*this);
 }
 
@@ -80,49 +68,38 @@ TMeshBuilder &&TMeshBuilder::Layout(EDataType type, unsigned count, unsigned div
 GLuint TMeshBuilder::BuildVao() {
     std::cout << "build vao" << std::endl;
     GLuint vao;
-    glGenVertexArrays(1, &vao);
-    TGlError::Assert("gen vao");
+    GL_ASSERT(glGenVertexArrays(1, &vao));
     try {
-        glBindVertexArray(vao);
-        TGlError::Assert("bind vao");
+        GL_ASSERT(glBindVertexArray(vao));
         try {
             if (Ebo != 0) {
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo);
-                TGlError::Assert("bind ebo");
+                GL_ASSERT(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Ebo));
             }
             GLubyte *offset = nullptr;
             GLubyte *instanceOffset = nullptr;
             int location = 0;
             for (auto[dataType, length, count, divisor] : Locations) {
                 if (divisor > 0) {
-                    glBindBuffer(GL_ARRAY_BUFFER, InstanceVbo);
-                    TGlError::Assert("bind instance vbo while build");
+                    GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, InstanceVbo));
 
-                    glVertexAttribPointer(location, count, dataType, GL_FALSE, InstanceStride, instanceOffset);
-                    TGlError::Assert("vertex attrib pointer");
+                    GL_ASSERT(glVertexAttribPointer(location, count, dataType, GL_FALSE, InstanceStride, instanceOffset));
                     instanceOffset += length;
                 } else {
-                    glBindBuffer(GL_ARRAY_BUFFER, Vbo);
-                    TGlError::Assert("bind vbo while build");
+                    GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, Vbo));
 
                     std::cout << "location " << location << " count " << count << " data type " << dataType
                               << " stride " << Stride << " offset " << reinterpret_cast<size_t>(offset) << endl;
-                    glVertexAttribPointer(location, count, dataType, GL_FALSE, Stride, offset);
-                    TGlError::Assert("vertex attrib pointer");
+                    GL_ASSERT(glVertexAttribPointer(location, count, dataType, GL_FALSE, Stride, offset));
                     offset += length;
                 }
 
-                glVertexAttribDivisor(location, divisor);
-                TGlError::Assert("attrib divisor");
+                GL_ASSERT(glVertexAttribDivisor(location, divisor));
 
-                glEnableVertexAttribArray(location);
-                TGlError::Assert("enable vertex attrib array");
+                GL_ASSERT(glEnableVertexAttribArray(location));
                 location++;
             }
-            glBindVertexArray(0);
-            TGlError::Assert("unbind vao while build");
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            TGlError::Assert("unbind vbo while build");
+            GL_ASSERT(glBindVertexArray(0));
+            GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, 0));
             if (Ebo != 0) {
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
             }
@@ -219,38 +196,32 @@ TMesh::~TMesh() {
 }
 
 void TMesh::Draw(EDrawType type) const {
-    glBindVertexArray(Vao);
-    TGlError::Assert("bind vao");
+    GL_ASSERT(glBindVertexArray(Vao));
     try {
         if (Ebo == 0) {
             if (InstanceCount > 0) {
-                glDrawArraysInstanced(static_cast<GLenum>(type), 0, VertexCount, InstanceCount);
+                GL_ASSERT(glDrawArraysInstanced(static_cast<GLenum>(type), 0, VertexCount, InstanceCount));
             } else {
-                glDrawArrays(static_cast<GLenum>(type), 0, VertexCount);
+                GL_ASSERT(glDrawArrays(static_cast<GLenum>(type), 0, VertexCount));
             }
-            TGlError::Assert("draw arrays");
         } else {
             if (InstanceCount > 0) {
-                glDrawElementsInstanced(static_cast<GLenum>(type), IndexCount, GL_UNSIGNED_INT, nullptr, InstanceCount);
+                GL_ASSERT(glDrawElementsInstanced(static_cast<GLenum>(type), IndexCount, GL_UNSIGNED_INT, nullptr, InstanceCount));
             } else {
-                glDrawElements(static_cast<GLenum>(type), IndexCount, GL_UNSIGNED_INT, nullptr);
+                GL_ASSERT(glDrawElements(static_cast<GLenum>(type), IndexCount, GL_UNSIGNED_INT, nullptr));
             }
-            TGlError::Assert("draw elements");
         }
     } catch (...) {
         glBindVertexArray(0);
         throw;
     }
-    glBindVertexArray(0);
-    TGlError::Assert("unbind vao");
+    GL_ASSERT(glBindVertexArray(0));
 }
 
 TVertexBufferMapper::TVertexBufferMapper(TMesh &mesh, bool instances) {
-    glBindBuffer(GL_ARRAY_BUFFER, instances ? mesh.InstanceVbo : mesh.Vbo);
-    TGlError::Assert("bind array buffer while map");
+    GL_ASSERT(glBindBuffer(GL_ARRAY_BUFFER, instances ? mesh.InstanceVbo : mesh.Vbo));
     try {
-        Data = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-        TGlError::Assert("map array buffer");
+        Data = GL_ASSERTR(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
     } catch (...) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         throw;

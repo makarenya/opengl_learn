@@ -1,13 +1,11 @@
 #include "uniform_buffer.h"
 
 void TUniformBindingBase::Write(const void *data) {
-    glBindBuffer(GL_UNIFORM_BUFFER, Buffer);
-    TGlError::Assert("bind buffer while set");
+    GL_ASSERT(glBindBuffer(GL_UNIFORM_BUFFER, Buffer));
 
     void* mapped{};
     try {
-        mapped = glMapBufferRange(GL_UNIFORM_BUFFER, Offset, Size, GL_MAP_WRITE_BIT);
-        TGlError::Assert("map buffer while set");
+        mapped = GL_ASSERTR(glMapBufferRange(GL_UNIFORM_BUFFER, Offset, Size, GL_MAP_WRITE_BIT));
         memcpy(mapped, data, Size);
         glUnmapBuffer(GL_UNIFORM_BUFFER);
     } catch (...) {
@@ -20,14 +18,12 @@ void TUniformBindingBase::Write(const void *data) {
 }
 
 void TUniformBindingBase::Read(void *data) {
-    glBindBuffer(GL_UNIFORM_BUFFER, Buffer);
-    TGlError::Assert("bind buffer while get");
+    GL_ASSERT(glBindBuffer(GL_UNIFORM_BUFFER, Buffer));
     const void* mapped{};
     try {
-        mapped = glMapBufferRange(GL_UNIFORM_BUFFER, Offset, Size, GL_MAP_READ_BIT);
-        TGlError::Assert("map buffer while get");
+        mapped = GL_ASSERTR(glMapBufferRange(GL_UNIFORM_BUFFER, Offset, Size, GL_MAP_READ_BIT));
         memcpy(data, mapped, Size);
-        glUnmapBuffer(GL_UNIFORM_BUFFER);
+        GL_ASSERT(glUnmapBuffer(GL_UNIFORM_BUFFER));
     } catch (...) {
         if (mapped != nullptr) {
             glUnmapBuffer(GL_UNIFORM_BUFFER);
@@ -41,8 +37,7 @@ TUniformBuffer::TUniformBuffer(std::initializer_list<TUniformBindingBase *> buff
     size_t total = 0;
     int index = 0;
     GLint align{};
-    glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &align);
-    TGlError::Assert("get buffer alignment");
+    GL_ASSERT(glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &align));
 
     for (auto &buffer : buffers) {
         buffer->Offset = total;
@@ -50,21 +45,16 @@ TUniformBuffer::TUniformBuffer(std::initializer_list<TUniformBindingBase *> buff
         total = ((total + buffer->Size - 1) / align + 1) * align;
     }
 
-    glGenBuffers(1, &Buffer);
-    TGlError::Assert("gen uniform buffer");
+    GL_ASSERT(glGenBuffers(1, &Buffer));
     try {
-        glBindBuffer(GL_UNIFORM_BUFFER, Buffer);
-        TGlError::Assert("bind uniform buffer");
+        GL_ASSERT(glBindBuffer(GL_UNIFORM_BUFFER, Buffer));
 
-        glBufferData(GL_UNIFORM_BUFFER, total + 2, nullptr, GL_DYNAMIC_DRAW);
-        TGlError::Assert("set uniform buffer data");
+        GL_ASSERT(glBufferData(GL_UNIFORM_BUFFER, total + 2, nullptr, GL_DYNAMIC_DRAW));
 
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-        TGlError::Assert("unbind uniform buffer");
+        GL_ASSERT(glBindBuffer(GL_UNIFORM_BUFFER, 0));
         for (auto &buffer : buffers) {
             buffer->Buffer = Buffer;
-            glBindBufferRange(GL_UNIFORM_BUFFER, buffer->BoundIndex, Buffer, buffer->Offset, buffer->Size);
-            TGlError::Assert("bind uniform buffer range");
+            GL_ASSERT(glBindBufferRange(GL_UNIFORM_BUFFER, buffer->BoundIndex, Buffer, buffer->Offset, buffer->Size));
         }
     } catch (...) {
         glBindBuffer(GL_UNIFORM_BUFFER, 0);

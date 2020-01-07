@@ -6,8 +6,7 @@
 
 TProgramSetup::TProgramSetup(const TShaderProgram &program)
     : Program(program.Program), Textures{} {
-    glUseProgram(Program);
-    TGlError::Assert("use program");
+    GL_ASSERT(glUseProgram(Program));
 }
 
 TProgramSetup::TProgramSetup(TProgramSetup &&src) noexcept {
@@ -24,11 +23,9 @@ TProgramSetup::~TProgramSetup() {
 }
 
 TShaderProgram &&TShaderProgram::Block(const std::string &name, const TUniformBindingBase &binding) {
-    auto id = glGetUniformBlockIndex(Program, name.c_str());
-    TGlError::Assert("block index for " + name);
+    auto id = GL_ASSERTR(glGetUniformBlockIndex(Program, name.c_str()));
     if (id < 0) throw TGlBaseError("can't find block index for " + name);
-    glUniformBlockBinding(Program, id, binding.GetIndex());
-    TGlError::Assert("uniform block binding for" + name);
+    GL_ASSERT(glUniformBlockBinding(Program, id, binding.GetIndex()));
     return std::move(*this);
 }
 
@@ -40,62 +37,52 @@ TProgramSetup &&TProgramSetup::Texture(const std::string &name, GLenum type) {
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, GLint value) {
-    glUniform1i(Location(name), value);
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniform1i(Location(name), value));
     return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, GLfloat value) {
-    glUniform1f(Location(name), value);
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniform1f(Location(name), value));
     return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, glm::vec2 value) {
-    glUniform2f(Location(name), value.x, value.y);
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniform2f(Location(name), value.x, value.y));
     return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, GLfloat x, GLfloat y) {
-    glUniform2f(Location(name), x, y);
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniform2f(Location(name), x, y));
     return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, GLfloat x, GLfloat y, GLfloat z) {
-    glUniform3f(Location(name), x, y, z);
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniform3f(Location(name), x, y, z));
     return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, glm::vec3 value) {
-    glUniform3f(Location(name), value.x, value.y, value.z);
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniform3f(Location(name), value.x, value.y, value.z));
     return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, GLfloat x, GLfloat y, GLfloat z, GLfloat w) {
-    glUniform4f(Location(name), x, y, z, w);
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniform4f(Location(name), x, y, z, w));
     return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, glm::vec4 value) {
-    glUniform4f(Location(name), value.x, value.y, value.z, value.w);
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniform4f(Location(name), value.x, value.y, value.z, value.w));
     return std::move(*this);
 }
 
 TProgramSetup &&TProgramSetup::Set(const std::string &name, const glm::mat4 &mat) {
-    glUniformMatrix4fv(Location(name), 1, GL_FALSE, glm::value_ptr(mat));
-    TGlError::Assert("set value " + name);
+    GL_ASSERT(glUniformMatrix4fv(Location(name), 1, GL_FALSE, glm::value_ptr(mat)));
     return std::move(*this);
 }
 
 bool TProgramSetup::Has(const std::string &name) const {
-    auto location = glGetUniformLocation(Program, name.c_str());
-    TGlError::Assert("uniform location " + name);
+    auto location = GL_ASSERTR(glGetUniformLocation(Program, name.c_str()));
     return location != -1;
 }
 
@@ -124,8 +111,7 @@ void TProgramSetup::FlushTextures() {
 }
 
 GLint TProgramSetup::Location(const std::string &name) {
-    auto location = glGetUniformLocation(Program, name.c_str());
-    TGlError::Assert("uniform location " + name);
+    auto location = GL_ASSERTR(glGetUniformLocation(Program, name.c_str()));
     if (location == -1) {
         throw TGlError("can't find location " + name);
     }
@@ -144,20 +130,16 @@ TShaderProgram::TShaderProgram(const std::string &vertexFilename,
     GLuint geometry{};
     try {
         vertex = CreateShader(GL_VERTEX_SHADER, "vertex", vertexFilename);
-        glAttachShader(Program, vertex);
-        TGlError::Assert("attach vertex shader");
+        GL_ASSERT(glAttachShader(Program, vertex));
 
         fragment = CreateShader(GL_FRAGMENT_SHADER, "fragment", fragmentFilename);
-        glAttachShader(Program, fragment);
-        TGlError::Assert("attach fragment shader");
+        GL_ASSERT(glAttachShader(Program, fragment));
 
         if (!geometryFilename.empty()) {
             geometry = CreateShader(GL_GEOMETRY_SHADER, "geometry", geometryFilename);
-            glAttachShader(Program, geometry);
-            TGlError::Assert("attach geometry shader");
+            GL_ASSERT(glAttachShader(Program, geometry));
         }
-        glLinkProgram(Program);
-        TGlError::Assert("link program");
+        GL_ASSERT(glLinkProgram(Program));
         GLint success;
         glGetProgramiv(Program, GL_LINK_STATUS, &success);
         if (success != GL_TRUE) {
@@ -197,13 +179,10 @@ GLuint TShaderProgram::CreateShader(GLenum type, const std::string &name, const 
             throw TGlBaseError("error loading " + name + " while " + e.what());
         }
         const char *line = code.c_str();
-        glShaderSource(shader, 1, &line, nullptr);
-        TGlError::Assert(name + " shader source");
-        glCompileShader(shader);
-        TGlError::Assert(name + " compile shader");
+        GL_ASSERT(glShaderSource(shader, 1, &line, nullptr));
+        GL_ASSERT(glCompileShader(shader));
         GLint status;
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-        TGlError::Assert("compile " + name + " shader");
+        GL_ASSERT(glGetShaderiv(shader, GL_COMPILE_STATUS, &status));
         if (status != GL_TRUE) {
             std::array<char, 512> infoLog{};
             glGetShaderInfoLog(shader, infoLog.size(), nullptr, infoLog.data());

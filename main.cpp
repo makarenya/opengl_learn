@@ -120,17 +120,11 @@ void program() {
             throw TGlewError(initResult, "init");
         }
 
-        glViewport(0, 0, mode->width, mode->height);
-        TGlError::Assert("gl viewport");
-
-        glEnable(GL_DEPTH_TEST);
-        TGlError::Assert("enable depth test");
-        //glEnable(GL_CULL_FACE);
-        TGlError::Assert("enable cull face test");
-        glEnable(GL_BLEND);
-        TGlError::Assert("enable blend");
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        TGlError::Assert("enable blend func");
+        GL_ASSERT(glViewport(0, 0, mode->width, mode->height));
+        GL_ASSERT(glEnable(GL_DEPTH_TEST));
+        GL_ASSERT(glEnable(GL_CULL_FACE));
+        GL_ASSERT(glEnable(GL_BLEND));
+        GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
         const float sensibility = .25f;
         const float speed = 10.0f;
@@ -148,7 +142,6 @@ void program() {
         TScene scene(mode->width, mode->height);
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
-            TGlError::Assert("poll events");
 
             if (!std::isnan(lastMouse.x) && !std::isnan(lastMouse.y)) {
                 auto rot = Mouse - lastMouse;
@@ -194,7 +187,6 @@ void program() {
             scene.Draw(project, view, position);
 
             glfwSwapBuffers(window);
-            TGlError::Assert("swap buffers");
         }
     } catch (TGlBaseError &) {
         glfwTerminate();
