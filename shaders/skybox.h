@@ -3,18 +3,33 @@
 #include "../shader_program.h"
 
 class TSkyboxShader: public TShaderProgram {
+private:
+    int SkyBox;
 public:
-    TSkyboxShader()
-        : TShaderProgram("shaders/skybox.vert", "shaders/skybox.frag") {
+    explicit TSkyboxShader(const TUniformBindingBase &matrices)
+        : TShaderProgram(
+        TShaderBuilder()
+            .SetVertex("shaders/skybox.vert")
+            .SetFragment("shaders/skybox.frag")
+            .SetBlock("Matrices", matrices))
+          , SkyBox(DefineTexture("skybox")) {
     }
+
+    friend class TSkyBoxSetup;
 };
 
-class TSkyboxSetup: public TProgramSetup {
+class TSkyBoxSetup: public TShaderSetup {
+private:
+    const TSkyboxShader *Shader;
+
 public:
-    TSkyboxSetup(const TSkyboxShader &shader)
-        : TProgramSetup(shader) {
-        Texture("material.skybox", GL_TEXTURE_CUBE_MAP);
+    explicit TSkyBoxSetup(const TSkyboxShader *shader)
+        : TShaderSetup(shader)
+          , Shader(shader) {
+    }
+
+    TSkyBoxSetup &&SetSkyBox(const TTexture &texture) {
+        Set(Shader->SkyBox, texture);
+        return std::move(*this);
     }
 };
-
-

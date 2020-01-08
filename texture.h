@@ -2,6 +2,10 @@
 #include "common.h"
 #include <array>
 
+enum struct ETextureType {
+    Flat = GL_TEXTURE_2D,
+    Cube = GL_TEXTURE_CUBE_MAP,
+};
 
 enum struct ETextureMipmap {
     None,
@@ -36,22 +40,6 @@ public:
     BUILDER_PROPERTY(std::string, File);
     BUILDER_PROPERTY(glm::vec4, BorderColor);
     BUILDER_PROPERTY2(unsigned, unsigned, Empty){0, 0};
-
-    BUILDER_PROPERTY(std::string, PosX);
-    BUILDER_PROPERTY(std::string, NegX);
-    BUILDER_PROPERTY(std::string, PosY);
-    BUILDER_PROPERTY(std::string, NegY);
-    BUILDER_PROPERTY(std::string, PosZ);
-    BUILDER_PROPERTY(std::string, NegZ);
-};
-
-class TTexture {
-private:
-    std::shared_ptr<GLuint> Texture;
-public:
-    TTexture(const TTextureBuilder &builder);
-    GLuint GetTexture() const { return *Texture; }
-    void Bind(int location) const ;
 };
 
 class TCubeTextureBuilder {
@@ -68,10 +56,29 @@ public:
     BUILDER_PROPERTY(std::string, NegZ);
 };
 
-class TCubeTexture {
+class TTexture {
 private:
     std::shared_ptr<GLuint> Texture;
+    ETextureType Type;
+
 public:
-    TCubeTexture(const TCubeTextureBuilder &builder);
-    void Bind(int location) const;
+    TTexture() = default;
+    TTexture(const TTextureBuilder &builder);
+    TTexture(const TCubeTextureBuilder &builder);
+    [[nodiscard]] bool Empty() const { return !Texture; }
+    GLuint GetTexture() const { return *Texture; }
+    friend class TTextureBinder;
+};
+
+class TTextureBinder {
+private:
+    std::array<std::optional<ETextureType>, 32> Textures;
+
+public:
+    TTextureBinder() = default;
+    ~TTextureBinder();
+    TTextureBinder(TTextureBinder &&src) noexcept;
+    TTextureBinder(const TTextureBinder &) = delete;
+    TTextureBinder &operator=(const TTextureBinder &) = delete;
+    void Attach(const TTexture &texture, int index);
 };

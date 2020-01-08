@@ -3,20 +3,47 @@
 #include "../shader_program.h"
 
 class TNormalsShader: public TShaderProgram {
+private:
+    GLint Model;
 public:
-    TNormalsShader()
-        : TShaderProgram("shaders/normals.vert", "shaders/normals.frag", "shaders/normals.geom") {
+    explicit TNormalsShader(const TUniformBindingBase &matrices)
+        : TShaderProgram(
+        TShaderBuilder()
+            .SetVertex("shaders/normals.vert")
+            .SetFragment("shaders/normals.frag")
+            .SetGeometry("shaders/normals.geom")
+            .SetBlock("Matrices", matrices))
+          , Model(DefineProp("model")) {
     }
+
+    friend class TNormalsSetup;
 };
 
-class TNormalsSetup: public TProgramSetup {
+class TNormalsSetup: public TShaderSetup {
+private:
+    const TNormalsShader *Shader;
+
 public:
-    TNormalsSetup(const TNormalsShader &shader)
-        : TProgramSetup(shader) {
+    explicit TNormalsSetup(const TNormalsShader *shader) : TShaderSetup(shader), Shader(shader) {
     }
 
-    TNormalsSetup &&Model(glm::mat4 model) {
-        Set("model", model);
+    TNormalsSetup(TNormalsSetup &&src) noexcept
+        : TShaderSetup(std::move(src))
+          , Shader(src.Shader) {
+        src.Shader = nullptr;
+    }
+
+    ~TNormalsSetup() override {
+        if (Shader != nullptr) {
+            try {
+                Set(Shader->Model, glm::mat4(0));
+            } catch (...) {
+            }
+        }
+    }
+
+    TNormalsSetup &&SetModel(glm::mat4 model) {
+        Set(Shader->Model, model);
         return std::move(*this);
     }
 };

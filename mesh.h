@@ -1,7 +1,6 @@
 #pragma once
 #include "common.h"
 #include "buffer.h"
-#include "shader_program.h"
 
 enum struct EDataType {
     Byte = GL_BYTE,
@@ -50,6 +49,23 @@ public:
     }
 };
 
+class TInstanceMeshBuilder {
+public:
+    BUILDER_PROPERTY2(TArrayBuffer, unsigned, Instances);
+    BUILDER_LIST3(EDataType, unsigned, unsigned, Layout);
+
+    template<typename T>
+    TInstanceMeshBuilder &SetInstances(EBufferUsage usage, T &&src) {
+        SetInstances({usage, std::forward<T>(src)}, src.size());
+        return *this;
+    }
+
+    TInstanceMeshBuilder &AddLayout(EDataType dataType, unsigned count) {
+        AddLayout(dataType, count, 0);
+        return *this;
+    }
+};
+
 class TMesh {
 private:
     std::shared_ptr<GLuint> VertexArrayObject;
@@ -59,9 +75,11 @@ private:
     unsigned VertexCount;
     unsigned IndexCount;
     unsigned InstanceCount;
+    std::vector<std::tuple<EDataType, unsigned, unsigned>> Layout;
 
 public:
     TMesh(const TMeshBuilder &builder);
+    TMesh(const TMesh &mesh, const TInstanceMeshBuilder &builder);
     void Draw(EDrawType type = EDrawType::Triangles) const;
 
     [[nodiscard]] const TArrayBuffer &GetVertices() const { return Vertices; }

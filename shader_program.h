@@ -1,65 +1,86 @@
 #pragma once
-#include <vector>
-#include <map>
-#include <glm/fwd.hpp>
+#include "common.h"
 #include "uniform_buffer.h"
+#include "texture.h"
+#include "material.h"
+
+class TShaderBuilder {
+public:
+    BUILDER_PROPERTY(std::string, Vertex);
+    BUILDER_PROPERTY(std::string, Fragment);
+    BUILDER_PROPERTY(std::string, Geometry);
+    BUILDER_MAP(std::string, EMaterialProp, Texture){};
+    BUILDER_MAP(std::string, EMaterialProp, Color){};
+    BUILDER_MAP(std::string, EMaterialProp, Constant){};
+    BUILDER_MAP(std::string, TUniformBindingBase, Block){};
+};
 
 class TShaderProgram {
 private:
     GLuint Program;
+    std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Textures{};
+    std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Colors{};
+    std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Constants{};
+    std::array<GLint, 32> Bound{};
+    int TexturesCount = 1;
+
 public:
-    TShaderProgram(const std::string &vertexFilename,
-                   const std::string &fragmentFilename,
-                   const std::string &geometryFilename = {});
+    TShaderProgram(const TShaderBuilder &builder);
     TShaderProgram(const TShaderProgram &) = delete;
     TShaderProgram &operator=(const TShaderProgram &) = delete;
     ~TShaderProgram();
-    [[nodiscard]] GLuint GetProgram() const { return Program; }
-    TShaderProgram &&Block(const std::string &name, const TUniformBindingBase &binding);
+
+protected:
+    GLint DefineTexture(const std::string &name, bool skip = false);
+    GLint DefineProp(const std::string &name, bool skip = false);
 
 private:
     static GLuint CreateShader(GLenum type, const std::string &name, const std::string &filename);
-    friend class TProgramSetup;
+    friend class TShaderSetup;
 };
 
-class TProgramSetup {
+class TShaderSetup: public TTextureBinder, public IMaterialBound {
 private:
-    GLuint Program;
-    std::map<std::string, std::tuple<int, GLenum>> Textures;
+    const TShaderProgram *Program;
 
 public:
-    explicit TProgramSetup(const TShaderProgram &program);
+    explicit TShaderSetup(const TShaderProgram *program);
+    TShaderSetup(TShaderSetup &&src) noexcept
+        : TTextureBinder(std::move(src))
+          , Program(src.Program) {
+        src.Program = nullptr;
+    }
+    ~TShaderSetup() override;
 
-    TProgramSetup(TProgramSetup &&src) noexcept;
-    ~TProgramSetup();
-
-    TProgramSetup(const TProgramSetup &) = delete;
-    TProgramSetup &operator=(const TProgramSetup &) = delete;
-
-    TProgramSetup &&Texture(const std::string &name, GLenum type);
-    TProgramSetup &&Set(const std::string &name, GLint value);
-    TProgramSetup &&Set(const std::string &name, GLfloat value);
-    TProgramSetup &&Set(const std::string &name, glm::vec2 value);
-    TProgramSetup &&Set(const std::string &name, GLfloat x, GLfloat y);
-    TProgramSetup &&Set(const std::string &name, GLfloat x, GLfloat y, GLfloat z);
-    TProgramSetup &&Set(const std::string &name, glm::vec3 value);
-    TProgramSetup &&Set(const std::string &name, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-    TProgramSetup &&Set(const std::string &name, glm::vec4 value);
-    TProgramSetup &&Set(const std::string &name, const glm::mat4 &mat);
-    bool Has(const std::string &name) const;
-    int TextureLoc(const std::string &name) const;
-    int TryTextureLoc(const std::string &name) const;
-    void FlushTextures();
-
-    template<typename ... T>
-    TProgramSetup &&TrySet(const std::string &name, T... value) {
-        if (Has(name)) {
-            Set(name, value...);
+    void SetTexture(EMaterialProp prop, const TTexture &texture) override {
+        auto index = Program->Textures[static_cast<size_t>(prop)];
+        if (index != -1) {
+            Set(index, texture);
         }
-        return std::move(*this);
     }
 
-private:
-    GLint Location(const std::string &name);
-};
+    void SetColor(EMaterialProp prop, glm::vec4 color) override {
+        auto location = Program->Colors[static_cast<size_t>(prop)];
+        if (location != -1) {
+            Set(location, color);
+        }
+    }
 
+    void SetConstant(EMaterialProp prop, float value) override {
+        auto location = Program->Constants[static_cast<size_t>(prop)];
+        if (location != -1) {
+            Set(location, value);
+        }
+    }
+
+protected:
+    static void Set(GLint location, GLfloat value);
+    static void Set(GLint location, glm::vec2 value);
+    static void Set(GLint location, GLfloat x, GLfloat y);
+    static void Set(GLint location, GLfloat x, GLfloat y, GLfloat z);
+    static void Set(GLint location, glm::vec3 value);
+    static void Set(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+    static void Set(GLint location, glm::vec4 value);
+    static void Set(GLint location, const glm::mat4 &mat);
+    void Set(GLint index, const TTexture &texture);
+};

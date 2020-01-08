@@ -22,7 +22,11 @@ namespace {
         }
     }
 
-    std::shared_ptr<GLuint> CreateVertexArrayObject(const TMeshBuilder &builder) {
+    std::shared_ptr<GLuint> CreateVertexArrayObject(
+        const TArrayBuffer &vertices,
+        const TIndexBuffer &indices,
+        const TArrayBuffer &instances,
+        const std::initializer_list<const std::vector<std::tuple<EDataType, unsigned, unsigned>> *> &layouts) {
         GLuint vao;
         GL_ASSERT(glGenVertexArrays(1, &vao));
         try {
@@ -31,27 +35,31 @@ namespace {
             GLubyte *instanceOffset = nullptr;
             size_t vertexStride = 0;
             size_t instanceStride = 0;
-            for (auto[dataType, count, divisor] : builder.Layouts_) {
-                (divisor > 0 ? instanceStride : vertexStride) += DataSize(dataType) * count;
+            for (auto &layout : layouts) {
+                for (auto[dataType, count, divisor] : *layout) {
+                    (divisor > 0 ? instanceStride : vertexStride) += DataSize(dataType) * count;
+                }
             }
             int location = 0;
-            for (auto[dataType, count, divisor] : builder.Layouts_) {
-                if (divisor > 0) {
-                    TArrayBinder instanceBinder(get<0>(builder.Instances_));
-                    GL_ASSERT(glVertexAttribPointer(location, count, static_cast<GLenum>(dataType),
-                                                    GL_FALSE, instanceStride, instanceOffset));
-                    instanceOffset += count * DataSize(dataType);
-                } else {
-                    TArrayBinder arrayBinder(get<0>(builder.Vertices_));
-                    GL_ASSERT(glVertexAttribPointer(location, count, static_cast<GLenum>(dataType),
-                                                    GL_FALSE, vertexStride, vertexOffset));
-                    vertexOffset += count * DataSize(dataType);
+            for (auto &layout : layouts) {
+                for (auto[dataType, count, divisor] : *layout) {
+                    if (divisor > 0) {
+                        TArrayBinder instanceBinder(instances);
+                        GL_ASSERT(glVertexAttribPointer(location, count, static_cast<GLenum>(dataType),
+                                                        GL_FALSE, instanceStride, instanceOffset));
+                        instanceOffset += count * DataSize(dataType);
+                    } else {
+                        TArrayBinder arrayBinder(vertices);
+                        GL_ASSERT(glVertexAttribPointer(location, count, static_cast<GLenum>(dataType),
+                                                        GL_FALSE, vertexStride, vertexOffset));
+                        vertexOffset += count * DataSize(dataType);
+                    }
+                    GL_ASSERT(glVertexAttribDivisor(location, divisor));
+                    GL_ASSERT(glEnableVertexAttribArray(location));
+                    location++;
                 }
-                GL_ASSERT(glVertexAttribDivisor(location, divisor));
-                GL_ASSERT(glEnableVertexAttribArray(location));
-                location++;
             }
-            TIndexBinder indexBinder(get<0>(builder.Indices_));
+            TIndexBinder indexBinder(indices);
             GL_ASSERT(glBindVertexArray(0));
         } catch (...) {
             glBindVertexArray(0);
@@ -63,13 +71,31 @@ namespace {
 }
 
 TMesh::TMesh(const TMeshBuilder &builder)
-    : VertexArrayObject(CreateVertexArrayObject(builder))
+    : VertexArrayObject(CreateVertexArrayObject(std::get<0>(builder.Vertices_),
+                                                std::get<0>(builder.Indices_),
+                                                std::get<0>(builder.Instances_),
+                                                {&builder.Layouts_}))
       , Vertices(std::get<0>(builder.Vertices_))
       , Indices(std::get<0>(builder.Indices_))
       , Instances(std::get<0>(builder.Instances_))
       , VertexCount(std::get<1>(builder.Vertices_))
       , IndexCount(std::get<1>(builder.Indices_))
-      , InstanceCount(std::get<1>(builder.Instances_)) {
+      , InstanceCount(std::get<1>(builder.Instances_))
+      , Layout(builder.Layouts_) {
+}
+
+TMesh::TMesh(const TMesh &mesh, const TInstanceMeshBuilder &builder)
+    : VertexArrayObject(CreateVertexArrayObject(mesh.Vertices,
+                                                mesh.Indices,
+                                                std::get<0>(builder.Instances_),
+                                                {&mesh.Layout, &builder.Layouts_}))
+      , Vertices(mesh.Vertices)
+      , Indices(mesh.Indices)
+      , Instances(std::get<0>(builder.Instances_))
+      , VertexCount(mesh.VertexCount)
+      , IndexCount(mesh.IndexCount)
+      , InstanceCount(std::get<1>(builder.Instances_))
+      , Layout(builder.Layouts_) {
 }
 
 void TMesh::Draw(EDrawType type) const {

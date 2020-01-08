@@ -75,16 +75,16 @@ void main() {
     vec4 specular = material.specular_col.a > 0 ? material.specular_col : texture(material.specular_map, fs_in.coord);
     float shiness = material.shiness > 0 ? material.shiness : float(texture(material.shiness_map, fs_in.coord));
 
-    vec3 result = CalcDirectionalLight(directional, norm, viewDir, diffuse.rgb, specular.rgb * specular.a, shiness);
+    vec3 result = CalcDirectionalLight(directional, norm, viewDir, diffuse.rgb, specular.rgb, shiness);
     for (int i = 0; i < spotCount; i++) {
-        result += CalcSpotLight(spots[i], norm, viewDir, diffuse.rgb, specular.rgb * specular.a, shiness);
+        result += CalcSpotLight(spots[i], norm, viewDir, diffuse.rgb, specular.rgb, shiness);
     }
-    result += CalcProjectorLight(projector, norm, viewDir, diffuse.rgb, specular.rgb * specular.a, shiness);
+    result += CalcProjectorLight(projector, norm, viewDir, diffuse.rgb, specular.rgb, shiness);
 
     if (material.reflection > 0) {
         vec3 reflectDir = reflect(-viewDir, norm);
         vec3 sky = vec3(texture(material.skybox, reflectDir));
-        float r = material.reflection * (specular.r + specular.g + specular.b) / 3;
+        float r = material.reflection;
         result = sky * r + result * (1.0 - r);
     }
 

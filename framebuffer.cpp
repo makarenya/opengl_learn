@@ -62,10 +62,10 @@ TFrameBuffer::~TFrameBuffer() {
     glDeleteFramebuffers(1, &FrameBuffer);
 }
 
-void TFrameBuffer::Draw(TProgramSetup &setup) {
-    Texture.Bind(setup.TextureLoc("screenTexture"));
+void TFrameBuffer::Draw(IFrameBufferShader &target) {
+    target.SetScreen(Texture);
     if (DepthTexture.has_value()) {
-        DepthTexture->Bind(setup.TextureLoc("depthTexture"));
+        target.SetDepth(*DepthTexture);
     }
     Mesh.Draw();
 }

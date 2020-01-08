@@ -3,31 +3,65 @@
 #include "../shader_program.h"
 
 class TParticlesShader: public TShaderProgram {
+private:
+    GLint Model;
+    GLint ViewPos;
+    int SkyBox;
+
 public:
-    TParticlesShader()
-        : TShaderProgram("shaders/particles.vert", "shaders/particles.frag") {
+    explicit TParticlesShader(const TUniformBindingBase &matrices, const TUniformBindingBase &lights)
+        : TShaderProgram(
+        TShaderBuilder()
+            .SetVertex("shaders/particles.vert")
+            .SetFragment("shaders/particles.frag")
+            .SetBlock("Matrices", matrices)
+            .SetBlock("Lights", lights))
+          , SkyBox(DefineTexture("skybox"))
+          , Model(DefineProp("model"))
+          , ViewPos(DefineProp("viewPos")) {
     }
+
+    friend class TParticlesSetup;
 };
 
-class TParticlesSetup: public TProgramSetup {
+class TParticlesSetup: public TShaderSetup {
+private:
+    const TParticlesShader *Shader;
+
 public:
-    TParticlesSetup(const TParticlesShader &shader)
-        : TProgramSetup(shader) {
-        Texture("skybox", GL_TEXTURE_CUBE_MAP);
+    explicit TParticlesSetup(const TParticlesShader *shader)
+        : TShaderSetup(shader)
+          , Shader(shader) {
     }
 
-    TParticlesSetup &&ViewPos(glm::vec3 viewPos) {
-        Set("viewPos", viewPos);
+    TParticlesSetup(TParticlesSetup &&src) noexcept
+        : TShaderSetup(std::move(src))
+          , Shader(src.Shader) {
+        src.Shader = nullptr;
+    }
+
+    ~TParticlesSetup() override {
+        if (Shader != nullptr) {
+            try {
+                Set(Shader->Model, glm::mat4(0));
+                Set(Shader->ViewPos, glm::vec3(0));
+            } catch (...) {
+            }
+        }
+    }
+
+    TParticlesSetup &&SetModel(glm::mat4 model) {
+        Set(Shader->Model, model);
         return std::move(*this);
     }
 
-    TParticlesSetup &&Model(glm::mat4 model) {
-        Set("model", model);
+    TParticlesSetup &&SetViewPos(glm::vec3 position) {
+        Set(Shader->ViewPos, position);
         return std::move(*this);
     }
 
-    TParticlesSetup &&Skybox(const TCubeTexture &texture) {
-        texture.Bind(TextureLoc("skybox"));
+    TParticlesSetup &&SetSkyBox(TTexture &texture) {
+        Set(Shader->SkyBox, texture);
         return std::move(*this);
     }
 };

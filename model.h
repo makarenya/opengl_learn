@@ -1,12 +1,11 @@
 #pragma once
 #include "mesh.h"
 #include "material.h"
-#include <vector>
-#include <glm/glm.hpp>
+#include "shader_program.h"
 
 class TModel {
 private:
-    std::vector<std::tuple<TMesh, std::string, int>> Meshes;
+    std::vector<std::tuple<TMesh, std::string, size_t>> Meshes;
     std::vector<TMaterial> Materials;
 
 public:
@@ -26,22 +25,44 @@ public:
         return *this;
     }
 
-    void Draw(TProgramSetup &setup) const {
+    void Draw(TShaderSetup &&setup) const {
         for (auto&[mesh, name, mat] : Meshes) {
-            Materials[mat].Use(setup);
+            TMaterialBinder binder(Materials[mat], setup);
             mesh.Draw();
         }
     }
 
-    void Draw(TProgramSetup &setup,
-              const std::function<void(const std::string &, const TMesh &)> &fn) const {
+    void Draw(TShaderSetup &setup) const {
         for (auto&[mesh, name, mat] : Meshes) {
-            Materials[mat].Use(setup);
-            fn(name, mesh);
+            TMaterialBinder binder(Materials[mat], setup);
+            mesh.Draw();
         }
     }
 
-    TMesh &GetMesh(int index) {
-        return std::get<0>(Meshes[index]);
+    void Draw(TShaderSetup &setup,
+              const std::function<void(const std::string &, const TMesh &, const TMaterial &material)> &fn) const {
+        for (auto&[mesh, name, mat] : Meshes) {
+            fn(name, mesh, Materials.at(mat));
+        }
+    }
+
+    [[nodiscard]] size_t MeshCount() const {
+        return Meshes.size();
+    }
+
+    [[nodiscard]] const TMesh &GetMesh(int index) const {
+        return std::get<0>(Meshes.at(index));
+    }
+
+    [[nodiscard]] size_t MaterialsCount() const {
+        return Materials.size();
+    }
+
+    [[nodiscard]] const TMaterial &GetMaterial(int index) const {
+        return Materials.at(index);
+    }
+
+    [[nodiscard]] const TMaterial &GetMeshMaterial(int index) const {
+        return Materials.at(std::get<2>(Meshes.at(index)));
     }
 };

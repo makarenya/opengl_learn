@@ -2,64 +2,87 @@
 #include <glm/glm.hpp>
 
 class TSceneShader: public TShaderProgram {
-public:
-    TSceneShader()
-        : TShaderProgram("shaders/scene.vert", "shaders/scene.frag", "shaders/scene.geom") {
-    }
-};
-
-class TSceneSetup: public TProgramSetup {
 private:
-    int SpotCount{};
+    GLint Model;
+    GLint SkyBox;
+    GLint ViewPos;
+    GLint Explosion;
+    GLint CanDiscard;
+public:
+    TSceneShader(const TUniformBindingBase &matrices, const TUniformBindingBase &lights)
+        : TShaderProgram(
+        TShaderBuilder()
+            .SetVertex("shaders/scene.vert")
+            .SetFragment("shaders/scene.frag")
+            .SetGeometry("shaders/scene.geom")
+            .SetBlock("Matrices", matrices)
+            .SetBlock("Lights", lights)
+            .SetTexture("material.diffuse_map", EMaterialProp::Diffuse)
+            .SetTexture("material.specular_map", EMaterialProp::Specular)
+            .SetTexture("material.shiness_map", EMaterialProp::Shininess)
+            .SetColor("material.diffuse_col", EMaterialProp::Diffuse)
+            .SetColor("material.specular_col", EMaterialProp::Specular)
+            .SetConstant("material.shiness", EMaterialProp::Shininess)
+            .SetConstant("material.reflection", EMaterialProp::Reflection)
+            .SetConstant("material.refraction", EMaterialProp::Refraction))
+          , Model(DefineProp("model"))
+          , SkyBox(DefineTexture("material.skybox"))
+          , ViewPos(DefineProp("viewPos"))
+          , Explosion(DefineProp("explosion"))
+          , CanDiscard(DefineProp("canDiscard")) {
+    }
+
+    friend class TSceneSetup;
+};
+
+class TSceneSetup: public TShaderSetup {
+private:
+    const TSceneShader *Shader;
 
 public:
-    TSceneSetup(const TSceneShader &shader, glm::vec3 viewPos)
-        : TProgramSetup(shader) {
-        Texture("material.diffuse_map", GL_TEXTURE_2D);
-        Texture("material.specular_map", GL_TEXTURE_2D);
-        Texture("material.shiness_map", GL_TEXTURE_2D);
-        Texture("material.skybox", GL_TEXTURE_CUBE_MAP);
-        Set("viewPos", viewPos);
+    explicit TSceneSetup(const TSceneShader *shader) : TShaderSetup(shader), Shader(shader) {
     }
 
-    TSceneSetup(const TSceneSetup &) = delete;
-    TSceneSetup &operator=(const TSceneSetup &) = delete;
+    TSceneSetup(TSceneSetup &&src) noexcept
+        : TShaderSetup(std::move(src))
+          , Shader(src.Shader) {
+        src.Shader = nullptr;
+    }
 
-    TSceneSetup &&Explosion(float value) {
-        Set("explosion", value);
+    ~TSceneSetup() override {
+        if (Shader != nullptr) {
+            try {
+                Set(Shader->Model, glm::mat4(0));
+                Set(Shader->ViewPos, glm::vec3(0));
+                Set(Shader->Explosion, 0.0f);
+                Set(Shader->CanDiscard, false);
+            } catch (...) {
+            }
+        }
+    }
+
+    TSceneSetup &&SetModel(glm::mat4 model) {
+        Set(Shader->Model, model);
         return std::move(*this);
     }
 
-    TSceneSetup &&Model(glm::mat4 model) {
-        Set("model", model);
+    TSceneSetup &&SetViewPos(glm::vec3 position) {
+        Set(Shader->ViewPos, position);
         return std::move(*this);
     }
 
-    TSceneSetup &&CanDiscard(bool canDiscard) {
-        Set("canDiscard", canDiscard);
+    TSceneSetup &&SetExplosion(float value) {
+        Set(Shader->Explosion, value);
         return std::move(*this);
     }
 
-    TSceneSetup &&Reflection(float reflect) {
-        Set("material.reflection", reflect);
-        Set("material.refraction", 0.0f);
+    TSceneSetup &&SetCanDiscard(bool value) {
+        Set(Shader->CanDiscard, value);
         return std::move(*this);
     }
 
-    TSceneSetup &&Refraction(float refract) {
-        Set("material.reflection", 0.0f);
-        Set("material.refraction", refract);
-        return std::move(*this);
-    }
-
-    int Skybox() {
-        return TextureLoc("material.skybox");
-    }
-
-    TSceneSetup &&NoReflectRefract() {
-        Set("material.reflection", 0.0f);
-        Set("material.refraction", 0.0f);
+    TSceneSetup &&SetSkyBox(TTexture &texture) {
+        Set(Shader->SkyBox, texture);
         return std::move(*this);
     }
 };
-

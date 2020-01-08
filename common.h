@@ -1,7 +1,9 @@
 #include "errors.h"
 #include <glm/glm.hpp>
+#include <string>
 #include <vector>
 #include <map>
+#include <array>
 
 #define BUILDER_PROPERTY2(T1, T2, NAME) \
 auto &Set##NAME(const T1 &v1, const T2 &v2) { \

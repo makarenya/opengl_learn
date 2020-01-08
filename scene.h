@@ -102,14 +102,14 @@ private:
     TUniformBinding<TProjectionView> ProjectionView;
     TUniformBinding<TLights> LightSetup;
     TUniformBuffer Connector{&ProjectionView, &LightSetup};
-    TSceneShader SceneShader{};
-    TLightShader LightShader{};
-    TSilhouetteShader SilhouetteShader{};
+    TSceneShader SceneShader{ProjectionView, LightSetup};
+    TLightShader LightShader{ProjectionView};
+    TSilhouetteShader SilhouetteShader{ProjectionView};
     TBorderShader BorderShader{};
-    TSkyboxShader SkyboxShader{};
-    TParticlesShader ParticlesShader{};
-    TNormalsShader NormalsShader{};
-    std::array<std::tuple<glm::vec3, glm::vec3>, 10000> Particles;
+    TSkyboxShader SkyboxShader{ProjectionView};
+    TParticlesShader ParticlesShader{ProjectionView, LightSetup};
+    TNormalsShader NormalsShader{ProjectionView};
+    std::array<std::tuple<glm::vec3, glm::vec3>, 2000> Particles;
     int CurrentParticles = 0;
     double LastParticleTime = NAN;
     const glm::ivec3 Maxims{53, 37, 47};
@@ -121,7 +121,7 @@ private:
         TTextureBuilder()
             .SetFile("images/asphalt_diffuse.png")
             .SetMipmap(ETextureMipmap::Linear)};
-    TCubeTexture SkyTex{
+    TTexture SkyTex{
         TCubeTextureBuilder()
             .SetPosX("images/yokohama3/posx.jpg")
             .SetNegX("images/yokohama3/negx.jpg")
@@ -132,22 +132,24 @@ private:
 
     TMaterial Asphalt{
         TMaterialBuilder()
-            .SetColor("specular_col", glm::vec4(0.1f, 0.1f, 0.1f, 1.0f))
-            .SetTexture("diffuse_map", AsphaltTex)
-            .SetConstant("shiness", 5)};
+            .SetColor(EMaterialProp::Specular, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f))
+            .SetTexture(EMaterialProp::Diffuse, AsphaltTex)
+            .SetConstant(EMaterialProp::Shininess, 5)};
     TMaterial Container{
         TMaterialBuilder()
-            .SetTexture("diffuse_map", TTextureBuilder().SetFile("images/container2_diffuse.png"))
-            .SetTexture("specular_map", TTextureBuilder().SetFile("images/container2_specular.png"))
-            .SetConstant("shiness", 64)};
+            .SetTexture(EMaterialProp::Diffuse, TTextureBuilder().SetFile("images/container2_diffuse.png"))
+            .SetTexture(EMaterialProp::Specular, TTextureBuilder().SetFile("images/container2_specular.png"))
+            .SetConstant(EMaterialProp::Reflection, .1)
+            .SetConstant(EMaterialProp::Shininess, 64)};
     TMesh Sky{
         TMeshBuilder()
             .SetVertices(EBufferUsage::Static, Cube<false, false>(
                 TGeomBuilder().SetSize(1).SetBackward(true)))
             .AddLayout(EDataType::Float, 3)};
-    TMaterial Skybox{TMaterialBuilder().SetTexture("skybox", SkyTex)};
-    TMaterial Grass{TMaterialBuilder().SetTexture("diffuse_map", TTextureBuilder().SetFile("images/grass.png"))};
-    TMaterial Window{TMaterialBuilder().SetTexture("diffuse_map", TTextureBuilder().SetFile("images/window.png"))};
+    TMaterial
+        Grass{TMaterialBuilder().SetTexture(EMaterialProp::Diffuse, TTextureBuilder().SetFile("images/grass.png"))};
+    TMaterial
+        Window{TMaterialBuilder().SetTexture(EMaterialProp::Diffuse, TTextureBuilder().SetFile("images/window.png"))};
     TMesh GroundCube{
         TMeshBuilder()
             .SetVertices(EBufferUsage::Static, Cube(TGeomBuilder().SetTextureMul(10, 10)))
@@ -170,17 +172,14 @@ private:
 
     TModel Suit{LoadMesh("nanosuit/nanosuit.obj")};
     TModel Drop{LoadMesh("images/drop.obj")};
-    TMesh Points{
-        TMeshBuilder()
-            .SetVertices(Drop.GetMesh(0).GetVertices(), Drop.GetMesh(0).GetVertexCount())
-            .SetIndices(Drop.GetMesh(0).GetIndices(), Drop.GetMesh(0).GetIndexCount())
-            .SetInstances(TArrayBuffer(EBufferUsage::Stream, nullptr, sizeof(float) * 6 * Particles.size()), 6 * Particles.size())
-            .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 3, 1)
-            .AddLayout(EDataType::Float, 3, 1)};
+    TMesh Points{Drop.GetMesh(0),
+                 TInstanceMeshBuilder()
+                     .SetInstances(TArrayBuffer(EBufferUsage::Stream, nullptr, sizeof(float) * 6 * Particles.size()),
+                                   6 * Particles.size())
+                     .AddLayout(EDataType::Float, 3, 1)
+                     .AddLayout(EDataType::Float, 3, 1)};
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {
-        std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, 2.0f}, glm::vec3{1.0f, 0.2f, 0.1f}),
+        std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, 2.0f}, glm::vec3{2.0f, 0.2f, 0.1f}),
         std::forward_as_tuple(glm::vec3{2.0f, 2.0f, 40.0f}, glm::vec3{2.0f, 1.0f, 0.1f})
     };
 
@@ -196,12 +195,6 @@ private:
 public:
     TScene(int width, int height)
         : FrameBuffer(width, height, true) {
-        SceneShader.Block("Lights", LightSetup);
-        SceneShader.Block("Matrices", ProjectionView);
-        LightShader.Block("Matrices", ProjectionView);
-        SilhouetteShader.Block("Matrices", ProjectionView);
-        ParticlesShader.Block("Matrices", ProjectionView);
-        NormalsShader.Block("Matrices", ProjectionView);
     }
 
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position);

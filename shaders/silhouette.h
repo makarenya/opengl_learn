@@ -3,20 +3,46 @@
 #include "../shader_program.h"
 
 class TSilhouetteShader: public TShaderProgram {
+private:
+    GLint Model;
 public:
-    TSilhouetteShader()
-        : TShaderProgram("shaders/silhouette.vert", "shaders/silhouette.frag") {
+    explicit TSilhouetteShader(const TUniformBindingBase &matrices)
+        : TShaderProgram(
+        TShaderBuilder()
+            .SetVertex("shaders/silhouette.vert")
+            .SetFragment("shaders/silhouette.frag")
+            .SetBlock("Matrices", matrices))
+          , Model(DefineProp("model")) {
     }
+
+    friend class TSilhouetteSetup;
 };
 
-class TSilhouetteSetup: public TProgramSetup {
+class TSilhouetteSetup: public TShaderSetup {
+private:
+    const TSilhouetteShader *Shader;
+
 public:
-    TSilhouetteSetup(const TSilhouetteShader &shader)
-        : TProgramSetup(shader) {
+    explicit TSilhouetteSetup(const TSilhouetteShader *shader) : TShaderSetup(shader), Shader(shader) {
     }
 
-    TSilhouetteSetup &&Model(glm::mat4 model) {
-        Set("model", model);
+    TSilhouetteSetup(TSilhouetteSetup &&src) noexcept
+        : TShaderSetup(std::move(src))
+          , Shader(src.Shader) {
+        src.Shader = nullptr;
+    }
+
+    ~TSilhouetteSetup() override {
+        if (Shader != nullptr) {
+            try {
+                Set(Shader->Model, glm::mat4(0));
+            } catch (...) {
+            }
+        }
+    }
+
+    TSilhouetteSetup &&SetModel(glm::mat4 model) {
+        Set(Shader->Model, model);
         return std::move(*this);
     }
 };

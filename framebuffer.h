@@ -14,6 +14,13 @@ public:
     TFrameBufferBinder& operator=(const TFrameBufferBinder&) = delete;
 };
 
+class IFrameBufferShader {
+public:
+    virtual ~IFrameBufferShader() = default;
+    virtual void SetScreen(const TTexture &texture)= 0;
+    virtual void SetDepth(const TTexture &texture) = 0;
+};
+
 class TFrameBuffer {
     GLuint FrameBuffer{};
     TTexture Texture;
@@ -30,7 +37,7 @@ public:
 
     TFrameBufferBinder Bind() { return TFrameBufferBinder(FrameBuffer); }
 
-    void Draw(TProgramSetup& setup);
+    void Draw(IFrameBufferShader &target);
 
 private:
     void MakeRenderBuffer(int width, int height);

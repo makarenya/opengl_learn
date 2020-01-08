@@ -43,11 +43,13 @@ public:
 
     static void Assert(const std::string &context) {
         int code = glGetError();
-        if (code != GL_NO_ERROR) throw TGlError(code, context);
+        if (code != GL_NO_ERROR) {
+            throw TGlError(code, context);
+        }
     }
 
-    static void Skip() {
-        glGetError();
+    static GLenum Skip() {
+        return glGetError();
     }
 
 private:
@@ -56,7 +58,6 @@ private:
     }
 
     static std::string CodeDescription(GLenum code);
-
     static std::string ErrorMessage(int code, const std::string &context);
 };
 
@@ -67,4 +68,5 @@ T &&ReturnGlAssert(T &&value, std::string file, int line) {
 }
 
 #define GL_ASSERT(EQ) (EQ); TGlError::Assert(std::string(__FILE__) + ": " + std::to_string(__LINE__))
+#define GL_ASSERT_MSG(EQ, MSG) (EQ); TGlError::Assert(std::string(__FILE__) + ": " + std::to_string(__LINE__) + " with: " + (MSG))
 #define GL_ASSERTR(EQ) ReturnGlAssert((EQ), __FILE__, __LINE__)

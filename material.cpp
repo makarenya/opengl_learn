@@ -1,26 +1,56 @@
 #include "material.h"
-#include "errors.h"
 
-TMaterial::TMaterial(const TMaterialBuilder &builder)
-    : Textures(builder.Textures_)
-      , CubeTextures(builder.CubeTextures_)
-      , Colors(builder.Colors_)
-      , Constants(builder.Constants_) {
-}
-
-void TMaterial::Use(TProgramSetup &setup) const {
-    setup.FlushTextures();
-    for (auto &texture : Textures) {
-        texture.second.Bind(setup.TryTextureLoc("material." + texture.first));
+TMaterial::TMaterial(const TMaterialBuilder &builder) {
+    for (auto&[key, value]: builder.Textures_) {
+        Textures[static_cast<int>(key)] = value;
     }
-    for (auto &texture : CubeTextures) {
-        texture.second.Bind(setup.TryTextureLoc("material." + texture.first));
+    for (auto&[key, value]: builder.Colors_) {
+        Colors[static_cast<int>(key)] = value;
     }
-    for (auto &color : Colors) {
-        setup.TrySet("material." + color.first, color.second);
-    }
-    for (auto &constant : Constants) {
-        setup.TrySet("material." + constant.first, constant.second);
+    for (auto&[key, value]: builder.Constants_) {
+        Constants[static_cast<int>(key)] = value;
     }
 }
 
+void TMaterial::DrawWith(IMaterialBound &bound, const TMesh &mesh) const {
+    TMaterialBinder binder(*this, bound);
+    mesh.Draw();
+}
+
+TMaterialBinder::TMaterialBinder(const TMaterial &material, IMaterialBound &shader)
+    : Material(material)
+      , Shader(shader) {
+    for (int i = 0; i < material.Textures.size(); ++i) {
+        if (!material.Textures[i].Empty()) {
+            shader.SetTexture(static_cast<EMaterialProp>(i), material.Textures[i]);
+        }
+    }
+    for (int i = 0; i < material.Colors.size(); ++i) {
+        if (material.Colors[i] != glm::vec4(0.0f)) {
+            shader.SetColor(static_cast<EMaterialProp>(i), material.Colors[i]);
+        }
+    }
+    for (int i = 0; i < material.Constants.size(); ++i) {
+        if (material.Constants[i] != 0.0f) {
+            shader.SetConstant(static_cast<EMaterialProp>(i), material.Constants[i]);
+        }
+    }
+}
+
+TMaterialBinder::~TMaterialBinder() {
+    for (int i = 0; i < Material.Textures.size(); ++i) {
+        if (!Material.Textures[i].Empty()) {
+            Shader.SetTexture(static_cast<EMaterialProp>(i), TTexture());
+        }
+    }
+    for (int i = 0; i < Material.Colors.size(); ++i) {
+        if (Material.Colors[i] != glm::vec4(0.0f)) {
+            Shader.SetColor(static_cast<EMaterialProp>(i), glm::vec4(0.0f));
+        }
+    }
+    for (int i = 0; i < Material.Constants.size(); ++i) {
+        if (Material.Constants[i] != 0.0f) {
+            Shader.SetConstant(static_cast<EMaterialProp>(i), 0.0f);
+        }
+    }
+}

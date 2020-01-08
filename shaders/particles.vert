@@ -2,11 +2,12 @@
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
-layout (location = 2) in vec3 offset;
-layout (location = 3) in vec3 speed;
+layout (location = 2) in vec2 coord;
+layout (location = 3) in vec3 offset;
+layout (location = 4) in vec3 speed;
 out VS_OUT {
     vec3 normal;
-    vec4 position;
+    vec3 position;
 } vs_out;
 
 uniform mat4 model;
@@ -27,11 +28,11 @@ void main() {
     } else {
         float c = sqrt(1 - d.z * d.z);
         rot = mat3(
-            d.y / c, d.x / c, 0,
-            -d.x, d.y, d.z,
-            d.x * d.z / c, - d.y * d.z / c, c);
+            d.y / c, -d.x / c, 0,
+            d.x, d.y, d.z,
+            -d.x * d.z / c, - d.y * d.z / c, c);
     }
-    vs_out.position = model * vec4(rot * position + offset, 1.0);
+    vs_out.position = vec3(model * vec4(rot * position + offset, 1.0));
     vs_out.normal = transpose(inverse(mat3(model) * rot)) * normal;
-    gl_Position = projection * view * vs_out.position;
+    gl_Position = projection * view * vec4(vs_out.position, 1.0);
 }
