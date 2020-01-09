@@ -92,10 +92,15 @@ public:
         src.Data = nullptr;
     }
 
-    ~TBufferMapper() {
+    void Unmap() {
         if (Data != nullptr) {
+            Data = nullptr;
             Impl::UnmapBuffer(static_cast<GLenum>(Type));
         }
+    }
+
+    ~TBufferMapper() {
+        Unmap();
     }
 
     TBufferMapper(const TBufferMapper &) = delete;

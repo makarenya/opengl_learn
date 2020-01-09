@@ -103,10 +103,10 @@ void main() {
 
 vec3 CalcDirectionalLight(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {
     vec3 lightNorm = normalize(-light.direction);
-    vec3 reflectDir = reflect(-lightNorm, norm);
+    vec3 halfLight = normalize(lightNorm + viewDir);
 
     float diff = max(dot(norm, lightNorm), 0.0f);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), shiness);
+    float spec = pow(max(dot(norm, halfLight), 0.0f), shiness);
 
     return diffuse * light.ambient +
     diffuse * diff * light.diffuse +
@@ -115,13 +115,13 @@ vec3 CalcDirectionalLight(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 
 
 vec3 CalcSpotLight(SpotLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {
     vec3 lightNorm = normalize(light.position - fs_in.position);
-    vec3 reflectDir = reflect(-lightNorm, norm);
+    vec3 halfLight = normalize(lightNorm + viewDir);
 
     float distance = length(light.position - fs_in.position);
     float intensity = 1.0f / (1.0f + light.linear * distance + light.quadratic * distance * distance);
 
     float diff = max(dot(norm, lightNorm), 0.0f);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), shiness);
+    float spec = pow(max(dot(norm, halfLight), 0.0f), shiness);
 
     return (diffuse * light.ambient +
     diffuse * diff * light.diffuse +
@@ -130,7 +130,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 
 
 vec3 CalcProjectorLight(ProjectorLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {
     vec3 lightNorm = normalize(light.position - fs_in.position);
-    vec3 reflectDir = reflect(-lightNorm, norm);
+    vec3 halfLight = normalize(lightNorm + viewDir);
     vec3 lightDir = normalize(light.position - light.target);
 
     float distance = length(light.position - fs_in.position);
@@ -140,7 +140,7 @@ vec3 CalcProjectorLight(ProjectorLight light, vec3 norm, vec3 viewDir, vec3 diff
         0.0f, 1.0f);
 
     float diff = max(dot(norm, lightNorm), 0.0f);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0f), shiness);
+    float spec = pow(max(dot(norm, halfLight), 0.0f), shiness);
 
     return (diffuse * light.ambient +
     diffuse * diff * light.diffuse +

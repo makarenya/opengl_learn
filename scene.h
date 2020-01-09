@@ -11,6 +11,7 @@
 #include "cube.h"
 #include "framebuffer.h"
 #include <glm/glm.hpp>
+#include <random>
 
 struct TProjectionView {
     glm::mat4 projection;
@@ -97,6 +98,27 @@ struct TLights {
     uint32_t spotCount;
 };
 
+class TParticleInjector {
+private:
+    static constexpr double Meter = 15 / 1.8;
+    static constexpr glm::ivec3 Maxims{53, 37, 47};
+    glm::ivec3 Currents{};
+    std::random_device Rd{};
+    std::mt19937_64 E2{Rd()};
+    std::normal_distribution<> Dist{0, .2 * Meter};
+    std::normal_distribution<> VDist{5 * Meter, .5 * Meter};
+
+public:
+    std::tuple<glm::vec3, glm::vec3> Inject() {
+        glm::vec3 add = 3.0f * glm::vec3(Currents - Maxims / 2) / glm::vec3(Maxims);
+        glm::vec3 dir{std::round(Dist(E2)), std::round(VDist(E2)), std::round(Dist(E2))};
+        Currents = {Currents.x >= Maxims.x - 1 ? 0 : Currents.x + 1,
+                    Currents.y >= Maxims.y - 1 ? 0 : Currents.y + 1,
+                    Currents.z >= Maxims.z - 1 ? 0 : Currents.z + 1};
+        return std::make_tuple(glm::vec3(0, std::round(Dist(E2)), 0), dir + add);
+    }
+};
+
 class TScene {
 private:
     TUniformBinding<TProjectionView> ProjectionView;
@@ -110,11 +132,8 @@ private:
     TParticlesShader ParticlesShader{ProjectionView, LightSetup};
     TNormalsShader NormalsShader{ProjectionView};
     std::array<std::tuple<glm::vec3, glm::vec3>, 2000> Particles;
+    TParticleInjector Injector;
     int CurrentParticles = 0;
-    double LastParticleTime = NAN;
-    const glm::ivec3 Maxims{53, 37, 47};
-    glm::ivec3 Currents{};
-    float ExplosionCounter = 0;
     float ExplosionTime = 0;
 
     TTexture AsphaltTex{
@@ -134,7 +153,7 @@ private:
         TMaterialBuilder()
             .SetColor(EMaterialProp::Specular, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f))
             .SetTexture(EMaterialProp::Diffuse, AsphaltTex)
-            .SetConstant(EMaterialProp::Shininess, 5)};
+            .SetConstant(EMaterialProp::Shininess, .1)};
     TMaterial Container{
         TMaterialBuilder()
             .SetTexture(EMaterialProp::Diffuse, TTextureBuilder().SetFile("images/container2_diffuse.png"))
@@ -199,10 +218,11 @@ public:
           , AliasedFrameBuffer(width, height, 4, true) {
     }
 
-    void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position);
+    void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position, float interval);
 
 private:
     void SetupLights(glm::vec3 position);
+    void DrawFountain(float interval, glm::vec3 position);
     void DrawSkybox();
     void DrawObjects(glm::vec3 position);
     void DrawOpaques(glm::vec3 position);

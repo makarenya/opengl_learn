@@ -163,7 +163,7 @@ void program() {
 
             mat4 view = lookAt(vec3(position), vec3(position + direction), up);
             mat4 project = perspective(radians(45.0f), 1.0f * mode->width / mode->height, 0.1f, 300.0f);
-            scene.Draw(project, view, position);
+            scene.Draw(project, view, position, interval);
 
             glfwSwapBuffers(window);
         }

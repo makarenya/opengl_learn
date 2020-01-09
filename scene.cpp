@@ -3,14 +3,13 @@
 #include "framebuffer.h"
 #include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <GLFW/glfw3.h>
-#include <random>
 
 using namespace std;
 using namespace glm;
 
-void TScene::Draw(mat4 project, mat4 view, vec3 position) {
+void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
     ProjectionView = {project, view};
+    ExplosionTime = ExplosionTime >= 15 ? 0 : ExplosionTime + interval;
     SetupLights(position);
 
     glClearColor(.05, .01, .07, 1);
@@ -22,57 +21,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
     DrawSkybox();
     DrawBorder();
     DrawOpaques(position);
-
-    double meter = 15 / 1.8;
-    double gravity = 9.8 * meter;
-    std::random_device rd;
-    std::mt19937_64 e2(rd());
-    std::normal_distribution<> dist(0, .2 * meter);
-    std::normal_distribution<> vdist(5 * meter, .5 * meter);
-    if (std::isnan(LastParticleTime)) {
-        LastParticleTime = glfwGetTime();
-    } else {
-        double now = glfwGetTime();
-        auto interval = static_cast<float>(now - LastParticleTime);
-        LastParticleTime = now;
-        if (now - ExplosionCounter > 15) {
-            ExplosionCounter = now;
-        }
-        ExplosionTime = now - ExplosionCounter;
-        for (int i = 0; i < 30 && CurrentParticles < Particles.size(); ++i) {
-            Particles[CurrentParticles++] = make_tuple(vec3(0, 0, 0),
-                                                       vec3(std::round(dist(e2)),
-                                                            std::round(vdist(e2)),
-                                                            std::round(dist(e2))));
-        }
-        TArrayBufferMapper<vec3> mapper(Points.GetInstances());
-        auto p = *mapper;
-        for (int i = 0; i < CurrentParticles; ++i) {
-            auto[pos, speed] = Particles[i];
-            speed = vec3(speed.x, speed.y - gravity * interval, speed.z);
-            if (speed.y < -2 * meter) {
-                vec3 add = 3.0f * vec3(Currents - Maxims / 2) / vec3(Maxims);
-                Particles[i] = make_tuple(vec3(0, std::round(dist(e2)), 0),
-                                          vec3(std::round(dist(e2)), std::round(vdist(e2)), std::round(dist(e2)))
-                                              + add);
-                Currents = {Currents.x >= Maxims.x - 1 ? 0 : Currents.x + 1,
-                            Currents.y >= Maxims.y - 1 ? 0 : Currents.y + 1,
-                            Currents.z >= Maxims.z - 1 ? 0 : Currents.z + 1};
-            } else {
-                Particles[i] = make_tuple(pos + speed * interval, speed);
-            }
-            *p++ = pos;
-            *p++ = speed;
-        }
-    }
-    {
-        auto setup = TParticlesSetup(&ParticlesShader)
-            .SetViewPos(position)
-            .SetModel(NConstMath::Translate(0, 10, 0))
-            .SetSingle(NConstMath::Scale(.5))
-            .SetSkyBox(SkyTex);
-        Points.Draw();
-    }
+    DrawFountain(interval, position);
 }
 
 void TScene::DrawSkybox() {
@@ -82,6 +31,35 @@ void TScene::DrawSkybox() {
     Sky.Draw();
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
+}
+
+void TScene::DrawFountain(float interval, vec3 position) {
+    double meter = 15 / 1.8;
+    double gravity = 9.8 * meter;
+
+    for (int i = 0; i < 30 && CurrentParticles < Particles.size(); ++i) {
+        Particles[CurrentParticles++] = Injector.Inject();
+    }
+    TArrayBufferMapper<vec3> mapper(Points.GetInstances());
+    auto p = *mapper;
+    for (int i = 0; i < CurrentParticles; ++i) {
+        auto[pos, speed] = Particles[i];
+        speed = vec3(speed.x, speed.y - gravity * interval, speed.z);
+        if (speed.y < -2 * meter) {
+            Particles[i] = Injector.Inject();
+        } else {
+            Particles[i] = make_tuple(pos + speed * interval, speed);
+        }
+        *p++ = pos;
+        *p++ = speed;
+    }
+    mapper.Unmap();
+    auto setup = TParticlesSetup(&ParticlesShader)
+        .SetViewPos(position)
+        .SetModel(NConstMath::Translate(0, 10, 0))
+        .SetSingle(NConstMath::Scale(.5))
+        .SetSkyBox(SkyTex);
+    Points.Draw();
 }
 
 void TScene::SetupLights(glm::vec3 position) {
