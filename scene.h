@@ -144,12 +144,12 @@ private:
     TTexture SkyTex{
         TCubeTextureBuilder()
             .SetUsage(ETextureUsage::SRgb)
-            .SetPosX("images/yokohama3/posx.jpg")
-            .SetNegX("images/yokohama3/negx.jpg")
-            .SetPosY("images/yokohama3/posy.jpg")
-            .SetNegY("images/yokohama3/negy.jpg")
-            .SetPosZ("images/yokohama3/posz.jpg")
-            .SetNegZ("images/yokohama3/negz.jpg")};
+            .SetPosX("images/skybox/right.jpg")
+            .SetNegX("images/skybox/left.jpg")
+            .SetPosY("images/skybox/top.jpg")
+            .SetNegY("images/skybox/bottom.jpg")
+            .SetPosZ("images/skybox/front.jpg")
+            .SetNegZ("images/skybox/back.jpg")};
 
     TMaterial Asphalt{
         TMaterialBuilder()
@@ -203,6 +203,16 @@ private:
             .AddLayout(EDataType::Float, 3)
             .AddLayout(EDataType::Float, 2)};
 
+    TMesh ScreenQuad{
+        TMeshBuilder()
+            .SetVertices(EBufferUsage::Static, Quad<false, true>(
+                TGeomBuilder()
+                    .SetTextureMul(1, -1)
+                    .SetTextureOffset(0, 1)
+                    .SetSize(1.0f)))
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 2)};
+
     TModel Suit{LoadMesh("nanosuit/nanosuit.obj")};
     TModel Drop{LoadMesh("images/drop.obj")};
     TMesh Points{Drop.GetMesh(0),
@@ -228,8 +238,12 @@ private:
 
 public:
     TScene(int width, int height)
-        : FrameBuffer(width, height, 0, true)
-          , AliasedFrameBuffer(width, height, 8, true) {
+        : FrameBuffer(
+        TTextureBuilder().SetEmpty(width, height).SetWrap(ETextureWrap::ClampToEdge),
+        TTextureBuilder().SetEmpty(width, height).SetWrap(ETextureWrap::ClampToEdge).SetUsage(ETextureUsage::Depth))
+          , AliasedFrameBuffer(
+            TRenderBuffer(ETextureUsage::Rgba, width, height, 4),
+            TRenderBuffer(ETextureUsage::Depth, width, height, 4)) {
     }
 
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position, float interval);

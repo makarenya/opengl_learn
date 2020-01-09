@@ -54,6 +54,13 @@ auto &Set##NAME(TYPE v) { \
 } \
 TYPE NAME##_
 
+#define BUILDER_PROPERTY_ALT(TYPE, NAME, FIELD_NAME) \
+auto &Set##NAME(TYPE v) { \
+    FIELD_NAME = std::move(v); \
+    return *this; \
+} \
+TYPE FIELD_NAME
+
 #define BUILDER_MAP(KEY, VALUE, NAME) \
 auto &Set##NAME(KEY k, VALUE v) { \
     NAME##s_.emplace(std::move(k), std::move(v)); \

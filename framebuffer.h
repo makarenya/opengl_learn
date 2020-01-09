@@ -5,46 +5,48 @@
 #include "texture.h"
 #include <GL/glew.h>
 
-class TFrameBufferBinder {
-public:
-    explicit TFrameBufferBinder(GLuint frameBuffer);
-    ~TFrameBufferBinder();
+class TRenderBuffer {
+private:
+    std::shared_ptr<GLuint> Buffer;
+    ETextureUsage Usage{};
+    int Width{};
+    int Height{};
 
-    TFrameBufferBinder(const TFrameBufferBinder&) = delete;
-    TFrameBufferBinder& operator=(const TFrameBufferBinder&) = delete;
-};
-
-class IFrameBufferShader {
 public:
-    virtual ~IFrameBufferShader() = default;
-    virtual void SetScreen(const TTexture &texture)= 0;
-    virtual void SetDepth(const TTexture &texture) = 0;
+    TRenderBuffer() = default;
+    TRenderBuffer(ETextureUsage usage, unsigned width, unsigned height, unsigned samples);
+    [[nodiscard]] GLuint GetBuffer() const { return *Buffer; }
+    [[nodiscard]] int GetWidth() const { return Width; }
+    [[nodiscard]] int GetHeight() const { return Height; }
+    [[nodiscard]] bool Empty() { return !Buffer; }
 };
 
 class TFrameBuffer {
-    GLuint FrameBuffer{};
-    TTexture Texture;
-    std::optional<TTexture> DepthTexture;
-    GLuint RenderBuffer{};
-    TMesh Mesh;
-    unsigned Width;
-    unsigned Height;
-    unsigned Samples;
+    std::shared_ptr<GLuint> FrameBuffer;
+    TTexture ScreenTexture{};
+    TRenderBuffer ScreenBuffer{};
+    TTexture DepthTexture{};
+    TRenderBuffer DepthBuffer{};
 
 public:
-    TFrameBuffer(unsigned width, unsigned height, unsigned samples, bool depthAsTexture);
-    TFrameBuffer(TFrameBuffer &&src) noexcept;
-    TFrameBuffer(const TFrameBuffer &) = delete;
-    TFrameBuffer &operator=(const TFrameBuffer &) = delete;
-    ~TFrameBuffer();
+    TFrameBuffer(TTexture texture, bool depth = false);
+    TFrameBuffer(TTexture screen, TTexture depth);
+    TFrameBuffer(TTexture screen, TRenderBuffer depth);
+    TFrameBuffer(TRenderBuffer screen, TTexture depth);
+    TFrameBuffer(TRenderBuffer screen, TRenderBuffer depth);
 
-    TFrameBufferBinder Bind() { return TFrameBufferBinder(FrameBuffer); }
+    void CopyTo(TFrameBuffer &target);
+    [[nodiscard]] TTexture GetScreenTexture() const { return ScreenTexture; }
+    [[nodiscard]] TTexture GetDepthTexture() const { return DepthTexture; }
 
-    void Copy(TFrameBuffer &target);
-    void Draw(IFrameBufferShader &target);
-
-private:
-    void MakeRenderBuffer(int width, int height, int samples);
-    void MakeFrameBuffer(bool depthAsTexture);
+    friend class TFrameBufferBinder;
 };
 
+class TFrameBufferBinder {
+public:
+    explicit TFrameBufferBinder(const TFrameBuffer &framebuffer);
+    ~TFrameBufferBinder();
+
+    TFrameBufferBinder(const TFrameBufferBinder &) = delete;
+    TFrameBufferBinder &operator=(const TFrameBufferBinder &) = delete;
+};

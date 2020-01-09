@@ -26,7 +26,7 @@ public:
     friend class TBorderSetup;
 };
 
-class TBorderSetup: public TShaderSetup, public IFrameBufferShader {
+class TBorderSetup: public TShaderSetup {
 private:
     const TBorderShader *Shader;
 
@@ -50,12 +50,12 @@ public:
         }
     }
 
-    TBorderSetup &SetColor(glm::vec4 color) {
+    TBorderSetup &&SetColor(glm::vec4 color) {
         Set(Shader->Color, color);
-        return *this;
+        return std::move(*this);
     }
 
-    TBorderSetup &SetKernel(float radius, float innerRadius = 0) {
+    TBorderSetup &&SetKernel(float radius, float innerRadius = 0) {
         if (radius > 3.5) throw TGlBaseError("radius too big");
         std::array<GLfloat, 49> kernel{};
         std::array<GLfloat, 49> inner{};
@@ -84,14 +84,16 @@ public:
         Set(Shader->Kernel, kernel.data(), 49);
         Set(Shader->Inner, inner.data(), 49);
         Set(Shader->Size, size);
-        return *this;
+        return std::move(*this);
     }
 
-    void SetScreen(const TTexture &texture) override {
+    TBorderSetup &&SetScreen(const TTexture &texture) {
         Set(Shader->Screen, texture);
+        return std::move(*this);
     }
 
-    void SetDepth(const TTexture &texture) override {
+    TBorderSetup &&SetDepth(const TTexture &texture) {
         Set(Shader->Depth, texture);
+        return std::move(*this);
     }
 };

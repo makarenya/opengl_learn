@@ -63,8 +63,8 @@ void TScene::DrawFountain(float interval, vec3 position) {
 
 void TScene::SetupLights(glm::vec3 position) {
     TLights setup{};
-    setup.directional = {{1.0f, -6.0f, 3.0f},
-                         vec3(.01), vec3(.2), vec3(.2)};
+    setup.directional = {{1.0f, -1.0f, 1.0f},
+                         vec3(.25), vec3(.7), vec3(.8)};
     setup.spots[0] = {{position.x, 16.0, position.z},
                       vec3(0.01f), vec3(0.3f), vec3(0.0f),
                       0.00, 0.03};
@@ -123,14 +123,17 @@ void TScene::DrawOpaques(glm::vec3 position) {
 void TScene::DrawBorder() {
     {
         auto setup = TSilhouetteSetup(&SilhouetteShader).SetModel(NConstMath::Translate(0, 0, -15));
-        auto binder = AliasedFrameBuffer.Bind();
+        TFrameBufferBinder binder(AliasedFrameBuffer);
         Suit.Draw(setup);
     }
-    AliasedFrameBuffer.Copy(FrameBuffer);
+    AliasedFrameBuffer.CopyTo(FrameBuffer);
     {
-        TBorderSetup setup(&BorderShader);
-        setup.SetColor(vec4(0, 1, .5, .3)).SetKernel(2.4, 1.2);
-        FrameBuffer.Draw(setup);
+        auto setup = TBorderSetup(&BorderShader)
+            .SetColor(vec4(0, 1, .5, .3))
+            .SetKernel(2.4, 1.2)
+            .SetScreen(FrameBuffer.GetScreenTexture())
+            .SetDepth(FrameBuffer.GetDepthTexture());
+        ScreenQuad.Draw();
     }
 }
 

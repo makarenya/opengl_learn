@@ -79,6 +79,9 @@ public:
     [[nodiscard]] bool Empty() const { return !Texture; }
     GLuint GetTexture() const { return *Texture; }
     ETextureType GetType() const { return Type; }
+    int GetWidth() const;
+    int GetHeight() const;
+    int GetDepth() const;
     friend class TTextureBinder;
 };
 

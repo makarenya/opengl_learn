@@ -160,6 +160,30 @@ TTexture::TTexture(const TCubeTextureBuilder &builder)
       , Type(ETextureType::Cube) {
 }
 
+int TTexture::GetWidth() const {
+    GLint value;
+    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), *Texture));
+    GL_ASSERT(glGetTexLevelParameteriv(static_cast<GLenum>(Type), 0, GL_TEXTURE_WIDTH, &value));
+    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), 0));
+    return value;
+}
+
+int TTexture::GetHeight() const {
+    GLint value;
+    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), *Texture));
+    GL_ASSERT(glGetTexLevelParameteriv(static_cast<GLenum>(Type), 0, GL_TEXTURE_HEIGHT, &value));
+    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), 0));
+    return value;
+}
+
+int TTexture::GetDepth() const {
+    GLint value;
+    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), *Texture));
+    GL_ASSERT(glGetTexLevelParameteriv(static_cast<GLenum>(Type), 0, GL_TEXTURE_DEPTH, &value));
+    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), 0));
+    return value;
+}
+
 TTextureBinder::~TTextureBinder() {
     bool empty = true;
     for (int i = 0; i < Textures.size(); ++i) {

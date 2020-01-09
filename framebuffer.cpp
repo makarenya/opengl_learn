@@ -1,132 +1,141 @@
 #include "framebuffer.h"
 #include "cube.h"
 
-TFrameBufferBinder::TFrameBufferBinder(GLuint frameBuffer) {
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+void FreeRenderBuffer(GLuint *buffer) {
+    glDeleteRenderbuffers(1, buffer);
+}
+
+std::shared_ptr<GLuint> CreateRenderBuffer(ETextureUsage usage, unsigned width, unsigned height, unsigned samples) {
+    GLuint buffer;
+    auto type = static_cast<GLenum>(usage);
+    GL_ASSERT(glGenRenderbuffers(1, &buffer));
+    try {
+        GL_ASSERT(glBindRenderbuffer(GL_RENDERBUFFER, buffer));
+        if (samples == 0) {
+            GL_ASSERT(glRenderbufferStorage(GL_RENDERBUFFER, type, width, height));
+        } else {
+            GL_ASSERT(glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, type, width, height));
+        }
+        GL_ASSERT(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+        return std::shared_ptr<GLuint>(new GLuint(buffer), FreeRenderBuffer);
+    } catch (...) {
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glDeleteRenderbuffers(1, &buffer);
+        throw;
+    }
+}
+
+TRenderBuffer::TRenderBuffer(ETextureUsage usage, unsigned width, unsigned height, unsigned samples)
+    : Buffer(CreateRenderBuffer(usage, width, height, samples))
+      , Usage(usage)
+      , Width(width)
+      , Height(height) {
+}
+
+void FreeFrameBuffer(GLuint *framebuffer) {
+    glDeleteFramebuffers(1, framebuffer);
+}
+
+std::shared_ptr<GLuint> CreateFrameBuffer(TTexture *screenTex,
+                                          TTexture *depthTex,
+                                          TRenderBuffer *screenBuf,
+                                          TRenderBuffer *depthBuf) {
+    GLuint framebuffer;
+    try {
+        GL_ASSERT(glGenFramebuffers(1, &framebuffer));
+        GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer));
+        if (screenTex != nullptr) {
+            auto target = static_cast<GLenum>(screenTex->GetType());
+            GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, screenTex->GetTexture(), 0));
+        } else if (screenBuf != nullptr) {
+            GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                                                GL_COLOR_ATTACHMENT0,
+                                                GL_RENDERBUFFER,
+                                                screenBuf->GetBuffer()));
+        }
+        if (depthTex != nullptr) {
+            auto target = static_cast<GLenum>(depthTex->GetType());
+            GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, target, depthTex->GetTexture(), 0));
+        } else if (depthBuf != nullptr) {
+            GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                                                GL_DEPTH_ATTACHMENT,
+                                                GL_RENDERBUFFER,
+                                                depthBuf->GetBuffer()));
+        }
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            throw TGlBaseError("Framebuffer Incomplete");
+        }
+        GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+        return std::shared_ptr<GLuint>(new GLuint(framebuffer), FreeFrameBuffer);
+    } catch (...) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDeleteFramebuffers(1, &framebuffer);
+        throw;
+    }
+}
+
+TFrameBuffer::TFrameBuffer(TTexture texture, bool depth)
+    : FrameBuffer(CreateFrameBuffer(depth ? nullptr : &texture, depth ? &texture : nullptr, nullptr, nullptr))
+      , ScreenTexture(depth ? TTexture{} : texture)
+      , DepthTexture(depth ? texture : TTexture{}) {
+}
+
+TFrameBuffer::TFrameBuffer(TTexture screen, TTexture depth)
+    : FrameBuffer(CreateFrameBuffer(&screen, &depth, nullptr, nullptr))
+      , ScreenTexture(screen)
+      , DepthTexture(depth) {
+}
+
+TFrameBuffer::TFrameBuffer(TTexture screen, TRenderBuffer depth)
+    : FrameBuffer(CreateFrameBuffer(&screen, nullptr, nullptr, &depth))
+      , ScreenTexture(screen)
+      , DepthBuffer(depth) {
+}
+
+TFrameBuffer::TFrameBuffer(TRenderBuffer screen, TTexture depth)
+    : FrameBuffer(CreateFrameBuffer(nullptr, &depth, &screen, nullptr))
+      , ScreenBuffer(screen)
+      , DepthTexture(depth) {
+}
+
+TFrameBuffer::TFrameBuffer(TRenderBuffer screen, TRenderBuffer depth)
+    : FrameBuffer(CreateFrameBuffer(nullptr, nullptr, &screen, &depth))
+      , ScreenBuffer(screen)
+      , DepthBuffer(depth) {
+}
+
+void TFrameBuffer::CopyTo(TFrameBuffer &target) {
+    GLenum copy = 0;
+    int srcWidth = 0;
+    int srcHeight = 0;
+    int dstWidth = 0;
+    int dstHeight = 0;
+    if (!target.DepthTexture.Empty() && (!DepthTexture.Empty() || !DepthBuffer.Empty())) {
+        copy |= GL_DEPTH_BUFFER_BIT;
+        srcWidth = !DepthTexture.Empty() ? DepthTexture.GetWidth() : DepthBuffer.GetWidth();
+        srcHeight = !DepthTexture.Empty() ? DepthTexture.GetHeight() : DepthBuffer.GetHeight();
+        dstWidth = target.DepthTexture.GetWidth();
+        dstHeight = target.DepthTexture.GetHeight();
+    }
+    if (!target.ScreenTexture.Empty() && (!ScreenTexture.Empty() || !ScreenBuffer.Empty())) {
+        copy |= GL_COLOR_BUFFER_BIT;
+        srcWidth = !ScreenTexture.Empty() ? ScreenTexture.GetWidth() : ScreenBuffer.GetWidth();
+        srcHeight = !ScreenTexture.Empty() ? ScreenTexture.GetHeight() : ScreenBuffer.GetHeight();
+        dstWidth = target.ScreenTexture.GetWidth();
+        dstHeight = target.ScreenTexture.GetHeight();
+    }
+    GL_ASSERT(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, *target.FrameBuffer));
+    GL_ASSERT(glBindFramebuffer(GL_READ_FRAMEBUFFER, *FrameBuffer));
+    GL_ASSERT(glBlitFramebuffer(0, 0, dstWidth, dstHeight, 0, 0, srcWidth, srcHeight, copy, GL_NEAREST));
+    GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+}
+
+TFrameBufferBinder::TFrameBufferBinder(const TFrameBuffer &framebuffer) {
+    glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer.FrameBuffer);
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 TFrameBufferBinder::~TFrameBufferBinder() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-TFrameBuffer::TFrameBuffer(unsigned width, unsigned height, unsigned samples, bool depthAsTexture)
-    : Mesh(
-    TMeshBuilder()
-        .SetVertices(EBufferUsage::Static, Quad<false, true>(
-            TGeomBuilder()
-                .SetTextureMul(1, -1)
-                .SetTextureOffset(0, 1)
-                .SetSize(1.0f)))
-        .AddLayout(EDataType::Float, 3)
-        .AddLayout(EDataType::Float, 2))
-      , Texture(samples == 0 ? TTexture{TTextureBuilder()
-                                            .SetWrap(ETextureWrap::ClampToEdge)
-                                            .SetEmpty(width, height)}
-                             : TTexture{TMultiSampleTextureBuilder()
-                                            .SetSamples(samples)
-                                            .SetSize(width, height)})
-      , DepthTexture(!depthAsTexture ? std::optional<TTexture>()
-                                     : samples == 0 ? TTexture{TTextureBuilder()
-                                                                   .SetWrap(ETextureWrap::ClampToEdge)
-                                                                   .SetUsage(ETextureUsage::Depth)
-                                                                   .SetEmpty(width, height)}
-                                                    : TTexture{TMultiSampleTextureBuilder()
-                                                                   .SetSamples(samples)
-                                                                   .SetUsage(ETextureUsage::Depth)
-                                                                   .SetSize(width, height)})
-      , Width(width)
-      , Height(height)
-      , Samples(samples) {
-    try {
-        if (!depthAsTexture) {
-            MakeRenderBuffer(width, height, samples);
-        }
-        MakeFrameBuffer(depthAsTexture);
-    } catch (...) {
-        if (RenderBuffer != 0) {
-            glDeleteRenderbuffers(1, &RenderBuffer);
-        }
-        if (FrameBuffer != 0) {
-            glDeleteFramebuffers(1, &FrameBuffer);
-        }
-        throw;
-    }
-}
-
-TFrameBuffer::TFrameBuffer(TFrameBuffer &&src) noexcept
-    : FrameBuffer(src.FrameBuffer)
-      , Texture(std::move(src.Texture))
-      , DepthTexture(std::move(src.DepthTexture))
-      , RenderBuffer(src.RenderBuffer)
-      , Mesh(std::move(src.Mesh))
-      , Samples(src.Samples) {
-    src.FrameBuffer = 0;
-    src.RenderBuffer = 0;
-}
-
-TFrameBuffer::~TFrameBuffer() {
-    if (RenderBuffer != 0) {
-        glDeleteRenderbuffers(1, &RenderBuffer);
-    }
-    glDeleteFramebuffers(1, &FrameBuffer);
-}
-
-void TFrameBuffer::Copy(TFrameBuffer &target) {
-    GL_ASSERT(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target.FrameBuffer));
-    GL_ASSERT(glBindFramebuffer(GL_READ_FRAMEBUFFER, FrameBuffer));
-    GL_ASSERT(glBlitFramebuffer(0, 0, target.Width, target.Height, 0, 0, Width, Height,
-                                GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST));
-    GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-}
-
-void TFrameBuffer::Draw(IFrameBufferShader &target) {
-    target.SetScreen(Texture);
-    if (DepthTexture.has_value()) {
-        target.SetDepth(*DepthTexture);
-    }
-    Mesh.Draw();
-}
-
-void TFrameBuffer::MakeRenderBuffer(int width, int height, int samples) {
-    GL_ASSERT(glGenRenderbuffers(1, &RenderBuffer));
-    try {
-        GL_ASSERT(glBindRenderbuffer(GL_RENDERBUFFER, RenderBuffer));
-        if (samples == 1) {
-            GL_ASSERT(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height));
-        } else {
-            GL_ASSERT(glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, width, height));
-        }
-        GL_ASSERT(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-    } catch (...) {
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        throw;
-    }
-}
-
-void TFrameBuffer::MakeFrameBuffer(bool depthAsTexture) {
-    auto type = static_cast<GLenum>(Texture.GetType());
-    try {
-        GL_ASSERT(glGenFramebuffers(1, &FrameBuffer));
-        GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, FrameBuffer));
-        GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, type, Texture.GetTexture(), 0));
-
-        if (depthAsTexture) {
-            GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, type, DepthTexture->GetTexture(), 0));
-        } else {
-            GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-                                                GL_DEPTH_STENCIL_ATTACHMENT,
-                                                GL_RENDERBUFFER,
-                                                RenderBuffer));
-        }
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            throw TGlBaseError("Framebuffer Incomplete");
-        }
-    } catch (...) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        throw;
-    }
-    GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }

@@ -17,7 +17,7 @@ public:
     friend class TBlurSetup;
 };
 
-class TBlurSetup: public TShaderSetup, public IFrameBufferShader {
+class TBlurSetup: public TShaderSetup {
 private:
     const TBlurShader *Shader;
 
@@ -25,11 +25,13 @@ public:
     explicit TBlurSetup(const TBlurShader *shader) : TShaderSetup(shader), Shader(shader) {
     }
 
-    void SetScreen(const TTexture &texture) override {
+    TBlurSetup &&SetScreen(const TTexture &texture) {
         Set(Shader->Screen, texture);
+        return std::move(*this);
     }
 
-    void SetDepth(const TTexture &texture) override {
+    TBlurSetup &&SetDepth(const TTexture &texture) {
         Set(Shader->Depth, texture);
+        return std::move(*this);
     }
 };
