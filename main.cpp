@@ -66,30 +66,7 @@ void kernel() {
     }
 }
 
-void spot() {
-    float radius = 2.0;
-    int size = static_cast<int>(std::ceil(radius - 0.5));
-    float r2 = radius * radius;
-    for (int y = 0; y < 2 * size + 1; y++) {
-        for (int x = 0; x < 2 * size + 1; x++) {
-            int hits = 0;
-            for (int i = 0; i < 11; i++) {
-                for (int j = 0; j < 11; j++) {
-                    float py = (y * 11 + j) - size * 11 - 5;
-                    float px = (x * 11 + i) - size * 11 - 5;
-                    double length = (px * px + py * py) / 121;
-                    if (length < r2) hits++;
-                }
-            }
-            cout << fixed << setprecision(4) << hits / 121.0 << ", ";
-        }
-        cout << endl;
-    }
-}
-
 void program() {
-    spot();
-
     if (glfwInit() != GLFW_TRUE) {
         throw TGlfwError("init");
     }
@@ -107,6 +84,7 @@ void program() {
         glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
         glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+        glfwWindowHint(GLFW_SAMPLES, 4);
 
         auto window = glfwCreateWindow(mode->width, mode->height, "OpenGL example", monitors[1], nullptr);
         if (window == nullptr) {
@@ -125,6 +103,7 @@ void program() {
         GL_ASSERT(glEnable(GL_CULL_FACE));
         GL_ASSERT(glEnable(GL_BLEND));
         GL_ASSERT(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        GL_ASSERT(glEnable(GL_MULTISAMPLE));
 
         const float sensibility = .25f;
         const float speed = 10.0f;
@@ -158,7 +137,7 @@ void program() {
             auto interval = static_cast<float>(time - lastTime);
             lastTime = time;
             cout << static_cast<int>(1.0 / interval) << endl;
-            usleep(20000);
+            //usleep(10000);
 
             if (Keys[GLFW_KEY_ESCAPE]) {
                 glfwSetWindowShouldClose(window, GLFW_TRUE);

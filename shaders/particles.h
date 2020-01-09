@@ -5,6 +5,7 @@
 class TParticlesShader: public TShaderProgram {
 private:
     GLint Model;
+    GLint Single;
     GLint ViewPos;
     int SkyBox;
 
@@ -18,6 +19,7 @@ public:
             .SetBlock("Lights", lights))
           , SkyBox(DefineTexture("skybox"))
           , Model(DefineProp("model"))
+          , Single(DefineProp("single"))
           , ViewPos(DefineProp("viewPos")) {
     }
 
@@ -44,6 +46,7 @@ public:
         if (Shader != nullptr) {
             try {
                 Set(Shader->Model, glm::mat4(0));
+                Set(Shader->Single, glm::mat4(0));
                 Set(Shader->ViewPos, glm::vec3(0));
             } catch (...) {
             }
@@ -52,6 +55,11 @@ public:
 
     TParticlesSetup &&SetModel(glm::mat4 model) {
         Set(Shader->Model, model);
+        return std::move(*this);
+    }
+
+    TParticlesSetup &&SetSingle(glm::mat4 model) {
+        Set(Shader->Single, model);
         return std::move(*this);
     }
 

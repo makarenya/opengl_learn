@@ -191,10 +191,12 @@ private:
     };
 
     TFrameBuffer FrameBuffer;
+    TFrameBuffer AliasedFrameBuffer;
 
 public:
     TScene(int width, int height)
-        : FrameBuffer(width, height, true) {
+        : FrameBuffer(width, height, 0, true)
+          , AliasedFrameBuffer(width, height, 4, true) {
     }
 
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position);

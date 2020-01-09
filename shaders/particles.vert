@@ -11,6 +11,7 @@ out VS_OUT {
 } vs_out;
 
 uniform mat4 model;
+uniform mat4 single;
 layout (std140) uniform Matrices
 {
     mat4 projection;
@@ -19,20 +20,24 @@ layout (std140) uniform Matrices
 
 void main() {
     vec3 d = normalize(speed);
-    mat3 rot;
+    mat4 rot;
     if (d.z == 1 || d.z == -1) {
-        rot = mat3(
-            1, 0, 0,
-            0, 0, d.z,
-            0, -d.z, 0);
+        rot = mat4(
+            1,    0,   0, 0,
+            0,    0, d.z, 0,
+            0, -d.z,   0, 0,
+            0,    0,   0, 1
+        );
     } else {
         float c = sqrt(1 - d.z * d.z);
-        rot = mat3(
-            d.y / c, -d.x / c, 0,
-            d.x, d.y, d.z,
-            -d.x * d.z / c, - d.y * d.z / c, c);
+        rot = mat4(
+                   d.y / c,        -d.x / c,   0, 0,
+                       d.x,             d.y, d.z, 0,
+            -d.x * d.z / c, - d.y * d.z / c,   c, 0,
+                         0,               0,   0, 1
+        );
     }
-    vs_out.position = vec3(model * vec4(rot * position + offset, 1.0));
-    vs_out.normal = transpose(inverse(mat3(model) * rot)) * normal;
+    vs_out.position = vec3(model * (rot * single * vec4(position, 1.0) + vec4(offset, 0.0)));
+    vs_out.normal = transpose(inverse(mat3(model * single * rot))) * normal;
     gl_Position = projection * view * vec4(vs_out.position, 1.0);
 }

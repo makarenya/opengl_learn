@@ -74,6 +74,7 @@ public:
     }
 
 protected:
+    static void Set(GLint location, GLint value);
     static void Set(GLint location, GLfloat value);
     static void Set(GLint location, glm::vec2 value);
     static void Set(GLint location, GLfloat x, GLfloat y);
@@ -81,6 +82,7 @@ protected:
     static void Set(GLint location, glm::vec3 value);
     static void Set(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
     static void Set(GLint location, glm::vec4 value);
+    static void Set(GLint location, GLfloat* data, GLsizei count);
     static void Set(GLint location, const glm::mat4 &mat);
     void Set(GLint index, const TTexture &texture);
 };

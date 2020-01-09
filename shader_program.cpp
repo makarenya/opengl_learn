@@ -133,6 +133,10 @@ TShaderSetup::~TShaderSetup() {
     }
 }
 
+void TShaderSetup::Set(GLint location, GLint value) {
+    GL_ASSERT(glUniform1i(location, value));
+}
+
 void TShaderSetup::Set(GLint location, GLfloat value) {
     GL_ASSERT(glUniform1f(location, value));
 }
@@ -162,9 +166,11 @@ void TShaderSetup::Set(GLint location, glm::vec4 value) {
 }
 
 void TShaderSetup::Set(GLint location, const glm::mat4 &mat) {
-    GLint p;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &p);
     GL_ASSERT(glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat)));
+}
+
+void TShaderSetup::Set(GLint location, GLfloat* data, GLsizei count) {
+    GL_ASSERT(glUniform1fv(location, count, data));
 }
 
 void TShaderSetup::Set(GLint index, const TTexture &texture) {

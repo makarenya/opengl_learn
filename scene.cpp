@@ -39,7 +39,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
             ExplosionCounter = now;
         }
         ExplosionTime = now - ExplosionCounter;
-        for (int i = 0; i < 1 && CurrentParticles < Particles.size(); ++i) {
+        for (int i = 0; i < 30 && CurrentParticles < Particles.size(); ++i) {
             Particles[CurrentParticles++] = make_tuple(vec3(0, 0, 0),
                                                        vec3(std::round(dist(e2)),
                                                             std::round(vdist(e2)),
@@ -50,7 +50,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
         for (int i = 0; i < CurrentParticles; ++i) {
             auto[pos, speed] = Particles[i];
             speed = vec3(speed.x, speed.y - gravity * interval, speed.z);
-            if (speed.y < -3 * meter) {
+            if (speed.y < -2 * meter) {
                 vec3 add = 3.0f * vec3(Currents - Maxims / 2) / vec3(Maxims);
                 Particles[i] = make_tuple(vec3(0, std::round(dist(e2)), 0),
                                           vec3(std::round(dist(e2)), std::round(vdist(e2)), std::round(dist(e2)))
@@ -69,6 +69,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position) {
         auto setup = TParticlesSetup(&ParticlesShader)
             .SetViewPos(position)
             .SetModel(NConstMath::Translate(0, 10, 0))
+            .SetSingle(NConstMath::Scale(.5))
             .SetSkyBox(SkyTex);
         Points.Draw();
     }
@@ -145,12 +146,13 @@ void TScene::DrawOpaques(glm::vec3 position) {
 void TScene::DrawBorder() {
     {
         auto setup = TSilhouetteSetup(&SilhouetteShader).SetModel(NConstMath::Translate(0, 0, -15));
-        auto binder = FrameBuffer.Bind();
+        auto binder = AliasedFrameBuffer.Bind();
         Suit.Draw(setup);
     }
+    AliasedFrameBuffer.Copy(FrameBuffer);
     {
         TBorderSetup setup(&BorderShader);
-        setup.SetColor(vec4(0, 1, .5, .3));
+        setup.SetColor(vec4(0, 1, .5, .3)).SetKernel(2.4, 1.2);
         FrameBuffer.Draw(setup);
     }
 }

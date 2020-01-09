@@ -4,6 +4,7 @@
 
 enum struct ETextureType {
     Flat = GL_TEXTURE_2D,
+    MultiSample = GL_TEXTURE_2D_MULTISAMPLE,
     Cube = GL_TEXTURE_CUBE_MAP,
 };
 
@@ -56,6 +57,13 @@ public:
     BUILDER_PROPERTY(std::string, NegZ);
 };
 
+class TMultiSampleTextureBuilder {
+public:
+    BUILDER_PROPERTY(ETextureUsage, Usage){ETextureUsage::Rgba};
+    BUILDER_PROPERTY(int, Samples){4};
+    BUILDER_PROPERTY2(int, int, Size);
+};
+
 class TTexture {
 private:
     std::shared_ptr<GLuint> Texture;
@@ -64,9 +72,11 @@ private:
 public:
     TTexture() = default;
     TTexture(const TTextureBuilder &builder);
+    TTexture(const TMultiSampleTextureBuilder &builder);
     TTexture(const TCubeTextureBuilder &builder);
     [[nodiscard]] bool Empty() const { return !Texture; }
     GLuint GetTexture() const { return *Texture; }
+    ETextureType GetType() const { return Type; }
     friend class TTextureBinder;
 };
 

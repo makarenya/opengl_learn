@@ -26,7 +26,7 @@ GLenum ByteFormat(ETextureUsage usage) {
     switch (usage) {
         case ETextureUsage::Rgb:
         case ETextureUsage::Rgba: return GL_UNSIGNED_BYTE;
-        case ETextureUsage::Depth: return GL_FLOAT;
+        case ETextureUsage::Depth: return GL_UNSIGNED_BYTE;
         case ETextureUsage::DepthStencil: return GL_UNSIGNED_INT_24_8;
     }
 }
@@ -86,6 +86,23 @@ GLuint CreateTexture(const TTextureBuilder &builder) {
     return texture;
 }
 
+GLuint CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder) {
+    GLuint texture;
+    GL_ASSERT(glGenTextures(1, &texture));
+    try {
+        GL_ASSERT(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture));
+        auto format = static_cast<GLenum>(builder.Usage_);
+        auto[width, height]= builder.Size_;
+        GL_ASSERT(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, builder.Samples_, format, width, height, GL_TRUE));
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+    } catch (...) {
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        glDeleteTextures(1, &texture);
+        throw;
+    }
+    return texture;
+}
+
 GLuint CreateCubeTexture(const TCubeTextureBuilder &builder) {
     GLuint texture;
     GL_ASSERT(glGenTextures(1, &texture));
@@ -120,6 +137,11 @@ GLuint CreateCubeTexture(const TCubeTextureBuilder &builder) {
 TTexture::TTexture(const TTextureBuilder &builder)
     : Texture(new GLuint(CreateTexture(builder)), DropTexture)
       , Type(ETextureType::Flat) {
+}
+
+TTexture::TTexture(const TMultiSampleTextureBuilder &builder)
+    : Texture(new GLuint(CreateMultisampleTexture(builder)), DropTexture)
+      , Type(ETextureType::MultiSample) {
 }
 
 TTexture::TTexture(const TCubeTextureBuilder &builder)
