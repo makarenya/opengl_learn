@@ -25,6 +25,8 @@ enum struct ETextureWrap {
 enum struct ETextureUsage {
     Rgb = GL_RGB,
     Rgba = GL_RGBA,
+    SRgb = GL_SRGB,
+    SRgba = GL_SRGB_ALPHA,
     Depth = GL_DEPTH_COMPONENT,
     DepthStencil = GL_DEPTH24_STENCIL8
 };

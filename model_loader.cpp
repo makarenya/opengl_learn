@@ -24,7 +24,7 @@ bool LoadColorTexture(const aiMaterial *material,
         aiString path;
         material->GetTexture(type, 0, &path);
         std::string texPath = directory + "/" + path.C_Str();
-        builder.SetTexture(prop, TTextureBuilder().SetFile(texPath));
+        builder.SetTexture(prop, TTextureBuilder().SetFile(texPath).SetUsage(ETextureUsage::SRgba));
         return true;
     }
     aiColor3D color;

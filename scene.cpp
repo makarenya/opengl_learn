@@ -17,7 +17,6 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
 
     DrawObjects(position);
     DrawLightCubes();
-
     DrawSkybox();
     DrawBorder();
     DrawOpaques(position);
@@ -65,17 +64,17 @@ void TScene::DrawFountain(float interval, vec3 position) {
 void TScene::SetupLights(glm::vec3 position) {
     TLights setup{};
     setup.directional = {{1.0f, -6.0f, 3.0f},
-                         vec3(.01), vec3(.4), vec3(.4)};
+                         vec3(.01), vec3(.2), vec3(.2)};
     setup.spots[0] = {{position.x, 16.0, position.z},
-                      vec3(0.01f), vec3(0.3f), vec3(1.0f),
-                      0.09, 0.0032};
+                      vec3(0.01f), vec3(0.3f), vec3(0.0f),
+                      0.00, 0.03};
     int k = 1;
     for (auto &spot : Spots) {
         setup.spots[k] = {spot.first,
                           0.01f * spot.second,
                           0.3f * spot.second,
                           spot.second,
-                          0.02, 0.0009};
+                          0.00, 0.03};
         k++;
     }
     setup.spotCount = k;

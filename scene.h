@@ -139,9 +139,11 @@ private:
     TTexture AsphaltTex{
         TTextureBuilder()
             .SetFile("images/asphalt_diffuse.png")
+            .SetUsage(ETextureUsage::SRgb)
             .SetMipmap(ETextureMipmap::Linear)};
     TTexture SkyTex{
         TCubeTextureBuilder()
+            .SetUsage(ETextureUsage::SRgb)
             .SetPosX("images/yokohama3/posx.jpg")
             .SetNegX("images/yokohama3/negx.jpg")
             .SetPosY("images/yokohama3/posy.jpg")
@@ -153,12 +155,18 @@ private:
         TMaterialBuilder()
             .SetColor(EMaterialProp::Specular, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f))
             .SetTexture(EMaterialProp::Diffuse, AsphaltTex)
-            .SetConstant(EMaterialProp::Shininess, .1)};
+            .SetConstant(EMaterialProp::Shininess, .5)};
     TMaterial Container{
         TMaterialBuilder()
-            .SetTexture(EMaterialProp::Diffuse, TTextureBuilder().SetFile("images/container2_diffuse.png"))
-            .SetTexture(EMaterialProp::Specular, TTextureBuilder().SetFile("images/container2_specular.png"))
-            .SetConstant(EMaterialProp::Reflection, .1)
+            .SetTexture(EMaterialProp::Diffuse,
+                        TTextureBuilder()
+                            .SetUsage(ETextureUsage::SRgb)
+                            .SetFile("images/container2_diffuse.png"))
+            .SetTexture(EMaterialProp::Specular,
+                        TTextureBuilder()
+                            .SetUsage(ETextureUsage::SRgb)
+                            .SetFile("images/container2_specular.png"))
+            .SetConstant(EMaterialProp::Reflection, .001)
             .SetConstant(EMaterialProp::Shininess, 64)};
     TMesh Sky{
         TMeshBuilder()
@@ -166,9 +174,15 @@ private:
                 TGeomBuilder().SetSize(1).SetBackward(true)))
             .AddLayout(EDataType::Float, 3)};
     TMaterial
-        Grass{TMaterialBuilder().SetTexture(EMaterialProp::Diffuse, TTextureBuilder().SetFile("images/grass.png"))};
+        Grass{TMaterialBuilder().SetTexture(EMaterialProp::Diffuse,
+                                            TTextureBuilder()
+                                                .SetUsage(ETextureUsage::SRgba)
+                                                .SetFile("images/grass.png"))};
     TMaterial
-        Window{TMaterialBuilder().SetTexture(EMaterialProp::Diffuse, TTextureBuilder().SetFile("images/window.png"))};
+        Window{TMaterialBuilder().SetTexture(EMaterialProp::Diffuse,
+                                             TTextureBuilder()
+                                                 .SetUsage(ETextureUsage::SRgba)
+                                                 .SetFile("images/window.png"))};
     TMesh GroundCube{
         TMeshBuilder()
             .SetVertices(EBufferUsage::Static, Cube(TGeomBuilder().SetTextureMul(10, 10)))
@@ -198,7 +212,7 @@ private:
                      .AddLayout(EDataType::Float, 3, 1)
                      .AddLayout(EDataType::Float, 3, 1)};
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {
-        std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, 2.0f}, glm::vec3{2.0f, 0.2f, 0.1f}),
+        std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, -6.0f}, glm::vec3{2.0f, 0.2f, 0.1f}),
         std::forward_as_tuple(glm::vec3{2.0f, 2.0f, 40.0f}, glm::vec3{2.0f, 1.0f, 0.1f})
     };
 
@@ -215,7 +229,7 @@ private:
 public:
     TScene(int width, int height)
         : FrameBuffer(width, height, 0, true)
-          , AliasedFrameBuffer(width, height, 4, true) {
+          , AliasedFrameBuffer(width, height, 8, true) {
     }
 
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position, float interval);

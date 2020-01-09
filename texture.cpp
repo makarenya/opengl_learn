@@ -16,7 +16,9 @@ GLenum MinFilter(bool minLinear, ETextureMipmap mipmap) {
 
 int SoilFormat(ETextureUsage usage) {
     switch (usage) {
+        case ETextureUsage::SRgb:
         case ETextureUsage::Rgb: return SOIL_LOAD_RGB;
+        case ETextureUsage::SRgba:
         case ETextureUsage::Rgba: return SOIL_LOAD_RGBA;
         default:throw TGlBaseError("invalid value for load image");
     }
@@ -25,9 +27,19 @@ int SoilFormat(ETextureUsage usage) {
 GLenum ByteFormat(ETextureUsage usage) {
     switch (usage) {
         case ETextureUsage::Rgb:
-        case ETextureUsage::Rgba: return GL_UNSIGNED_BYTE;
+        case ETextureUsage::Rgba:
+        case ETextureUsage::SRgb:
+        case ETextureUsage::SRgba:
         case ETextureUsage::Depth: return GL_UNSIGNED_BYTE;
         case ETextureUsage::DepthStencil: return GL_UNSIGNED_INT_24_8;
+    }
+}
+
+GLenum OuterFormat(ETextureUsage usage) {
+    switch (usage) {
+        case ETextureUsage::SRgb: return GL_RGB;
+        case ETextureUsage::SRgba: return GL_RGBA;
+        default: return static_cast<GLenum>(usage);
     }
 }
 
@@ -39,7 +51,7 @@ void LoadTextureImage(const std::string &file, GLenum what, ETextureUsage usage)
     }
     try {
         auto format = static_cast<GLenum>(usage);
-        GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, format, ByteFormat(usage), data));
+        GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), data));
     } catch (...) {
         SOIL_free_image_data(data);
     }
@@ -58,8 +70,7 @@ GLuint CreateTexture(const TTextureBuilder &builder) {
         ETextureWrap wrapT = builder.WrapT_ == ETextureWrap::Undefined ? builder.Wrap_ : builder.WrapT_;
 
         GL_ASSERT(glBindTexture(GL_TEXTURE_2D, texture));
-        GL_ASSERT(glTexParameteri(GL_TEXTURE_2D,
-                                  GL_TEXTURE_MIN_FILTER,
+        GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                                   MinFilter(builder.MinLinear_, builder.Mipmap_)));
         GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MagFilter(builder.MagLinear_)));
         GL_ASSERT(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLenum>(wrapS)));
