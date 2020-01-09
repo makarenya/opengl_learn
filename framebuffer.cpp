@@ -53,7 +53,6 @@ std::shared_ptr<GLuint> CreateFrameBuffer(TTexture *screenTex,
         } else {
             glDrawBuffer(GL_NONE);
             glReadBuffer(GL_NONE);
-            std::cout << "none to draw" << std::endl;
         }
         if (depthTex != nullptr) {
             auto target = static_cast<GLenum>(depthTex->GetType());

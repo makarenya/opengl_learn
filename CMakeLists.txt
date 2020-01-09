@@ -27,6 +27,9 @@ add_executable(opengl
         model_loader.cpp
         scene.h
         scene.cpp
+        scene_setup.h
+        shader_set.h
+        shader_set.cpp
         framebuffer.h
         framebuffer.cpp
         uniform_buffer.h

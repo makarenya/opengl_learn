@@ -8,19 +8,26 @@ using namespace std;
 using namespace glm;
 
 void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
-    ProjectionView = {project, view};
     ExplosionTime = ExplosionTime >= 15 ? 0 : ExplosionTime + interval;
     SetupLights(position);
+    UpdateFountain(interval);
 
-    glClearColor(.05, .01, .07, 1);
-    GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+    mat4 global = ortho(-70.0f, 70.0f, -70.0f, 70.0f, 0.01f, 150.0f);
+    mat4 look = lookAt(-normalize(Directional) * 60.0f, vec3(0, 0, 0), vec3(0, 1, 0));
+    ProjectionView = {global, look};
 
-    DrawObjects(position);
-    DrawLightCubes();
+    ProjectionView = {project, view};
     DrawSkybox();
+    TSceneShaderSet set{&SceneShader, &ParticlesShader, SkyTex, position};
+    DrawScene(set);
+    DrawLightCubes();
     DrawBorder();
-    DrawOpaques(position);
-    DrawFountain(interval, position);
+}
+
+void TScene::DrawScene(IShaderSet &set) {
+    DrawFountain(set);
+    DrawObjects(set);
+    DrawOpaques(set);
 }
 
 void TScene::DrawSkybox() {
@@ -32,7 +39,7 @@ void TScene::DrawSkybox() {
     glDepthMask(GL_TRUE);
 }
 
-void TScene::DrawFountain(float interval, vec3 position) {
+void TScene::UpdateFountain(float interval) {
     double meter = 15 / 1.8;
     double gravity = 9.8 * meter;
 
@@ -53,18 +60,15 @@ void TScene::DrawFountain(float interval, vec3 position) {
         *p++ = speed;
     }
     mapper.Unmap();
-    auto setup = TParticlesSetup(&ParticlesShader)
-        .SetViewPos(position)
-        .SetModel(NConstMath::Translate(0, 10, 0))
-        .SetSingle(NConstMath::Scale(.5))
-        .SetSkyBox(SkyTex);
-    Points.Draw();
+}
+
+void TScene::DrawFountain(IShaderSet &set) {
+    set.Particles(NConstMath::Translate(0, 10, 0), NConstMath::Scale(.5), Points);
 }
 
 void TScene::SetupLights(glm::vec3 position) {
     TLights setup{};
-    setup.directional = {{1.0f, -1.0f, 1.0f},
-                         vec3(.25), vec3(.7), vec3(.8)};
+    setup.directional = {Directional, vec3(.25), vec3(.7), vec3(.8)};
     setup.spots[0] = {{position.x, 16.0, position.z},
                       vec3(0.01f), vec3(0.3f), vec3(0.0f),
                       0.00, 0.03};
@@ -79,45 +83,34 @@ void TScene::SetupLights(glm::vec3 position) {
     }
     setup.spotCount = k;
     LightSetup = setup;
+    glClearColor(.05, .01, .07, 1);
+    GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 }
 
 mat4 Place(vec3 position, vec3 axis, float angle, vec3 s) {
     return NConstMath::Translate(position) * NConstMath::RotateAxis(angle, axis) * NConstMath::Scale(s);
 }
 
-void TScene::DrawObjects(glm::vec3 position) {
-    auto setup = TSceneSetup(&SceneShader)
-        .SetViewPos(position)
-        .SetSkyBox(SkyTex)
-        .SetCanDiscard(false);
-    setup.SetModel(scale(translate(one<mat4>(), vec3(0.0f, -100.0f, 0.0f)), vec3(200.0f)));
-    Asphalt.DrawWith(setup, GroundCube);
+void TScene::DrawObjects(IShaderSet &set) {
+    set.Scene(scale(translate(one<mat4>(), vec3(0.0f, -100.0f, 0.0f)), vec3(200.0f)),
+        false, 0, Asphalt, GroundCube);
 
-    setup.SetModel(Place(vec3(6, 7.0, 44.0), vec3(.2, .4, -.1), 30.0f, vec3(10.0f)));
-    Container.DrawWith(setup, SimpleCube);
-
-    setup.SetModel(NConstMath::Translate(0, 0, -15));
-    if (ExplosionTime > 14) {
-        setup.SetExplosion(std::sin((ExplosionTime - 14) * M_PI) * 20);
-    } else {
-        setup.SetExplosion(0);
-    }
-    Suit.Draw(setup);
+    set.Scene(Place(vec3(6, 7.0, 44.0), vec3(.2, .4, -.1), 30.0f, vec3(10.0f)),
+            false, 0, Container, SimpleCube);
+    float explosion = ExplosionTime <= 14 ? 0.0f : static_cast<float>(std::sin((ExplosionTime - 14) * M_PI) * 20.0f);
+    set.Scene(NConstMath::Translate(0, 0, -15), false, explosion, Suit);
 }
 
-void TScene::DrawOpaques(glm::vec3 position) {
-    auto setup = TSceneSetup(&SceneShader).SetViewPos(position);
-    setup.SetCanDiscard(true);
+void TScene::DrawOpaques(IShaderSet &set) {
     std::map<float, OpaqueType> objs{};
     for (auto obj : OpaqueObjects) {
-        objs.emplace(-glm::length(get<0>(obj) - position), obj);
+        objs.emplace(-glm::length(get<0>(obj) - set.GetPosition()), obj);
     }
     for (auto obj : objs) {
+        // todo: don't divide to position and matrix
         auto&[position, matrix, material, mesh] = obj.second;
-        setup.SetModel(NConstMath::Translate(position) * matrix);
-        material.DrawWith(setup, mesh);
+        set.Scene(NConstMath::Translate(position) * matrix, true, 0, material, mesh);
     }
-    setup.SetCanDiscard(false);
 }
 
 void TScene::DrawBorder() {
