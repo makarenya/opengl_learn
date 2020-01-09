@@ -48,19 +48,19 @@ std::shared_ptr<GLuint> CreateFrameBuffer(TTexture *screenTex,
             auto target = static_cast<GLenum>(screenTex->GetType());
             GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, screenTex->GetTexture(), 0));
         } else if (screenBuf != nullptr) {
-            GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-                                                GL_COLOR_ATTACHMENT0,
-                                                GL_RENDERBUFFER,
-                                                screenBuf->GetBuffer()));
+            GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                                GL_RENDERBUFFER, screenBuf->GetBuffer()));
+        } else {
+            glDrawBuffer(GL_NONE);
+            glReadBuffer(GL_NONE);
+            std::cout << "none to draw" << std::endl;
         }
         if (depthTex != nullptr) {
             auto target = static_cast<GLenum>(depthTex->GetType());
             GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, target, depthTex->GetTexture(), 0));
         } else if (depthBuf != nullptr) {
-            GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-                                                GL_DEPTH_ATTACHMENT,
-                                                GL_RENDERBUFFER,
-                                                depthBuf->GetBuffer()));
+            GL_ASSERT(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                                GL_RENDERBUFFER, depthBuf->GetBuffer()));
         }
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             throw TGlBaseError("Framebuffer Incomplete");
@@ -78,6 +78,12 @@ TFrameBuffer::TFrameBuffer(TTexture texture, bool depth)
     : FrameBuffer(CreateFrameBuffer(depth ? nullptr : &texture, depth ? &texture : nullptr, nullptr, nullptr))
       , ScreenTexture(depth ? TTexture{} : texture)
       , DepthTexture(depth ? texture : TTexture{}) {
+}
+
+TFrameBuffer::TFrameBuffer(TRenderBuffer buffer, bool depth)
+    : FrameBuffer(CreateFrameBuffer(nullptr, nullptr, depth ? nullptr : &buffer, depth ? &buffer : nullptr))
+      , ScreenBuffer(depth ? TRenderBuffer{} : buffer)
+      , DepthBuffer(depth ? buffer : TRenderBuffer{}) {
 }
 
 TFrameBuffer::TFrameBuffer(TTexture screen, TTexture depth)
@@ -132,8 +138,15 @@ void TFrameBuffer::CopyTo(TFrameBuffer &target) {
 
 TFrameBufferBinder::TFrameBufferBinder(const TFrameBuffer &framebuffer) {
     glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer.FrameBuffer);
+    GLenum what = 0;
+    if (!framebuffer.ScreenTexture.Empty() || !framebuffer.ScreenBuffer.Empty()) {
+        what |= GL_COLOR_BUFFER_BIT;
+    }
+    if (!framebuffer.DepthTexture.Empty() || !framebuffer.DepthBuffer.Empty()) {
+        what |= GL_DEPTH_BUFFER_BIT;
+    }
     glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(what);
 }
 
 TFrameBufferBinder::~TFrameBufferBinder() {

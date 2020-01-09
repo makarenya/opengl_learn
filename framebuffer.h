@@ -18,7 +18,7 @@ public:
     [[nodiscard]] GLuint GetBuffer() const { return *Buffer; }
     [[nodiscard]] int GetWidth() const { return Width; }
     [[nodiscard]] int GetHeight() const { return Height; }
-    [[nodiscard]] bool Empty() { return !Buffer; }
+    [[nodiscard]] bool Empty() const { return !Buffer; }
 };
 
 class TFrameBuffer {
@@ -30,6 +30,7 @@ class TFrameBuffer {
 
 public:
     TFrameBuffer(TTexture texture, bool depth = false);
+    TFrameBuffer(TRenderBuffer buffer, bool depth = false);
     TFrameBuffer(TTexture screen, TTexture depth);
     TFrameBuffer(TTexture screen, TRenderBuffer depth);
     TFrameBuffer(TRenderBuffer screen, TTexture depth);
