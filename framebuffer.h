@@ -44,10 +44,13 @@ public:
 };
 
 class TFrameBufferBinder {
+    GLuint OldBuffer{};
+    glm::ivec4 OldViewport{};
 public:
     explicit TFrameBufferBinder(const TFrameBuffer &framebuffer);
     ~TFrameBufferBinder();
 
     TFrameBufferBinder(const TFrameBufferBinder &) = delete;
     TFrameBufferBinder &operator=(const TFrameBufferBinder &) = delete;
+    void Unbind();
 };

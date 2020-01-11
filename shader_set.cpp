@@ -1,9 +1,16 @@
 #include "shader_set.h"
 
-TSceneShaderSet::TSceneShaderSet(TSceneShader *scene, TParticlesShader *particles, TTexture sky, glm::vec3 position)
+TSceneShaderSet::TSceneShaderSet(TSceneShader *scene,
+                                 TParticlesShader *particles,
+                                 TTexture sky,
+                                 TTexture shadow,
+                                 glm::mat4 lightMatrix,
+                                 glm::vec3 position)
     : SceneShader(scene)
       , ParticlesShader(particles)
       , Sky(std::move(sky))
+      , Shadow(std::move(shadow))
+      , LightMatrix(lightMatrix)
       , Position(position) {
 }
 
@@ -20,8 +27,10 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
     auto setup = TSceneSetup(SceneShader)
         .SetViewPos(Position)
         .SetModel(model)
-        .SetCanDiscard(opaque)
+        .SetOpaque(opaque)
         .SetSkyBox(Sky)
+        .SetShadow(Shadow)
+        .SetLightMatrix(LightMatrix)
         .SetExplosion(explosion);
     mat.DrawWith(setup, mesh);
 }
@@ -30,8 +39,37 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
     auto setup = TSceneSetup(SceneShader)
         .SetViewPos(Position)
         .SetModel(model)
-        .SetCanDiscard(opaque)
+        .SetOpaque(opaque)
         .SetSkyBox(Sky)
+        .SetShadow(Shadow)
+        .SetLightMatrix(LightMatrix)
         .SetExplosion(explosion);
+    obj.Draw(setup);
+}
+
+TShadowShaderSet::TShadowShaderSet(TShadowShader *shader, glm::mat4 lightMatrix, glm::vec3 position)
+    : ShadowShader(shader)
+      , LightMatrix(lightMatrix)
+      , Position(position) {
+}
+
+void TShadowShaderSet::Particles(glm::mat4, glm::mat4, const TMesh &mesh) {
+}
+
+void TShadowShaderSet::Scene(glm::mat4 model, bool opacity, float explosion, const TMaterial &mat, const TMesh &mesh) {
+    if (explosion > 0) return;
+    auto setup = TShadowSetup(ShadowShader)
+        .SetLightMatrix(LightMatrix)
+        .SetModel(model)
+        .SetOpacity(opacity);
+    mat.DrawWith(setup, mesh);
+}
+
+void TShadowShaderSet::Scene(glm::mat4 model, bool opacity, float explosion, const TModel &obj) {
+    if (explosion > 0) return;
+    auto setup = TShadowSetup(ShadowShader)
+        .SetLightMatrix(LightMatrix)
+        .SetModel(model)
+        .SetOpacity(opacity);
     obj.Draw(setup);
 }

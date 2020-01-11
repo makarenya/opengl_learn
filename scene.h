@@ -8,6 +8,7 @@
 #include "shaders/skybox.h"
 #include "shaders/normals.h"
 #include "shaders/blur.h"
+#include "shaders/depth.h"
 #include "cube.h"
 #include "framebuffer.h"
 #include "scene_setup.h"
@@ -24,6 +25,8 @@ private:
     TUniformBuffer Connector{&ProjectionView, &LightSetup};
     TSceneShader SceneShader{ProjectionView, LightSetup};
     TLightShader LightShader{ProjectionView};
+    TShadowShader ShadowShader{};
+    TDepthShader DepthShader{};
     TSilhouetteShader SilhouetteShader{ProjectionView};
     TBorderShader BorderShader{};
     TSkyboxShader SkyboxShader{ProjectionView};
@@ -119,7 +122,7 @@ private:
                                    6 * Particles.size())
                      .AddLayout(EDataType::Float, 3, 1)
                      .AddLayout(EDataType::Float, 3, 1)};
-    glm::vec3 Directional{1.0f, -1.0f, 1.0f};
+    glm::vec3 Directional{0.6f, -1.0f, 1.0f};
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {
         std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, -6.0f}, glm::vec3{2.0f, 0.2f, 0.1f}),
         std::forward_as_tuple(glm::vec3{2.0f, 2.0f, 40.0f}, glm::vec3{2.0f, 1.0f, 0.1f})
@@ -136,11 +139,12 @@ private:
     TFrameBuffer AliasedFrameBuffer;
     TFrameBuffer GlobalLightShadow{
         TTextureBuilder()
-            .SetEmpty(1024, 1024)
+            .SetEmpty(4096, 4096)
             .SetMagLinear(false)
             .SetMinLinear(false)
-            .SetUsage(ETextureUsage::Depth)
-            .SetWrap(ETextureWrap::ClampToEdge),
+            .SetWrap(ETextureWrap::ClampToBorder)
+            .SetBorderColor(glm::vec4(1))
+            .SetUsage(ETextureUsage::Depth),
         true
     };
 
@@ -157,7 +161,7 @@ public:
     void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position, float interval);
 
 private:
-    void DrawScene(IShaderSet &set);
+    void DrawScene(IShaderSet &&set);
     void SetupLights(glm::vec3 position);
     void UpdateFountain(float interval);
     void DrawFountain(IShaderSet &set);

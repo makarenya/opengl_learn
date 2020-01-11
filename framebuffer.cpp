@@ -1,3 +1,4 @@
+#include <iostream>
 #include "framebuffer.h"
 #include "cube.h"
 
@@ -7,7 +8,7 @@ void FreeRenderBuffer(GLuint *buffer) {
 
 std::shared_ptr<GLuint> CreateRenderBuffer(ETextureUsage usage, unsigned width, unsigned height, unsigned samples) {
     GLuint buffer;
-    auto type = static_cast<GLenum>(usage);
+    auto type = TextureUsageType(usage);
     GL_ASSERT(glGenRenderbuffers(1, &buffer));
     try {
         GL_ASSERT(glBindRenderbuffer(GL_RENDERBUFFER, buffer));
@@ -136,18 +137,41 @@ void TFrameBuffer::CopyTo(TFrameBuffer &target) {
 }
 
 TFrameBufferBinder::TFrameBufferBinder(const TFrameBuffer &framebuffer) {
+    GLint current;
+    GL_ASSERT(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current));
+    GLint viewport[4];
+    GL_ASSERT(glGetIntegerv(GL_VIEWPORT, viewport));
+    OldBuffer = current;
+    OldViewport = glm::ivec4(viewport[0], viewport[1], viewport[2], viewport[3]);
+
     glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer.FrameBuffer);
     GLenum what = 0;
-    if (!framebuffer.ScreenTexture.Empty() || !framebuffer.ScreenBuffer.Empty()) {
-        what |= GL_COLOR_BUFFER_BIT;
-    }
+    int width = 0;
+    int height = 0;
     if (!framebuffer.DepthTexture.Empty() || !framebuffer.DepthBuffer.Empty()) {
         what |= GL_DEPTH_BUFFER_BIT;
+        width = !framebuffer.DepthTexture.Empty() ? framebuffer.DepthTexture.GetWidth()
+                                                  : framebuffer.DepthBuffer.GetWidth();
+        height = !framebuffer.DepthTexture.Empty() ? framebuffer.DepthTexture.GetHeight()
+                                                  : framebuffer.DepthBuffer.GetHeight();
     }
-    glClearColor(0, 0, 0, 0);
-    glClear(what);
+    if (!framebuffer.ScreenTexture.Empty() || !framebuffer.ScreenBuffer.Empty()) {
+        what |= GL_COLOR_BUFFER_BIT;
+        width = !framebuffer.ScreenTexture.Empty() ? framebuffer.ScreenTexture.GetWidth()
+                                                  : framebuffer.ScreenBuffer.GetWidth();
+        height = !framebuffer.ScreenTexture.Empty() ? framebuffer.ScreenTexture.GetHeight()
+                                                   : framebuffer.ScreenBuffer.GetHeight();
+    }
+    GL_ASSERT(glViewport(0, 0, width, height));
+    GL_ASSERT(glClearColor(0, 0, 0, 0));
+    GL_ASSERT(glClear(what));
 }
 
 TFrameBufferBinder::~TFrameBufferBinder() {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    Unbind();
+}
+
+void TFrameBufferBinder::Unbind() {
+    glBindFramebuffer(GL_FRAMEBUFFER, OldBuffer);
+    glViewport(OldViewport[0], OldViewport[1], OldViewport[2], OldViewport[3]);
 }

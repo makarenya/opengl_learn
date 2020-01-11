@@ -7,7 +7,6 @@ struct Material {
     vec4 specular_col;
     sampler2D shiness_map;
     float shiness;
-    samplerCube skybox;
     float reflection;
     float refraction;
 };
@@ -48,12 +47,15 @@ struct ProjectorLight {
 in GS_OUT {
     vec3 normal;
     vec3 position;
+    vec4 lightPos;
     vec2 coord;
 } fs_in;
 
 uniform vec3 viewPos;
 uniform Material material;
-uniform bool canDiscard;
+uniform samplerCube skybox;
+uniform sampler2D shadow;
+uniform bool opaque;
 layout (std140) uniform Lights {
     DirectionalLight directional;
     SpotLight spots[8];
@@ -84,22 +86,38 @@ void main() {
 
     if (material.reflection > 0) {
         vec3 reflectDir = reflect(-viewDir, norm);
-        vec3 sky = vec3(texture(material.skybox, reflectDir));
+        vec3 sky = vec3(texture(skybox, reflectDir));
         float r = material.reflection;
         result = sky * r + result * (1.0 - r);
     }
 
     if (material.refraction > 0) {
         float ratio = 1.00 / 1.33;
-        vec3 ref = vec3(texture(material.skybox, refract(-viewDir, norm, ratio)));
+        vec3 ref = vec3(texture(skybox, refract(-viewDir, norm, ratio)));
         result = ref * material.refraction + result * (1.0 - material.refraction);
     }
 
-    if (canDiscard) {
+    if (opaque) {
         color = vec4(pow(result, gamma), diffuse.a);
     } else {
         color = vec4(pow(result, gamma), 1.0f);
     }
+}
+
+vec2 shadowTex = 0.5 / textureSize(shadow, 0);
+
+float GetShadow() {
+    vec3 coord = (fs_in.lightPos.xyz / fs_in.lightPos.w) * 0.5 + 0.5;
+    if (coord.z > 1) return 1;
+    float value = 1;
+    for (int i = -3; i <= 3; i++) {
+        for (int j = -3; j <= 3; j++) {
+            if (texture(shadow, coord.xy + shadowTex * vec2(i, j)).r < coord.z) {
+                value -= 1.0 / 49;
+            }
+        }
+    }
+    return value;
 }
 
 vec3 CalcDirectionalLight(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {
@@ -107,11 +125,12 @@ vec3 CalcDirectionalLight(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 
     vec3 halfLight = normalize(lightNorm + viewDir);
 
     float diff = max(dot(norm, lightNorm), 0.0f);
-    float spec = pow(max(dot(norm, halfLight), 0.0f), shiness);
+    float spec = dot(norm, lightNorm) >= 0 ? pow(max(dot(norm, halfLight), 0.0f), shiness) : 0;
+    float s = GetShadow();
 
     return diffuse * light.ambient +
-    diffuse * diff * light.diffuse +
-    specular.rgb * spec * light.specular;
+        s * diffuse * diff * light.diffuse +
+        s * specular.rgb * spec * light.specular;
 }
 
 vec3 CalcSpotLight(SpotLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {
@@ -122,7 +141,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 
     float intensity = 1.0f / (1.0f + light.linear * distance + light.quadratic * distance * distance);
 
     float diff = max(dot(norm, lightNorm), 0.0f);
-    float spec = pow(max(dot(norm, halfLight), 0.0f), shiness);
+    float spec = dot(norm, lightNorm) >= 0 ? pow(max(dot(norm, halfLight), 0.0f), shiness) : 0;
 
     return (diffuse * light.ambient +
     diffuse * diff * light.diffuse +
@@ -141,7 +160,7 @@ vec3 CalcProjectorLight(ProjectorLight light, vec3 norm, vec3 viewDir, vec3 diff
         0.0f, 1.0f);
 
     float diff = max(dot(norm, lightNorm), 0.0f);
-    float spec = pow(max(dot(norm, halfLight), 0.0f), shiness);
+    float spec = dot(norm, lightNorm) >= 0 ? pow(max(dot(norm, halfLight), 0.0f), shiness) : 0;
 
     return (diffuse * light.ambient +
     diffuse * diff * light.diffuse +

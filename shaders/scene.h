@@ -5,9 +5,11 @@ class TSceneShader: public TShaderProgram {
 private:
     GLint Model;
     GLint SkyBox;
+    GLint Shadow;
+    GLint LightMatrix;
     GLint ViewPos;
     GLint Explosion;
-    GLint CanDiscard;
+    GLint Opaque;
 public:
     TSceneShader(const TUniformBindingBase &matrices, const TUniformBindingBase &lights)
         : TShaderProgram(
@@ -26,10 +28,12 @@ public:
             .SetConstant("material.reflection", EMaterialProp::Reflection)
             .SetConstant("material.refraction", EMaterialProp::Refraction))
           , Model(DefineProp("model"))
-          , SkyBox(DefineTexture("material.skybox"))
+          , SkyBox(DefineTexture("skybox"))
+          , Shadow(DefineTexture("shadow"))
+          , LightMatrix(DefineProp("lightMatrix"))
           , ViewPos(DefineProp("viewPos"))
           , Explosion(DefineProp("explosion"))
-          , CanDiscard(DefineProp("canDiscard")) {
+          , Opaque(DefineProp("opaque")) {
     }
 
     friend class TSceneSetup;
@@ -55,7 +59,7 @@ public:
                 Set(Shader->Model, glm::mat4(0));
                 Set(Shader->ViewPos, glm::vec3(0));
                 Set(Shader->Explosion, 0.0f);
-                Set(Shader->CanDiscard, false);
+                Set(Shader->Opaque, false);
             } catch (...) {
             }
         }
@@ -76,8 +80,18 @@ public:
         return std::move(*this);
     }
 
-    TSceneSetup &&SetCanDiscard(bool value) {
-        Set(Shader->CanDiscard, value);
+    TSceneSetup &&SetOpaque(bool value) {
+        Set(Shader->Opaque, value);
+        return std::move(*this);
+    }
+
+    TSceneSetup &&SetShadow(TTexture &texture) {
+        Set(Shader->Shadow, texture);
+        return std::move(*this);
+    }
+
+    TSceneSetup &&SetLightMatrix(glm::mat4 matrix) {
+        Set(Shader->LightMatrix, matrix);
         return std::move(*this);
     }
 

@@ -23,13 +23,16 @@ enum struct ETextureWrap {
 };
 
 enum struct ETextureUsage {
-    Rgb = GL_RGB,
-    Rgba = GL_RGBA,
-    SRgb = GL_SRGB,
-    SRgba = GL_SRGB_ALPHA,
-    Depth = GL_DEPTH_COMPONENT,
-    DepthStencil = GL_DEPTH24_STENCIL8
+    Rgb,
+    Rgba,
+    SRgb,
+    SRgba,
+    Depth,
+    FloatDepth,
+    DepthStencil,
 };
+
+GLenum TextureUsageType(ETextureUsage usage);
 
 class TTextureBuilder {
 public:
@@ -57,6 +60,7 @@ public:
     BUILDER_PROPERTY(std::string, NegY);
     BUILDER_PROPERTY(std::string, PosZ);
     BUILDER_PROPERTY(std::string, NegZ);
+    BUILDER_PROPERTY3(unsigned, unsigned, unsigned, Empty){0, 0, 0};
 };
 
 class TMultiSampleTextureBuilder {
