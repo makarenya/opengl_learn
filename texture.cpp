@@ -55,7 +55,7 @@ GLenum OuterFormat(ETextureUsage usage) {
     }
 }
 
-void LoadTextureImage(const std::string &file, GLenum what, int width, int height, ETextureUsage usage) {
+void LoadTextureImage(const std::string &file, GLenum what, int &width, int &height, ETextureUsage usage) {
     auto format = TextureUsageType(usage);
     if (file.empty()) {
         GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, format, ByteFormat(usage), nullptr));
@@ -73,11 +73,15 @@ void LoadTextureImage(const std::string &file, GLenum what, int width, int heigh
     }
 }
 
-void DropTexture(GLuint *texture) {
-    glDeleteTextures(1, texture);
+void FreeTexture(std::tuple<GLuint, int, int> *texture) {
+    glDeleteTextures(1, &std::get<0>(*texture));
 }
 
-GLuint CreateTexture(const TTextureBuilder &builder) {
+void FreeCubeTexture(std::tuple<GLuint, int, int, int> *texture) {
+    glDeleteTextures(1, &std::get<0>(*texture));
+}
+
+std::shared_ptr<std::tuple<GLuint, int, int>> Impl::CreateFlatTexture(const TTextureBuilder &builder) {
     GLuint texture;
     GL_ASSERT(glGenTextures(1, &texture));
     try {
@@ -94,21 +98,25 @@ GLuint CreateTexture(const TTextureBuilder &builder) {
                           builder.BorderColor_[2], builder.BorderColor_[3]};
         GL_ASSERT(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border));
 
-        auto [width, height] = builder.Empty_;
+        auto[width, height] = builder.Empty_;
         LoadTextureImage(builder.File_, GL_TEXTURE_2D, width, height, builder.Usage_);
         if (builder.Mipmap_ != ETextureMipmap::None) {
             GL_ASSERT(glGenerateMipmap(GL_TEXTURE_2D));
         }
         GL_ASSERT(glBindTexture(GL_TEXTURE_2D, 0));
+        if (width == 0 || height == 0) {
+            throw TGlBaseError("width or height is 0");
+        }
+        return std::shared_ptr<std::tuple<GLuint, int, int>>(
+            new std::tuple<GLuint, int, int>(texture, width, height), FreeTexture);
     } catch (...) {
         glBindTexture(GL_TEXTURE_2D, 0);
         glDeleteTextures(1, &texture);
         throw;
     }
-    return texture;
 }
 
-GLuint CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder) {
+std::shared_ptr<std::tuple<GLuint, int, int>> Impl::CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder) {
     GLuint texture;
     GL_ASSERT(glGenTextures(1, &texture));
     try {
@@ -117,15 +125,19 @@ GLuint CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder) {
         auto[width, height]= builder.Size_;
         GL_ASSERT(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, builder.Samples_, format, width, height, GL_TRUE));
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        if (width == 0 || height == 0) {
+            throw TGlBaseError("width or height is 0");
+        }
+        return std::shared_ptr<std::tuple<GLuint, int, int>>(
+            new std::tuple<GLuint, int, int>(texture, width, height), FreeTexture);
     } catch (...) {
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
         glDeleteTextures(1, &texture);
         throw;
     }
-    return texture;
 }
 
-GLuint CreateCubeTexture(const TCubeTextureBuilder &builder) {
+std::shared_ptr<std::tuple<GLuint, int, int, int>> Impl::CreateCubeTexture(const TCubeTextureBuilder &builder) {
     GLuint texture;
     GL_ASSERT(glGenTextures(1, &texture));
     try {
@@ -137,7 +149,7 @@ GLuint CreateCubeTexture(const TCubeTextureBuilder &builder) {
         GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
         GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
         GL_ASSERT(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
-        auto [width, height, depth] = builder.Empty_;
+        auto[width, height, depth] = builder.Empty_;
 
         LoadTextureImage(builder.PosX_, GL_TEXTURE_CUBE_MAP_POSITIVE_X, depth, height, builder.Usage_);
         LoadTextureImage(builder.NegX_, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, depth, height, builder.Usage_);
@@ -149,51 +161,23 @@ GLuint CreateCubeTexture(const TCubeTextureBuilder &builder) {
             GL_ASSERT(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));
         }
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        if (width == 0 || height == 0 || depth == 0) {
+            throw TGlBaseError("width, height or depth is 0");
+        }
+        return std::shared_ptr<std::tuple<GLuint, int, int, int>>(
+            new std::tuple<GLuint, int, int, int>(texture, width, height, depth), FreeCubeTexture);
     } catch (...) {
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
         glDeleteTextures(1, &texture);
         throw;
     }
-    return texture;
 }
 
-TTexture::TTexture(const TTextureBuilder &builder)
-    : Texture(new GLuint(CreateTexture(builder)), DropTexture)
-      , Type(ETextureType::Flat) {
-}
-
-TTexture::TTexture(const TMultiSampleTextureBuilder &builder)
-    : Texture(new GLuint(CreateMultisampleTexture(builder)), DropTexture)
-      , Type(ETextureType::MultiSample) {
-}
-
-TTexture::TTexture(const TCubeTextureBuilder &builder)
-    : Texture(new GLuint(CreateCubeTexture(builder)), DropTexture)
-      , Type(ETextureType::Cube) {
-}
-
-int TTexture::GetWidth() const {
-    GLint value;
-    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), *Texture));
-    GL_ASSERT(glGetTexLevelParameteriv(static_cast<GLenum>(Type), 0, GL_TEXTURE_WIDTH, &value));
-    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), 0));
-    return value;
-}
-
-int TTexture::GetHeight() const {
-    GLint value;
-    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), *Texture));
-    GL_ASSERT(glGetTexLevelParameteriv(static_cast<GLenum>(Type), 0, GL_TEXTURE_HEIGHT, &value));
-    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), 0));
-    return value;
-}
-
-int TTexture::GetDepth() const {
-    GLint value;
-    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), *Texture));
-    GL_ASSERT(glGetTexLevelParameteriv(static_cast<GLenum>(Type), 0, GL_TEXTURE_DEPTH, &value));
-    GL_ASSERT(glBindTexture(static_cast<GLenum>(Type), 0));
-    return value;
+TTextureBinder::TTextureBinder(TTextureBinder &&src) noexcept
+    : Textures(src.Textures) {
+    for (auto &texture : src.Textures) {
+        texture = {};
+    }
 }
 
 TTextureBinder::~TTextureBinder() {
@@ -210,15 +194,8 @@ TTextureBinder::~TTextureBinder() {
     TGlError::Skip();
 }
 
-TTextureBinder::TTextureBinder(TTextureBinder &&src) noexcept
-    : Textures(src.Textures) {
-    for (auto &texture : src.Textures) {
-        texture = {};
-    }
-}
-
-void TTextureBinder::Attach(const TTexture &texture, int index) {
-    if (texture.Empty()) {
+void TTextureBinder::Attach(ETextureType type, GLuint texture, int index) {
+    if (texture == 0) {
         if (Textures[index].has_value()) {
             GL_ASSERT(glActiveTexture(GL_TEXTURE0 + index));
             GL_ASSERT(glBindTexture(static_cast<GLenum>(*Textures[index]), 0));
@@ -226,7 +203,7 @@ void TTextureBinder::Attach(const TTexture &texture, int index) {
         }
     } else if (index >= 0) {
         GL_ASSERT(glActiveTexture(GL_TEXTURE0 + index));
-        GL_ASSERT(glBindTexture(static_cast<GLenum>(texture.Type), *texture.Texture));
-        Textures[index] = texture.Type;
+        GL_ASSERT(glBindTexture(static_cast<GLenum>(type), texture));
+        Textures[index] = type;
     }
 }

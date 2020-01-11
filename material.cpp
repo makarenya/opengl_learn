@@ -21,7 +21,7 @@ TMaterialBinder::TMaterialBinder(const TMaterial &material, IMaterialBound &shad
     : Material(material)
       , Shader(shader) {
     for (int i = 0; i < material.Textures.size(); ++i) {
-        if (!material.Textures[i].Empty()) {
+        if (material.Textures[i].index() != 0) {
             shader.SetTexture(static_cast<EMaterialProp>(i), material.Textures[i]);
         }
     }
@@ -39,8 +39,8 @@ TMaterialBinder::TMaterialBinder(const TMaterial &material, IMaterialBound &shad
 
 TMaterialBinder::~TMaterialBinder() {
     for (int i = 0; i < Material.Textures.size(); ++i) {
-        if (!Material.Textures[i].Empty()) {
-            Shader.SetTexture(static_cast<EMaterialProp>(i), TTexture());
+        if (Material.Textures[i].index() != 0) {
+            Shader.SetTexture(static_cast<EMaterialProp>(i), TMaterialTexture());
         }
     }
     for (int i = 0; i < Material.Colors.size(); ++i) {

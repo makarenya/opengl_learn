@@ -25,12 +25,12 @@ public:
     explicit TBlurSetup(const TBlurShader *shader) : TShaderSetup(shader), Shader(shader) {
     }
 
-    TBlurSetup &&SetScreen(const TTexture &texture) {
+    TBlurSetup &&SetScreen(const TFlatTexture &texture) {
         Set(Shader->Screen, texture);
         return std::move(*this);
     }
 
-    TBlurSetup &&SetDepth(const TTexture &texture) {
+    TBlurSetup &&SetDepth(const TFlatTexture &texture) {
         Set(Shader->Depth, texture);
         return std::move(*this);
     }

@@ -28,7 +28,7 @@ public:
           , Shader(shader) {
     }
 
-    TSkyBoxSetup &&SetSkyBox(const TTexture &texture) {
+    TSkyBoxSetup &&SetSkyBox(const TCubeTexture &texture) {
         Set(Shader->SkyBox, texture);
         return std::move(*this);
     }

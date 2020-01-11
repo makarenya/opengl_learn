@@ -26,7 +26,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
     ProjectionView = {project, view};
     DrawSkybox();
     DrawScene(TSceneShaderSet{&SceneShader, &ParticlesShader, SkyTex,
-                              GlobalLightShadow.GetDepthTexture(), lightMatrix, position});
+                              std::get<TFlatTexture>(GlobalLightShadow.GetDepth()), lightMatrix, position});
     DrawLightCubes();
     DrawBorder();
 }
@@ -131,8 +131,8 @@ void TScene::DrawBorder() {
         auto setup = TBorderSetup(&BorderShader)
             .SetColor(vec4(0, 1, .5, .3))
             .SetKernel(2.4, 1.2)
-            .SetScreen(FrameBuffer.GetScreenTexture())
-            .SetDepth(FrameBuffer.GetDepthTexture());
+            .SetScreen(std::get<TFlatTexture>(FrameBuffer.GetScreen()))
+            .SetDepth(std::get<TFlatTexture>(FrameBuffer.GetDepth()));
         ScreenQuad.Draw();
     }
 }

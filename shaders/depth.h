@@ -40,7 +40,7 @@ public:
         }
     }
 
-    TDepthSetup &&SetDepth(const TTexture &texture) {
+    TDepthSetup &&SetDepth(const TFlatTexture &texture) {
         Set(Shader->Depth, texture);
         return std::move(*this);
     }

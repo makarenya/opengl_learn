@@ -17,16 +17,16 @@ public:
 
 class TSceneShaderSet: public IShaderSet {
 private:
-    TTexture Sky;
-    TTexture Shadow;
+    TCubeTexture Sky;
+    TFlatTexture Shadow;
     glm::mat4 LightMatrix;
     TSceneShader *SceneShader;
     TParticlesShader *ParticlesShader;
     glm::vec3 Position;
 
 public:
-    TSceneShaderSet(TSceneShader *scene, TParticlesShader *particles, TTexture sky,
-                    TTexture shadow, glm::mat4 lightMatrix, glm::vec3 position);
+    TSceneShaderSet(TSceneShader *scene, TParticlesShader *particles, TCubeTexture sky,
+                    TFlatTexture shadow, glm::mat4 lightMatrix, glm::vec3 position);
     void Particles(glm::mat4 model, glm::mat4 single, const TMesh &mesh) override;
     void Scene(glm::mat4 model, bool opaque, float explosion, const TMaterial &mat, const TMesh &mesh) override;
     void Scene(glm::mat4 model, bool opaque, float explosion, const TModel &obj) override;

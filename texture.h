@@ -45,7 +45,7 @@ public:
     BUILDER_PROPERTY(ETextureUsage, Usage){ETextureUsage::Rgba};
     BUILDER_PROPERTY(std::string, File);
     BUILDER_PROPERTY(glm::vec4, BorderColor);
-    BUILDER_PROPERTY2(unsigned, unsigned, Empty){0, 0};
+    BUILDER_PROPERTY2(int, int, Empty){0, 0};
 };
 
 class TCubeTextureBuilder {
@@ -60,7 +60,7 @@ public:
     BUILDER_PROPERTY(std::string, NegY);
     BUILDER_PROPERTY(std::string, PosZ);
     BUILDER_PROPERTY(std::string, NegZ);
-    BUILDER_PROPERTY3(unsigned, unsigned, unsigned, Empty){0, 0, 0};
+    BUILDER_PROPERTY3(int, int, int, Empty){0, 0, 0};
 };
 
 class TMultiSampleTextureBuilder {
@@ -70,22 +70,58 @@ public:
     BUILDER_PROPERTY2(int, int, Size);
 };
 
-class TTexture {
+namespace Impl {
+    std::shared_ptr<std::tuple<GLuint, int, int>> CreateFlatTexture(const TTextureBuilder &builder);
+    std::shared_ptr<std::tuple<GLuint, int, int>> CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder);
+    std::shared_ptr<std::tuple<GLuint, int, int, int>> CreateCubeTexture(const TCubeTextureBuilder &builder);
+}
+
+template<ETextureType>
+class TTexture;
+
+template<>
+class TTexture<ETextureType::Flat> {
 private:
-    std::shared_ptr<GLuint> Texture;
-    ETextureType Type;
+    std::shared_ptr<std::tuple<GLuint, int, int>> Texture;
 
 public:
-    TTexture() = default;
-    TTexture(const TTextureBuilder &builder);
-    TTexture(const TMultiSampleTextureBuilder &builder);
-    TTexture(const TCubeTextureBuilder &builder);
-    [[nodiscard]] bool Empty() const { return !Texture; }
-    GLuint GetTexture() const { return *Texture; }
-    ETextureType GetType() const { return Type; }
-    int GetWidth() const;
-    int GetHeight() const;
-    int GetDepth() const;
+    TTexture(const TTextureBuilder &builder)
+        : Texture(Impl::CreateFlatTexture(builder)) {
+    }
+    GLuint GetTexture() const { return std::get<0>(*Texture); }
+    int GetWidth() const { return std::get<1>(*Texture); }
+    int GetHeight() const { return std::get<2>(*Texture); }
+    friend class TTextureBinder;
+};
+
+template<>
+class TTexture<ETextureType::MultiSample> {
+private:
+    std::shared_ptr<std::tuple<GLuint, int, int>> Texture;
+
+public:
+    TTexture(const TMultiSampleTextureBuilder &builder)
+        : Texture(Impl::CreateMultisampleTexture(builder)) {
+    }
+    GLuint GetTexture() const { return std::get<0>(*Texture); }
+    int GetWidth() const { return std::get<1>(*Texture); }
+    int GetHeight() const { return std::get<2>(*Texture); }
+    friend class TTextureBinder;
+};
+
+template<>
+class TTexture<ETextureType::Cube> {
+private:
+    std::shared_ptr<std::tuple<GLuint, int, int, int>> Texture;
+
+public:
+    TTexture(const TCubeTextureBuilder &builder)
+        : Texture(Impl::CreateCubeTexture(builder)) {
+    }
+    GLuint GetTexture() const { return std::get<0>(*Texture); }
+    int GetWidth() const { return std::get<1>(*Texture); }
+    int GetHeight() const { return std::get<2>(*Texture); }
+    int GetDepth() const { return std::get<3>(*Texture); }
     friend class TTextureBinder;
 };
 
@@ -99,5 +135,15 @@ public:
     TTextureBinder(TTextureBinder &&src) noexcept;
     TTextureBinder(const TTextureBinder &) = delete;
     TTextureBinder &operator=(const TTextureBinder &) = delete;
-    void Attach(const TTexture &texture, int index);
+    template<ETextureType Type>
+    void Attach(const TTexture<Type> &texture, int index) {
+        Attach(Type, texture.GetTexture(), index);
+    }
+
+private:
+    void Attach(ETextureType type, GLuint texture, int index);
 };
+
+using TFlatTexture = TTexture<ETextureType::Flat>;
+using TCubeTexture = TTexture<ETextureType::Cube>;
+using TMultiSampleTexture = TTexture<ETextureType::MultiSample>;

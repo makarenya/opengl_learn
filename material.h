@@ -2,6 +2,7 @@
 #include "common.h"
 #include <map>
 #include <utility>
+#include <variant>
 #include "texture.h"
 #include "mesh.h"
 
@@ -17,24 +18,26 @@ enum EMaterialProp {
     MATERIAL_PROPS_COUNT
 };
 
+using TMaterialTexture = std::variant<bool, TFlatTexture, TCubeTexture>;
+
 class IMaterialBound {
 public:
     virtual ~IMaterialBound() = default;
-    virtual void SetTexture(EMaterialProp, const TTexture &texture) = 0;
+    virtual void SetTexture(EMaterialProp, const TMaterialTexture &texture) = 0;
     virtual void SetColor(EMaterialProp, glm::vec4) = 0;
     virtual void SetConstant(EMaterialProp, float value) = 0;
 };
 
 class TMaterialBuilder {
 public:
-    BUILDER_MAP(EMaterialProp, TTexture, Texture){};
+    BUILDER_MAP(EMaterialProp, TMaterialTexture, Texture){};
     BUILDER_MAP(EMaterialProp, glm::vec4, Color){};
     BUILDER_MAP(EMaterialProp, float, Constant){};
 };
 
 class TMaterial {
 private:
-    std::array<TTexture, EMaterialProp::MATERIAL_PROPS_COUNT> Textures{};
+    std::array<TMaterialTexture, EMaterialProp::MATERIAL_PROPS_COUNT> Textures{};
     std::array<glm::vec4, EMaterialProp::MATERIAL_PROPS_COUNT> Colors{};
     std::array<float, EMaterialProp::MATERIAL_PROPS_COUNT> Constants{};
 
@@ -42,7 +45,7 @@ public:
     TMaterial(const TMaterialBuilder &builder);
     void DrawWith(IMaterialBound &bound, const TMesh &mesh) const;
 
-    [[nodiscard]] TTexture GetTexture(EMaterialProp prop) const {
+    [[nodiscard]] TMaterialTexture GetTexture(EMaterialProp prop) const {
         return Textures[static_cast<int>(prop)];
     }
 

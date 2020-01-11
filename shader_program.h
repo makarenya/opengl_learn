@@ -52,7 +52,7 @@ public:
     }
     ~TShaderSetup() override;
 
-    void SetTexture(EMaterialProp prop, const TTexture &texture) override {
+    void SetTexture(EMaterialProp prop, const TMaterialTexture &texture) override {
         auto index = Program->Textures[static_cast<size_t>(prop)];
         if (index != -1) {
             Set(index, texture);
@@ -84,5 +84,5 @@ protected:
     static void Set(GLint location, glm::vec4 value);
     static void Set(GLint location, GLfloat* data, GLsizei count);
     static void Set(GLint location, const glm::mat4 &mat);
-    void Set(GLint index, const TTexture &texture);
+    void Set(GLint index, const TMaterialTexture &texture);
 };

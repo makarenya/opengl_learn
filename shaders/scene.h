@@ -85,7 +85,7 @@ public:
         return std::move(*this);
     }
 
-    TSceneSetup &&SetShadow(TTexture &texture) {
+    TSceneSetup &&SetShadow(TFlatTexture &texture) {
         Set(Shader->Shadow, texture);
         return std::move(*this);
     }
@@ -95,7 +95,7 @@ public:
         return std::move(*this);
     }
 
-    TSceneSetup &&SetSkyBox(TTexture &texture) {
+    TSceneSetup &&SetSkyBox(TCubeTexture &texture) {
         Set(Shader->SkyBox, texture);
         return std::move(*this);
     }

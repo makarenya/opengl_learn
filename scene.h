@@ -37,12 +37,12 @@ private:
     int CurrentParticles = 0;
     float ExplosionTime = 0;
 
-    TTexture AsphaltTex{
+    TFlatTexture AsphaltTex{
         TTextureBuilder()
             .SetFile("images/asphalt_diffuse.png")
             .SetUsage(ETextureUsage::SRgb)
             .SetMipmap(ETextureMipmap::Linear)};
-    TTexture SkyTex{
+    TCubeTexture SkyTex{
         TCubeTextureBuilder()
             .SetUsage(ETextureUsage::SRgb)
             .SetPosX("images/skybox/right.jpg")
@@ -138,14 +138,14 @@ private:
     TFrameBuffer FrameBuffer;
     TFrameBuffer AliasedFrameBuffer;
     TFrameBuffer GlobalLightShadow{
+        false,
         TTextureBuilder()
             .SetEmpty(4096, 4096)
             .SetMagLinear(false)
             .SetMinLinear(false)
             .SetWrap(ETextureWrap::ClampToBorder)
             .SetBorderColor(glm::vec4(1))
-            .SetUsage(ETextureUsage::Depth),
-        true
+            .SetUsage(ETextureUsage::Depth)
     };
 
 public:

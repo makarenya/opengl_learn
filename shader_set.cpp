@@ -2,8 +2,8 @@
 
 TSceneShaderSet::TSceneShaderSet(TSceneShader *scene,
                                  TParticlesShader *particles,
-                                 TTexture sky,
-                                 TTexture shadow,
+                                 TCubeTexture sky,
+                                 TFlatTexture shadow,
                                  glm::mat4 lightMatrix,
                                  glm::vec3 position)
     : SceneShader(scene)

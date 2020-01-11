@@ -87,12 +87,12 @@ public:
         return std::move(*this);
     }
 
-    TBorderSetup &&SetScreen(const TTexture &texture) {
+    TBorderSetup &&SetScreen(const TFlatTexture &texture) {
         Set(Shader->Screen, texture);
         return std::move(*this);
     }
 
-    TBorderSetup &&SetDepth(const TTexture &texture) {
+    TBorderSetup &&SetDepth(const TFlatTexture &texture) {
         Set(Shader->Depth, texture);
         return std::move(*this);
     }

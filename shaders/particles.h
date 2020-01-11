@@ -68,7 +68,7 @@ public:
         return std::move(*this);
     }
 
-    TParticlesSetup &&SetSkyBox(TTexture &texture) {
+    TParticlesSetup &&SetSkyBox(TCubeTexture &texture) {
         Set(Shader->SkyBox, texture);
         return std::move(*this);
     }

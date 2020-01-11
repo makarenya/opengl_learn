@@ -173,7 +173,11 @@ void TShaderSetup::Set(GLint location, GLfloat* data, GLsizei count) {
     GL_ASSERT(glUniform1fv(location, count, data));
 }
 
-void TShaderSetup::Set(GLint index, const TTexture &texture) {
+void TShaderSetup::Set(GLint index, const TMaterialTexture &texture) {
     GL_ASSERT(glUniform1i(Program->Bound[index], index));
-    Attach(texture, index);
+    if (texture.index() == 1) {
+        Attach(std::get<TFlatTexture>(texture), index);
+    } else if (texture.index() == 2) {
+        Attach(std::get<TCubeTexture>(texture), index);
+    }
 }

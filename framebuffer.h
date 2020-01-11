@@ -8,7 +8,6 @@
 class TRenderBuffer {
 private:
     std::shared_ptr<GLuint> Buffer;
-    ETextureUsage Usage{};
     int Width{};
     int Height{};
 
@@ -21,25 +20,22 @@ public:
     [[nodiscard]] bool Empty() const { return !Buffer; }
 };
 
+using TFrameBufferTarget = std::variant<bool,
+                                        TRenderBuffer,
+                                        TFlatTexture,
+                                        TTexture<ETextureType::MultiSample>>;
+
 class TFrameBuffer {
     std::shared_ptr<GLuint> FrameBuffer;
-    TTexture ScreenTexture{};
-    TRenderBuffer ScreenBuffer{};
-    TTexture DepthTexture{};
-    TRenderBuffer DepthBuffer{};
+    TFrameBufferTarget Screen;
+    TFrameBufferTarget Depth;
 
 public:
-    TFrameBuffer(TTexture texture, bool depth = false);
-    TFrameBuffer(TRenderBuffer buffer, bool depth = false);
-    TFrameBuffer(TTexture screen, TTexture depth);
-    TFrameBuffer(TTexture screen, TRenderBuffer depth);
-    TFrameBuffer(TRenderBuffer screen, TTexture depth);
-    TFrameBuffer(TRenderBuffer screen, TRenderBuffer depth);
+    TFrameBuffer(TFrameBufferTarget screen, TFrameBufferTarget depth);
 
     void CopyTo(TFrameBuffer &target);
-    [[nodiscard]] TTexture GetScreenTexture() const { return ScreenTexture; }
-    [[nodiscard]] TTexture GetDepthTexture() const { return DepthTexture; }
-
+    [[nodiscard]] TFrameBufferTarget GetScreen() const { return Screen; }
+    [[nodiscard]] TFrameBufferTarget GetDepth() const { return Depth; }
     friend class TFrameBufferBinder;
 };
 
