@@ -8,21 +8,18 @@ struct TProjectionView {
 };
 
 struct TDirectionalLight {
-    glm::vec4 Direction;
     glm::vec4 Ambient;
     glm::vec4 Diffuse;
     glm::vec4 Specular;
     TDirectionalLight() = default;
-    TDirectionalLight(glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
-        : Direction(direction, 1.0)
-          , Ambient(ambient, 1.0)
+    TDirectionalLight(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
+        : Ambient(ambient, 1.0)
           , Diffuse(diffuse, 1.0)
           , Specular(specular, 1.0) {
     }
 };
 
 struct TSpotLight {
-    glm::vec4 Position;
     glm::vec4 Ambient;
     glm::vec4 Diffuse;
     glm::vec3 Specular;
@@ -30,14 +27,12 @@ struct TSpotLight {
     float Quadratic;
     float tmp[3];
     TSpotLight() = default;
-    TSpotLight(glm::vec3 position,
-               glm::vec3 ambient,
+    TSpotLight(glm::vec3 ambient,
                glm::vec3 diffuse,
                glm::vec3 specular,
                float linear,
                float quadratic)
-        : Position(position, 1.0)
-          , Ambient(ambient, 1.0)
+        : Ambient(ambient, 1.0)
           , Diffuse(diffuse, 1.0)
           , Specular(specular)
           , Linear(linear)
@@ -45,10 +40,19 @@ struct TSpotLight {
     }
 };
 
-struct TProjectorLight {
+struct TProjectorLightPos {
     glm::vec4 Position;
     glm::vec4 Target;
 
+    TProjectorLightPos() = default;
+    TProjectorLightPos(glm::vec3 position,
+                    glm::vec3 target)
+        : Position(position, 1.0f)
+          , Target(target, 1.0f) {
+    }
+};
+
+struct TProjectorLight {
     glm::vec4 Ambient;
     glm::vec4 Diffuse;
     glm::vec3 Specular;
@@ -59,18 +63,14 @@ struct TProjectorLight {
     float Quadratic;
     float tmp;
     TProjectorLight() = default;
-    TProjectorLight(glm::vec3 position,
-                    glm::vec3 target,
-                    glm::vec3 ambient,
+    TProjectorLight(glm::vec3 ambient,
                     glm::vec3 diffuse,
                     glm::vec3 specular,
                     float innerCutoff,
                     float outerCutoff,
                     float linear,
                     float quadratic)
-        : Position(position, 1.0f)
-          , Target(target, 1.0f)
-          , Ambient(ambient, 1.0f)
+        : Ambient(ambient, 1.0f)
           , Diffuse(diffuse, 1.0f)
           , Specular(specular)
           , InnerCutoff(std::cos(glm::radians(innerCutoff)))
@@ -82,9 +82,15 @@ struct TProjectorLight {
 
 struct TLights {
     TDirectionalLight directional;
-    TSpotLight spots[8];
+    TSpotLight spots[4];
     TProjectorLight projector;
     uint32_t spotCount;
+};
+
+struct TLightsPos {
+    glm::vec4 directional;
+    glm::vec4 spots[4];
+    TProjectorLightPos projector;
 };
 
 class TParticleInjector {

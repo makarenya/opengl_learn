@@ -10,13 +10,16 @@ private:
     int SkyBox;
 
 public:
-    explicit TParticlesShader(const TUniformBindingBase &matrices, const TUniformBindingBase &lights)
+    explicit TParticlesShader(const TUniformBindingBase &matrices,
+                              const TUniformBindingBase &lights,
+                              const TUniformBindingBase &lightsPos)
         : TShaderProgram(
         TShaderBuilder()
             .SetVertex("shaders/particles.vert")
             .SetFragment("shaders/particles.frag")
             .SetBlock("Matrices", matrices)
-            .SetBlock("Lights", lights))
+            .SetBlock("Lights", lights)
+            .SetBlock("LightsPos", lightsPos))
           , SkyBox(DefineTexture("skybox"))
           , Model(DefineProp("model"))
           , Single(DefineProp("single"))

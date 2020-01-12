@@ -3,12 +3,6 @@ layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 norm;
 layout (location = 2) in vec2 coord;
 
-layout (std140) uniform Matrices
-{
-    mat4 projection;
-    mat4 view;
-};
-
 uniform mat4 model;
 uniform mat4 lightMatrix;
 
@@ -20,7 +14,7 @@ out VS_OUT {
 } vs_out;
 
 void main() {
-    gl_Position = view * model * vec4(position, 1.0f);
+    gl_Position = model * vec4(position, 1.0f);
     vs_out.position = vec3(model * vec4(position, 1.0f));
     vs_out.normal = mat3(transpose(inverse(model))) * norm;
     vs_out.lightPos = lightMatrix * model * vec4(position, 1.0);

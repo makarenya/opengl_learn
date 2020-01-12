@@ -22,15 +22,16 @@ class TScene {
 private:
     TUniformBinding<TProjectionView> ProjectionView;
     TUniformBinding<TLights> LightSetup;
-    TUniformBuffer Connector{&ProjectionView, &LightSetup};
-    TSceneShader SceneShader{ProjectionView, LightSetup};
+    TUniformBinding<TLightsPos> LightsPos;
+    TUniformBuffer Connector{&ProjectionView, &LightSetup,&LightsPos};
+    TSceneShader SceneShader{ProjectionView, LightSetup, LightsPos};
     TLightShader LightShader{ProjectionView};
     TShadowShader ShadowShader{};
     TDepthShader DepthShader{};
     TSilhouetteShader SilhouetteShader{ProjectionView};
     TBorderShader BorderShader{};
     TSkyboxShader SkyboxShader{ProjectionView};
-    TParticlesShader ParticlesShader{ProjectionView, LightSetup};
+    TParticlesShader ParticlesShader{ProjectionView, LightSetup, LightsPos};
     TNormalsShader NormalsShader{ProjectionView};
     std::array<std::tuple<glm::vec3, glm::vec3>, 2000> Particles;
     TParticleInjector Injector;

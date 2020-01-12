@@ -62,23 +62,27 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
 void TScene::SetupLights(glm::vec3 position, float interval) {
     SpotAngle += interval;
     float radius = 5;
-    Spots[0] = std::make_tuple(glm::vec3{-4.0f + sin(SpotAngle) * radius, 13.0f, -6.0f + cos(SpotAngle) * radius}, get<1>(Spots[0]));
-    TLights setup{};
-    setup.directional = {Directional, vec3(.05), vec3(.3), vec3(.4)};
-    setup.spots[0] = {{position.x, 16.0, position.z},
-                      vec3(0.01f), vec3(0.3f), vec3(0.0f),
-                      0.00, 0.03};
+    Spots[0] = std::make_tuple(glm::vec3{-4.0f + sin(SpotAngle) * radius, 13.0f, -6.0f + cos(SpotAngle) * radius},
+                               get<1>(Spots[0]));
+    TLights lights{};
+    TLightsPos pos{};
+    pos.directional = vec4(Directional, 1.0);
+    lights.directional = {vec3(.05), vec3(.3), vec3(.4)};
+
+    lights.spots[0] = {vec3(0.01f), vec3(0.3f), vec3(0.0f), 0.00, 0.03};
+    pos.spots[0] = {position.x, 16.0, position.z, 1.0};
     int k = 1;
     for (auto &spot : Spots) {
-        setup.spots[k] = {spot.first,
-                          0.01f * spot.second,
-                          0.3f * spot.second,
-                          spot.second,
-                          0.00, 0.01};
+        pos.spots[k] = vec4(spot.first, 1.0);
+        lights.spots[k] = {0.01f * spot.second,
+                           0.3f * spot.second,
+                           spot.second,
+                           0.00, 0.01};
         k++;
     }
-    setup.spotCount = k;
-    LightSetup = setup;
+    lights.spotCount = k;
+    LightSetup = lights;
+    LightsPos = pos;
     glClearColor(.05, .01, .07, 1);
     GL_ASSERT(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
 }

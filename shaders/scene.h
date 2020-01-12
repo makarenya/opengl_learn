@@ -13,7 +13,7 @@ private:
     GLint Explosion;
     GLint Opaque;
 public:
-    TSceneShader(const TUniformBindingBase &matrices, const TUniformBindingBase &lights)
+    TSceneShader(const TUniformBindingBase &matrices, const TUniformBindingBase &lights, const TUniformBindingBase &lightsPos)
         : TShaderProgram(
         TShaderBuilder()
             .SetVertex("shaders/scene.vert")
@@ -21,6 +21,7 @@ public:
             .SetGeometry("shaders/scene.geom")
             .SetBlock("Matrices", matrices)
             .SetBlock("Lights", lights)
+            .SetBlock("LightsPos", lightsPos)
             .SetTexture(EMaterialProp::Diffuse, "material.diffuse_map", "material.has_diffuse_map")
             .SetTexture(EMaterialProp::Specular, "material.specular_map", "material.has_specular_map")
             .SetTexture(EMaterialProp::Shininess, "material.shiness_map", "material.has_shiness_map")
