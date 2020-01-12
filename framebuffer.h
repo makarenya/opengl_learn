@@ -23,7 +23,8 @@ public:
 using TFrameBufferTarget = std::variant<bool,
                                         TRenderBuffer,
                                         TFlatTexture,
-                                        TTexture<ETextureType::MultiSample>>;
+                                        TMultiSampleTexture,
+                                        TCubeTexture>;
 
 class TFrameBuffer {
     std::shared_ptr<GLuint> FrameBuffer;

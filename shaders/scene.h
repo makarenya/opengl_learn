@@ -6,6 +6,8 @@ private:
     GLint Model;
     GLint SkyBox;
     GLint Shadow;
+    GLint SpotShadow;
+    GLint SpotShadow2;
     GLint LightMatrix;
     GLint ViewPos;
     GLint Explosion;
@@ -30,6 +32,8 @@ public:
           , Model(DefineProp("model"))
           , SkyBox(DefineTexture("skybox"))
           , Shadow(DefineTexture("shadow"))
+          , SpotShadow(DefineTexture("spotShadow"))
+          , SpotShadow2(DefineTexture("spotShadow2"))
           , LightMatrix(DefineProp("lightMatrix"))
           , ViewPos(DefineProp("viewPos"))
           , Explosion(DefineProp("explosion"))
@@ -87,6 +91,16 @@ public:
 
     TSceneSetup &&SetShadow(TFlatTexture &texture) {
         Set(Shader->Shadow, texture);
+        return std::move(*this);
+    }
+
+    TSceneSetup &&SetSpotShadow(TCubeTexture &texture) {
+        Set(Shader->SpotShadow, texture);
+        return std::move(*this);
+    }
+
+    TSceneSetup &&SetSpotShadow2(TCubeTexture &texture) {
+        Set(Shader->SpotShadow2, texture);
         return std::move(*this);
     }
 

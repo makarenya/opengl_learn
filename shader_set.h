@@ -19,6 +19,8 @@ class TSceneShaderSet: public IShaderSet {
 private:
     TCubeTexture Sky;
     TFlatTexture Shadow;
+    TCubeTexture SpotShadow;
+    TCubeTexture SpotShadow2;
     glm::mat4 LightMatrix;
     TSceneShader *SceneShader;
     TParticlesShader *ParticlesShader;
@@ -26,7 +28,8 @@ private:
 
 public:
     TSceneShaderSet(TSceneShader *scene, TParticlesShader *particles, TCubeTexture sky,
-                    TFlatTexture shadow, glm::mat4 lightMatrix, glm::vec3 position);
+                    TFlatTexture shadow, TCubeTexture spotShadow, TCubeTexture spotShadow2,
+                    glm::mat4 lightMatrix, glm::vec3 position);
     void Particles(glm::mat4 model, glm::mat4 single, const TMesh &mesh) override;
     void Scene(glm::mat4 model, bool opaque, float explosion, const TMaterial &mat, const TMesh &mesh) override;
     void Scene(glm::mat4 model, bool opaque, float explosion, const TModel &obj) override;
@@ -36,11 +39,14 @@ public:
 class TShadowShaderSet: public IShaderSet {
 private:
     TShadowShader *ShadowShader;
-    glm::mat4 LightMatrix;
+    std::array<glm::mat4, 6> LightMatrices;
+    glm::vec3 LightPos;
     glm::vec3 Position;
+    bool Direct;
 
 public:
     TShadowShaderSet(TShadowShader *shader, glm::mat4 lightMatrix, glm::vec3 position);
+    TShadowShaderSet(TShadowShader *shader, const std::array<glm::mat4, 6> &lightMatrices, glm::vec3 lightPos, glm::vec3 position);
     void Particles(glm::mat4 model, glm::mat4 single, const TMesh &mesh) override;
     void Scene(glm::mat4 model, bool opaque, float explosion, const TMaterial &mat, const TMesh &mesh) override;
     void Scene(glm::mat4 model, bool opaque, float explosion, const TModel &obj) override;

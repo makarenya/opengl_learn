@@ -4,10 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#include <glm/gtc/constants.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iomanip>
-#include <unistd.h>
 
 using namespace std;
 using namespace glm;
@@ -74,7 +72,7 @@ void program() {
     try {
         int monitorsCount = 0;
         auto monitors = glfwGetMonitors(&monitorsCount);
-        auto mode = glfwGetVideoMode(monitors[1]);
+        auto mode = glfwGetVideoMode(monitors[monitorsCount - 1]);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -86,7 +84,7 @@ void program() {
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        auto window = glfwCreateWindow(mode->width, mode->height, "OpenGL example", monitors[1], nullptr);
+        auto window = glfwCreateWindow(mode->width, mode->height, "OpenGL example", monitors[monitorsCount - 1], nullptr);
         if (window == nullptr) {
             throw TGlfwError("create window");
         }
@@ -137,7 +135,6 @@ void program() {
             auto interval = static_cast<float>(time - lastTime);
             lastTime = time;
             cout << static_cast<int>(1.0 / interval) << endl;
-            //usleep(10000);
 
             if (Keys[GLFW_KEY_ESCAPE]) {
                 glfwSetWindowShouldClose(window, GLFW_TRUE);

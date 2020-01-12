@@ -169,7 +169,11 @@ void TShaderSetup::Set(GLint location, const glm::mat4 &mat) {
     GL_ASSERT(glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(mat)));
 }
 
-void TShaderSetup::Set(GLint location, GLfloat* data, GLsizei count) {
+void TShaderSetup::Set(GLint location, const glm::mat4 *mat, GLsizei count) {
+    GL_ASSERT(glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(*mat)));
+}
+
+void TShaderSetup::Set(GLint location, const GLfloat* data, GLsizei count) {
     GL_ASSERT(glUniform1fv(location, count, data));
 }
 

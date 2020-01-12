@@ -11,8 +11,7 @@ public:
         TShaderBuilder()
             .SetVertex("shaders/border.vert")
             .SetFragment("shaders/depth.frag"))
-          , Depth(DefineTexture("depthTexture"))
-          , Perspective(DefineProp("perspective")) {
+          , Depth(DefineTexture("depthTexture")) {
     }
     friend class TDepthSetup;
 };
@@ -40,13 +39,8 @@ public:
         }
     }
 
-    TDepthSetup &&SetDepth(const TFlatTexture &texture) {
+    TDepthSetup &&SetDepth(const TCubeTexture &texture) {
         Set(Shader->Depth, texture);
-        return std::move(*this);
-    }
-
-    TDepthSetup &&SetPerspective(float near, float far) {
-        Set(Shader->Perspective, near, far);
         return std::move(*this);
     }
 };

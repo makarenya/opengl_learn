@@ -1,11 +1,14 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "../shader_program.h"
 
 class TShadowShader: public TShaderProgram {
 private:
-    GLint LightMatrix;
+    GLint LightMatrices;
+    GLint Direct;
     GLint Model;
+    GLint LightPos;
     GLint Opacity;
 public:
     explicit TShadowShader()
@@ -13,9 +16,12 @@ public:
         TShaderBuilder()
             .SetVertex("shaders/shadow.vert")
             .SetFragment("shaders/shadow.frag")
+            .SetGeometry("shaders/shadow.geom")
             .SetTexture("diffuse", EMaterialProp::Diffuse))
-          , LightMatrix(DefineProp("lightMatrix"))
+          , LightMatrices(DefineProp("lightMatrices"))
+          , Direct(DefineProp("direct"))
           , Model(DefineProp("model"))
+          , LightPos(DefineProp("lightPos"))
           , Opacity(DefineProp("opacity")) {
     }
 
@@ -39,20 +45,30 @@ public:
     ~TShadowSetup() override {
         if (Shader != nullptr) {
             try {
-                Set(Shader->LightMatrix, glm::mat4(0));
+                Set(Shader->Direct, false);
                 Set(Shader->Model, glm::mat4(0));
             } catch (...) {
             }
         }
     }
 
-    TShadowSetup &&SetLightMatrix(glm::mat4 model) {
-        Set(Shader->LightMatrix, model);
+    TShadowSetup &&SetDirect(bool direct) {
+        Set(Shader->Direct, direct);
+        return std::move(*this);
+    }
+
+    TShadowSetup &&SetLightMatrices(std::array<glm::mat4, 6> mat) {
+        Set(Shader->LightMatrices, mat.data(), 6);
         return std::move(*this);
     }
 
     TShadowSetup &&SetModel(glm::mat4 model) {
         Set(Shader->Model, model);
+        return std::move(*this);
+    }
+
+    TShadowSetup &&SetLightPos(glm::vec3 lightPos) {
+        Set(Shader->LightPos, lightPos);
         return std::move(*this);
     }
 

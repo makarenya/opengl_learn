@@ -4,12 +4,16 @@ TSceneShaderSet::TSceneShaderSet(TSceneShader *scene,
                                  TParticlesShader *particles,
                                  TCubeTexture sky,
                                  TFlatTexture shadow,
+                                 TCubeTexture spotShadow,
+                                 TCubeTexture spotShadow2,
                                  glm::mat4 lightMatrix,
                                  glm::vec3 position)
     : SceneShader(scene)
       , ParticlesShader(particles)
       , Sky(std::move(sky))
       , Shadow(std::move(shadow))
+      , SpotShadow(std::move(spotShadow))
+      , SpotShadow2(std::move(spotShadow2))
       , LightMatrix(lightMatrix)
       , Position(position) {
 }
@@ -30,6 +34,8 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
         .SetOpaque(opaque)
         .SetSkyBox(Sky)
         .SetShadow(Shadow)
+        .SetSpotShadow(SpotShadow)
+        .SetSpotShadow2(SpotShadow2)
         .SetLightMatrix(LightMatrix)
         .SetExplosion(explosion);
     mat.DrawWith(setup, mesh);
@@ -42,6 +48,8 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
         .SetOpaque(opaque)
         .SetSkyBox(Sky)
         .SetShadow(Shadow)
+        .SetSpotShadow(SpotShadow)
+        .SetSpotShadow2(SpotShadow2)
         .SetLightMatrix(LightMatrix)
         .SetExplosion(explosion);
     obj.Draw(setup);
@@ -49,8 +57,20 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
 
 TShadowShaderSet::TShadowShaderSet(TShadowShader *shader, glm::mat4 lightMatrix, glm::vec3 position)
     : ShadowShader(shader)
-      , LightMatrix(lightMatrix)
-      , Position(position) {
+      , LightMatrices({lightMatrix})
+      , Position(position)
+      , Direct(true) {
+}
+
+TShadowShaderSet::TShadowShaderSet(TShadowShader *shader,
+                                   const std::array<glm::mat4, 6> &lightMatrices,
+                                   glm::vec3 lightPos,
+                                   glm::vec3 position)
+    : ShadowShader(shader)
+      , LightMatrices(lightMatrices)
+      , Position(position)
+      , LightPos(lightPos)
+      , Direct(false) {
 }
 
 void TShadowShaderSet::Particles(glm::mat4, glm::mat4, const TMesh &mesh) {
@@ -59,8 +79,10 @@ void TShadowShaderSet::Particles(glm::mat4, glm::mat4, const TMesh &mesh) {
 void TShadowShaderSet::Scene(glm::mat4 model, bool opacity, float explosion, const TMaterial &mat, const TMesh &mesh) {
     if (explosion > 0) return;
     auto setup = TShadowSetup(ShadowShader)
-        .SetLightMatrix(LightMatrix)
+        .SetLightMatrices(LightMatrices)
+        .SetDirect(Direct)
         .SetModel(model)
+        .SetLightPos(LightPos)
         .SetOpacity(opacity);
     mat.DrawWith(setup, mesh);
 }
@@ -68,8 +90,10 @@ void TShadowShaderSet::Scene(glm::mat4 model, bool opacity, float explosion, con
 void TShadowShaderSet::Scene(glm::mat4 model, bool opacity, float explosion, const TModel &obj) {
     if (explosion > 0) return;
     auto setup = TShadowSetup(ShadowShader)
-        .SetLightMatrix(LightMatrix)
+        .SetLightMatrices(LightMatrices)
+        .SetDirect(Direct)
         .SetModel(model)
+        .SetLightPos(LightPos)
         .SetOpacity(opacity);
     obj.Draw(setup);
 }

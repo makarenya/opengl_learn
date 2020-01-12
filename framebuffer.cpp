@@ -60,7 +60,7 @@ struct TTargetVisitor<const TRenderBuffer &> {
 template<ETextureType Type>
 struct TTargetVisitor<const TTexture<Type> &> {
     static void Bind(const TTexture<Type> &arg, GLenum type) {
-        GL_ASSERT(glFramebufferTexture2D(GL_FRAMEBUFFER, type, static_cast<GLenum>(Type), arg.GetTexture(), 0));
+        GL_ASSERT(glFramebufferTexture(GL_FRAMEBUFFER, type, arg.GetTexture(), 0));
     }
     static glm::ivec2 Size(const TTexture<Type> &arg) { return glm::ivec2(arg.GetWidth(), arg.GetHeight()); }
 };

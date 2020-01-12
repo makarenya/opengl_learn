@@ -9,31 +9,62 @@ using namespace glm;
 
 void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
     ExplosionTime = ExplosionTime >= 15 ? 0 : ExplosionTime + interval;
-    SetupLights(position);
+    SetupLights(position, interval);
     UpdateFountain(interval);
 
-    TFrameBufferBinder binder(GlobalLightShadow);
     mat4 lightMatrix = ortho(-70.0f, 70.0f, -70.0f, 70.0f, 0.01f, 150.0f) *
         lookAt(-normalize(Directional) * 60.0f, vec3(0, 0, 0), vec3(0, 1, 0));
-    glCullFace(GL_FRONT);
-    DrawScene(TShadowShaderSet(&ShadowShader, lightMatrix, position));
-    glCullFace(GL_BACK);
-    binder.Unbind();
+    glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.02f, 100.0f);
 
-    //auto setup = TDepthSetup(&DepthShader).SetDepth(GlobalLightShadow.GetDepthTexture()).SetPerspective(0, 0);
+    glCullFace(GL_FRONT);
+    {
+        TFrameBufferBinder binder(GlobalLightShadow);
+        DrawScene(TShadowShaderSet(&ShadowShader, lightMatrix, position));
+    }
+    {
+        std::array<glm::mat4, 6> spotMatrices;
+        spotMatrices[0] = proj * lookAt(Spots[0].first, Spots[0].first + vec3(1, 0, 0), vec3(0, -1, 0));
+        spotMatrices[1] = proj * lookAt(Spots[0].first, Spots[0].first + vec3(-1, 0, 0), vec3(0, -1, 0));
+        spotMatrices[2] = proj * lookAt(Spots[0].first, Spots[0].first + vec3(0, 1, 0), vec3(0, 0, 1));
+        spotMatrices[3] = proj * lookAt(Spots[0].first, Spots[0].first + vec3(0, -1, 0), vec3(0, 0, -1));
+        spotMatrices[4] = proj * lookAt(Spots[0].first, Spots[0].first + vec3(0, 0, 1), vec3(0, -1, 0));
+        spotMatrices[5] = proj * lookAt(Spots[0].first, Spots[0].first + vec3(0, 0, -1), vec3(0, -1, 0));
+        TFrameBufferBinder binder(SpotLightShadow);
+        DrawScene(TShadowShaderSet(&ShadowShader, spotMatrices, Spots[0].first, position));
+    }
+    {
+        std::array<glm::mat4, 6> spotMatrices;
+        spotMatrices[0] = proj * lookAt(Spots[1].first, Spots[1].first + vec3(1, 0, 0), vec3(0, -1, 0));
+        spotMatrices[1] = proj * lookAt(Spots[1].first, Spots[1].first + vec3(-1, 0, 0), vec3(0, -1, 0));
+        spotMatrices[2] = proj * lookAt(Spots[1].first, Spots[1].first + vec3(0, 1, 0), vec3(0, 0, 1));
+        spotMatrices[3] = proj * lookAt(Spots[1].first, Spots[1].first + vec3(0, -1, 0), vec3(0, 0, -1));
+        spotMatrices[4] = proj * lookAt(Spots[1].first, Spots[1].first + vec3(0, 0, 1), vec3(0, -1, 0));
+        spotMatrices[5] = proj * lookAt(Spots[1].first, Spots[1].first + vec3(0, 0, -1), vec3(0, -1, 0));
+        TFrameBufferBinder binder(SpotLightShadow2);
+        DrawScene(TShadowShaderSet(&ShadowShader, spotMatrices, Spots[1].first, position));
+    }
+    glCullFace(GL_BACK);
+
+    //auto setup = TDepthSetup(&DepthShader).SetDepth(std::get<TCubeTexture>(SpotLightShadow.GetDepth()));
     //ScreenQuad.Draw();
 
     ProjectionView = {project, view};
     DrawSkybox();
     DrawScene(TSceneShaderSet{&SceneShader, &ParticlesShader, SkyTex,
-                              std::get<TFlatTexture>(GlobalLightShadow.GetDepth()), lightMatrix, position});
+                              std::get<TFlatTexture>(GlobalLightShadow.GetDepth()),
+                              std::get<TCubeTexture>(SpotLightShadow.GetDepth()),
+                              std::get<TCubeTexture>(SpotLightShadow2.GetDepth()),
+                              lightMatrix, position});
     DrawLightCubes();
     DrawBorder();
 }
 
-void TScene::SetupLights(glm::vec3 position) {
+void TScene::SetupLights(glm::vec3 position, float interval) {
+    SpotAngle += interval;
+    float radius = 5;
+    Spots[0] = std::make_tuple(glm::vec3{-4.0f + sin(SpotAngle) * radius, 13.0f, -6.0f + cos(SpotAngle) * radius}, get<1>(Spots[0]));
     TLights setup{};
-    setup.directional = {Directional, vec3(.25), vec3(.7), vec3(.8)};
+    setup.directional = {Directional, vec3(.05), vec3(.3), vec3(.4)};
     setup.spots[0] = {{position.x, 16.0, position.z},
                       vec3(0.01f), vec3(0.3f), vec3(0.0f),
                       0.00, 0.03};
@@ -43,7 +74,7 @@ void TScene::SetupLights(glm::vec3 position) {
                           0.01f * spot.second,
                           0.3f * spot.second,
                           spot.second,
-                          0.00, 0.03};
+                          0.00, 0.01};
         k++;
     }
     setup.spotCount = k;

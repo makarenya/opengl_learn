@@ -123,6 +123,7 @@ private:
                      .AddLayout(EDataType::Float, 3, 1)
                      .AddLayout(EDataType::Float, 3, 1)};
     glm::vec3 Directional{0.6f, -1.0f, 1.0f};
+    float SpotAngle = 0;
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {
         std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, -6.0f}, glm::vec3{2.0f, 0.2f, 0.1f}),
         std::forward_as_tuple(glm::vec3{2.0f, 2.0f, 40.0f}, glm::vec3{2.0f, 1.0f, 0.1f})
@@ -145,8 +146,21 @@ private:
             .SetMinLinear(false)
             .SetWrap(ETextureWrap::ClampToBorder)
             .SetBorderColor(glm::vec4(1))
-            .SetUsage(ETextureUsage::Depth)
-    };
+            .SetUsage(ETextureUsage::Depth)};
+    TFrameBuffer SpotLightShadow{
+        false,
+        TCubeTextureBuilder()
+            .SetEmpty(512, 512, 512)
+            .SetMagLinear(false)
+            .SetMinLinear(false)
+            .SetUsage(ETextureUsage::Depth)};
+    TFrameBuffer SpotLightShadow2{
+        false,
+        TCubeTextureBuilder()
+            .SetEmpty(512, 512, 512)
+            .SetMagLinear(false)
+            .SetMinLinear(false)
+            .SetUsage(ETextureUsage::Depth)};
 
 public:
     TScene(int width, int height)
@@ -162,7 +176,7 @@ public:
 
 private:
     void DrawScene(IShaderSet &&set);
-    void SetupLights(glm::vec3 position);
+    void SetupLights(glm::vec3 position, float interval);
     void UpdateFountain(float interval);
     void DrawFountain(IShaderSet &set);
     void DrawSkybox();
