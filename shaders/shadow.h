@@ -17,7 +17,7 @@ public:
             .SetVertex("shaders/shadow.vert")
             .SetFragment("shaders/shadow.frag")
             .SetGeometry("shaders/shadow.geom")
-            .SetTexture("diffuse", EMaterialProp::Diffuse))
+            .SetTexture(EMaterialProp::Diffuse, "diffuse"))
           , LightMatrices(DefineProp("lightMatrices"))
           , Direct(DefineProp("direct"))
           , Model(DefineProp("model"))

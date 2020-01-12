@@ -46,18 +46,23 @@ TShaderProgram::TShaderProgram(const TShaderBuilder &builder)
 
         for (int &texture : Textures)
             texture = -1;
+        for (int &sw : TextureSwitches)
+            sw = -1;
         for (int &color : Colors)
             color = -1;
         for (int &constant : Constants)
             constant = -1;
 
-        for (auto &[name, prop] : builder.Textures_) {
+        for (auto &[prop, pair] : builder.Textures_) {
+            auto &[name, sw] = pair;
             Textures[static_cast<int>(prop)] = DefineTexture(name, true);
+            if (!sw.empty())
+                TextureSwitches[static_cast<int>(prop)] = DefineProp(sw, true);
         }
-        for (auto &[name, prop] : builder.Colors_) {
+        for (auto &[prop, name] : builder.Colors_) {
             Colors[static_cast<int>(prop)] = DefineProp(name, true);
         }
-        for (auto &[name, prop] : builder.Constants_) {
+        for (auto &[prop, name] : builder.Constants_) {
             Constants[static_cast<int>(prop)] = DefineProp(name, true);
         }
     } catch (...) {
@@ -81,7 +86,6 @@ GLint TShaderProgram::DefineTexture(const std::string &name, bool skip) {
     }
     return -1;
 }
-
 
 GLint TShaderProgram::DefineProp(const std::string &name, bool skip) {
     auto location = GL_ASSERTR(glGetUniformLocation(Program, name.c_str()));
@@ -121,9 +125,8 @@ GLuint TShaderProgram::CreateShader(GLenum type, const std::string &name, const 
     }
 }
 
-
 TShaderSetup::TShaderSetup(const TShaderProgram *program)
-    :  Program(program) {
+    : Program(program) {
     GL_ASSERT(glUseProgram(program->Program));
 }
 
@@ -173,7 +176,7 @@ void TShaderSetup::Set(GLint location, const glm::mat4 *mat, GLsizei count) {
     GL_ASSERT(glUniformMatrix4fv(location, count, GL_FALSE, glm::value_ptr(*mat)));
 }
 
-void TShaderSetup::Set(GLint location, const GLfloat* data, GLsizei count) {
+void TShaderSetup::Set(GLint location, const GLfloat *data, GLsizei count) {
     GL_ASSERT(glUniform1fv(location, count, data));
 }
 

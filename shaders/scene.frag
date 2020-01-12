@@ -2,11 +2,16 @@
 
 struct Material {
     sampler2D diffuse_map;
+    bool has_diffuse_map;
     vec4 diffuse_col;
     sampler2D specular_map;
+    bool has_specular_map;
     vec4 specular_col;
     sampler2D shiness_map;
+    bool has_shiness_map;
     float shiness;
+    sampler2D normal_map;
+    bool has_normal_map;
     float reflection;
     float refraction;
 };
@@ -76,9 +81,9 @@ void main() {
     vec3 norm = normalize(fs_in.normal);
     vec3 viewDir = normalize(viewPos - fs_in.position);
 
-    vec4 diffuse = material.diffuse_col.a > 0 ? material.diffuse_col : texture(material.diffuse_map, fs_in.coord);
-    vec4 specular = material.specular_col.a > 0 ? material.specular_col : texture(material.specular_map, fs_in.coord);
-    float shiness = material.shiness > 0 ? material.shiness : float(texture(material.shiness_map, fs_in.coord));
+    vec4 diffuse = material.has_diffuse_map ? texture(material.diffuse_map, fs_in.coord) : material.diffuse_col;
+    vec4 specular = material.has_specular_map ? texture(material.specular_map, fs_in.coord) : material.specular_col;
+    float shiness = material.has_shiness_map ? float(texture(material.shiness_map, fs_in.coord)) : material.shiness;
 
     vec3 result = CalcDirectionalLight(directional, norm, viewDir, diffuse.rgb, specular.rgb, shiness);
     for (int i = 0; i < spotCount; i++) {
@@ -133,11 +138,11 @@ vec3 CalcDirectionalLight(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 
 
 vec3 sampleOffsetDirections[20] = vec3[]
 (
-    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1),
-    vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
-    vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
-    vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
-    vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+vec3(1, 1, 1), vec3(1, -1, 1), vec3(-1, -1, 1), vec3(-1, 1, 1),
+vec3(1, 1, -1), vec3(1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+vec3(1, 1, 0), vec3(1, -1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
+vec3(1, 0, 1), vec3(-1, 0, 1), vec3(1, 0, -1), vec3(-1, 0, -1),
+vec3(0, 1, 1), vec3(0, -1, 1), vec3(0, -1, -1), vec3(0, 1, -1)
 );
 
 vec3 CalcSpotLight(SpotLight light, int i, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {

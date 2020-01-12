@@ -15,6 +15,7 @@ enum EMaterialProp {
     Shininess,
     Reflection,
     Refraction,
+    Normal,
     MATERIAL_PROPS_COUNT
 };
 

@@ -9,16 +9,21 @@ public:
     BUILDER_PROPERTY(std::string, Vertex);
     BUILDER_PROPERTY(std::string, Fragment);
     BUILDER_PROPERTY(std::string, Geometry);
-    BUILDER_MAP(std::string, EMaterialProp, Texture){};
-    BUILDER_MAP(std::string, EMaterialProp, Color){};
-    BUILDER_MAP(std::string, EMaterialProp, Constant){};
+    BUILDER_MAP2(EMaterialProp, std::string, std::string, Texture){};
+    BUILDER_MAP(EMaterialProp, std::string, Color){};
+    BUILDER_MAP(EMaterialProp, std::string, Constant){};
     BUILDER_MAP(std::string, TUniformBindingBase, Block){};
+    TShaderBuilder &&SetTexture(EMaterialProp p, const std::string &v) {
+        Textures_.emplace(p, std::forward_as_tuple(v, ""));
+        return std::move(*this);
+    }
 };
 
 class TShaderProgram {
 private:
     GLuint Program;
     std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Textures{};
+    std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> TextureSwitches{};
     std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Colors{};
     std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Constants{};
     std::array<GLint, 32> Bound{};
@@ -56,6 +61,10 @@ public:
         auto index = Program->Textures[static_cast<size_t>(prop)];
         if (index != -1) {
             Set(index, texture);
+        }
+        auto sw = Program->TextureSwitches[static_cast<size_t>(prop)];
+        if (sw != -1) {
+            Set(sw, texture.index() > 0);
         }
     }
 
