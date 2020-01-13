@@ -17,13 +17,12 @@
 #include <random>
 #include <utility>
 
-
 class TScene {
 private:
     TUniformBinding<TProjectionView> ProjectionView;
     TUniformBinding<TLights> LightSetup;
     TUniformBinding<TLightsPos> LightsPos;
-    TUniformBuffer Connector{&ProjectionView, &LightSetup,&LightsPos};
+    TUniformBuffer Connector{&ProjectionView, &LightSetup, &LightsPos};
     TSceneShader SceneShader{ProjectionView, LightSetup, LightsPos};
     TLightShader LightShader{ProjectionView};
     TShadowShader ShadowShader{};
@@ -43,6 +42,13 @@ private:
             .SetFile("images/asphalt_diffuse.png")
             .SetUsage(ETextureUsage::SRgb)
             .SetMipmap(ETextureMipmap::Linear)};
+    TFlatTexture AsphaltBump{
+        TTextureBuilder()
+            .SetFile("images/asphalt_height.png")
+            .SetUsage(ETextureUsage::Height)
+            .SetMipmap(ETextureMipmap::Linear)
+    };
+
     TCubeTexture SkyTex{
         TCubeTextureBuilder()
             .SetUsage(ETextureUsage::SRgb)
@@ -57,6 +63,7 @@ private:
         TMaterialBuilder()
             .SetColor(EMaterialProp::Specular, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f))
             .SetTexture(EMaterialProp::Diffuse, AsphaltTex)
+            .SetTexture(EMaterialProp::Normal, AsphaltBump)
             .SetConstant(EMaterialProp::Shininess, .5)};
     TMaterial Container{
         TMaterialBuilder()
@@ -68,7 +75,11 @@ private:
                         TTextureBuilder()
                             .SetUsage(ETextureUsage::SRgb)
                             .SetFile("images/container2_specular.png"))
-            .SetConstant(EMaterialProp::Reflection, .001)
+            .SetTexture(EMaterialProp::Normal,
+                        TTextureBuilder()
+                            .SetUsage(ETextureUsage::Height)
+                            .SetFile("images/container2_specular2.png"))
+            .SetConstant(EMaterialProp::Reflection, .01)
             .SetConstant(EMaterialProp::Shininess, 64)};
     TMesh Sky{
         TMeshBuilder()
@@ -87,16 +98,20 @@ private:
                                                  .SetFile("images/window.png"))};
     TMesh GroundCube{
         TMeshBuilder()
-            .SetVertices(EBufferUsage::Static, Cube(TGeomBuilder().SetTextureMul(10, 10)))
+            .SetVertices(EBufferUsage::Static, Cube<true, true, true>(TGeomBuilder().SetTextureMul(10, 10)))
             .AddLayout(EDataType::Float, 3)
             .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 2)};
+            .AddLayout(EDataType::Float, 2)
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 3)};
     TMesh SimpleCube{
         TMeshBuilder()
-            .SetVertices(EBufferUsage::Static, Cube())
+            .SetVertices(EBufferUsage::Static, Cube<true, true, true>())
             .AddLayout(EDataType::Float, 3)
             .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 2)};
+            .AddLayout(EDataType::Float, 2)
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 3)};
 
     TMesh QuadPoly{
         TMeshBuilder()

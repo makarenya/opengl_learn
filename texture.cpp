@@ -22,6 +22,7 @@ GLenum TextureUsageType(ETextureUsage usage) {
         case ETextureUsage::Depth:
         case ETextureUsage::FloatDepth: return GL_DEPTH_COMPONENT;
         case ETextureUsage::DepthStencil: return GL_DEPTH24_STENCIL8;
+        case ETextureUsage::Height: return GL_RGB;
     }
 }
 
@@ -31,6 +32,8 @@ int SoilFormat(ETextureUsage usage) {
         case ETextureUsage::Rgb: return SOIL_LOAD_RGB;
         case ETextureUsage::SRgba:
         case ETextureUsage::Rgba: return SOIL_LOAD_RGBA;
+        case ETextureUsage::Depth: return SOIL_LOAD_L;
+        case ETextureUsage::Height: return SOIL_LOAD_L;
         default:throw TGlBaseError("invalid value for load image");
     }
 }
@@ -44,6 +47,7 @@ GLenum ByteFormat(ETextureUsage usage) {
         case ETextureUsage::Depth: return GL_UNSIGNED_BYTE;
         case ETextureUsage::FloatDepth: return GL_FLOAT;
         case ETextureUsage::DepthStencil: return GL_UNSIGNED_INT_24_8;
+        case ETextureUsage::Height: return GL_FLOAT;
     }
 }
 
@@ -65,7 +69,35 @@ void LoadTextureImage(const std::string &file, GLenum what, int &width, int &hei
             throw TGlBaseError("can't load file " + file);
         }
         try {
-            GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), data));
+            if (usage == ETextureUsage::Height) {
+                std::vector<GLfloat> result(width * height * 3 + 4);
+                GLfloat *p = result.data();
+                const int h = 20;
+                for (int y = 0; y < height; ++y) {
+                    for (int x = 0; x < width; ++x) {
+                        int dx, dy;
+                        if (x == 0)
+                            dx = data[x + y * width] - data[x + 1 + y * width];
+                        else if (x == width - 1)
+                            dx = data[x - 1 + y * width] - data[x + y * width];
+                        else
+                            dx = data[x - 1 + y * width] - data[x + 1 + y * width];
+                        if (y == 0)
+                            dy = data[x + y * width] - data[x + (y + 1) * width];
+                        else if (y == height - 1)
+                            dy = data[x + (y - 1) * width] - data[x + y * width];
+                        else
+                            dy = data[x + (y - 1) * width] - data[x + (y + 1) * width];
+                        float length = sqrt(dx * dx + dy * dy + h * h);
+                        *p++ = dx / length;
+                        *p++ = dy / length;
+                        *p++ = h / length;
+                    }
+                }
+                GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), result.data()));
+            } else {
+                GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), data));
+            }
         } catch (...) {
             SOIL_free_image_data(data);
         }
@@ -116,7 +148,9 @@ std::shared_ptr<std::tuple<GLuint, int, int>> Impl::CreateFlatTexture(const TTex
     }
 }
 
-std::shared_ptr<std::tuple<GLuint, int, int>> Impl::CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder) {
+std::shared_ptr<std::tuple<GLuint,
+                           int,
+                           int>> Impl::CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder) {
     GLuint texture;
     GL_ASSERT(glGenTextures(1, &texture));
     try {

@@ -4,6 +4,7 @@
 class TSceneShader: public TShaderProgram {
 private:
     GLint Model;
+    GLint NormModel;
     GLint SkyBox;
     GLint Shadow;
     GLint SpotShadow;
@@ -32,6 +33,7 @@ public:
             .SetConstant(EMaterialProp::Reflection, "material.reflection")
             .SetConstant(EMaterialProp::Refraction, "material.refraction"))
           , Model(DefineProp("model"))
+          , NormModel(DefineProp("normModel", true))
           , SkyBox(DefineTexture("skybox"))
           , Shadow(DefineTexture("shadow"))
           , SpotShadow(DefineTexture("spotShadow"))
@@ -73,6 +75,9 @@ public:
 
     TSceneSetup &&SetModel(glm::mat4 model) {
         Set(Shader->Model, model);
+        if (Shader->NormModel >= 0) {
+            Set(Shader->NormModel, glm::transpose(glm::inverse(glm::mat3(model))));
+        }
         return std::move(*this);
     }
 

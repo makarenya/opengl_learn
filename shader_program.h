@@ -93,6 +93,7 @@ protected:
     static void Set(GLint location, glm::vec4 value);
     static void Set(GLint location, const GLfloat* data, GLsizei count);
     static void Set(GLint location, const glm::mat4 &mat);
+    static void Set(GLint location, const glm::mat3 &mat);
     static void Set(GLint location, const glm::mat4 *mat, GLsizei count);
     void Set(GLint index, const TMaterialTexture &texture);
 };

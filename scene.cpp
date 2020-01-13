@@ -1,8 +1,6 @@
 #include "errors.h"
 #include "scene.h"
 #include "framebuffer.h"
-#include <glm/gtc/constants.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 using namespace std;
 using namespace glm;
@@ -50,12 +48,12 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
 
     ProjectionView = {project, view};
     DrawSkybox();
+    DrawLightCubes();
     DrawScene(TSceneShaderSet{&SceneShader, &ParticlesShader, SkyTex,
                               std::get<TFlatTexture>(GlobalLightShadow.GetDepth()),
                               std::get<TCubeTexture>(SpotLightShadow.GetDepth()),
                               std::get<TCubeTexture>(SpotLightShadow2.GetDepth()),
                               lightMatrix, position});
-    DrawLightCubes();
     DrawBorder();
 }
 
@@ -77,7 +75,7 @@ void TScene::SetupLights(glm::vec3 position, float interval) {
         lights.spots[k] = {0.01f * spot.second,
                            0.3f * spot.second,
                            spot.second,
-                           0.00, 0.01};
+                           0.00, 0.005};
         k++;
     }
     lights.spotCount = k;
@@ -134,7 +132,7 @@ mat4 Place(vec3 position, vec3 axis, float angle, vec3 s) {
 }
 
 void TScene::DrawObjects(IShaderSet &set) {
-    set.Scene(scale(translate(one<mat4>(), vec3(0.0f, -100.0f, 0.0f)), vec3(200.0f)),
+    set.Scene(scale(NConstMath::Translate(0.0f, -100.0f, 0.0f), vec3(200.0f)),
               false, 0, Asphalt, GroundCube);
 
     set.Scene(Place(vec3(6, 7.0, 44.0), vec3(.2, .4, -.1), 30.0f, vec3(10.0f)),
