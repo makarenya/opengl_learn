@@ -25,11 +25,12 @@ private:
     TSceneShader *SceneShader;
     TParticlesShader *ParticlesShader;
     glm::vec3 Position;
+    bool UseMap;
 
 public:
     TSceneShaderSet(TSceneShader *scene, TParticlesShader *particles, TCubeTexture sky,
                     TFlatTexture shadow, TCubeTexture spotShadow, TCubeTexture spotShadow2,
-                    glm::mat4 lightMatrix, glm::vec3 position);
+                    glm::mat4 lightMatrix, glm::vec3 position, bool useMap);
     void Particles(glm::mat4 model, glm::mat4 single, const TMesh &mesh) override;
     void Scene(glm::mat4 model, bool opaque, float explosion, const TMaterial &mat, const TMesh &mesh) override;
     void Scene(glm::mat4 model, bool opaque, float explosion, const TModel &obj) override;

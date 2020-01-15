@@ -5,7 +5,7 @@
 using namespace std;
 using namespace glm;
 
-void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
+void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval, bool useMap) {
     ExplosionTime = ExplosionTime >= 15 ? 0 : ExplosionTime + interval;
     SetupLights(position, interval);
     UpdateFountain(interval);
@@ -53,7 +53,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval) {
                               std::get<TFlatTexture>(GlobalLightShadow.GetDepth()),
                               std::get<TCubeTexture>(SpotLightShadow.GetDepth()),
                               std::get<TCubeTexture>(SpotLightShadow2.GetDepth()),
-                              lightMatrix, position});
+                              lightMatrix, position, useMap});
     DrawBorder();
 }
 

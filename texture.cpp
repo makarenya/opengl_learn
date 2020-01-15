@@ -22,7 +22,8 @@ GLenum TextureUsageType(ETextureUsage usage) {
         case ETextureUsage::Depth:
         case ETextureUsage::FloatDepth: return GL_DEPTH_COMPONENT;
         case ETextureUsage::DepthStencil: return GL_DEPTH24_STENCIL8;
-        case ETextureUsage::Height: return GL_RGB;
+        case ETextureUsage::Height:
+        case ETextureUsage::Normals: return GL_RGB;
     }
 }
 
@@ -32,8 +33,9 @@ int SoilFormat(ETextureUsage usage) {
         case ETextureUsage::Rgb: return SOIL_LOAD_RGB;
         case ETextureUsage::SRgba:
         case ETextureUsage::Rgba: return SOIL_LOAD_RGBA;
-        case ETextureUsage::Depth: return SOIL_LOAD_L;
+        case ETextureUsage::Depth:
         case ETextureUsage::Height: return SOIL_LOAD_L;
+        case ETextureUsage::Normals: return SOIL_LOAD_RGB;
         default:throw TGlBaseError("invalid value for load image");
     }
 }
@@ -47,7 +49,8 @@ GLenum ByteFormat(ETextureUsage usage) {
         case ETextureUsage::Depth: return GL_UNSIGNED_BYTE;
         case ETextureUsage::FloatDepth: return GL_FLOAT;
         case ETextureUsage::DepthStencil: return GL_UNSIGNED_INT_24_8;
-        case ETextureUsage::Height: return GL_FLOAT;
+        case ETextureUsage::Height:
+        case ETextureUsage::Normals: return GL_FLOAT;
     }
 }
 
@@ -93,6 +96,15 @@ void LoadTextureImage(const std::string &file, GLenum what, int &width, int &hei
                         *p++ = dy / length;
                         *p++ = h / length;
                     }
+                }
+                GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), result.data()));
+            } else if (usage == ETextureUsage::Normals) {
+                std::vector<GLfloat> result(width * height * 3 + 4);
+                GLfloat *p = result.data();
+                for (int i = 0; i < height * width * 3; i += 3) {
+                    *p++ = (data[i] - 191) / 64.0;
+                    *p++ = (data[i + 1] - 191) / 64.0;
+                    *p++ = (data[i + 2] - 191) / 64.0;
                 }
                 GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), result.data()));
             } else {

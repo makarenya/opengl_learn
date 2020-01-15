@@ -30,7 +30,8 @@ enum struct ETextureUsage {
     Depth,
     FloatDepth,
     DepthStencil,
-    Height
+    Height,
+    Normals
 };
 
 GLenum TextureUsageType(ETextureUsage usage);

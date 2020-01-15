@@ -65,6 +65,7 @@ uniform sampler2D shadow;
 uniform samplerCube spotShadow;
 uniform samplerCube spotShadow2;
 uniform bool opaque;
+uniform bool useMap;
 layout (std140) uniform Lights {
     DirectionalLight directional;
     SpotLight spots[4];
@@ -81,7 +82,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 pos, int i, vec3 norm, vec3 viewDir, ve
 vec3 CalcProjectorLight(ProjectorLight light, ProjectorLightPos pos, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
 
 void main() {
-    vec3 norm = normalize(material.has_normal_map ? vec3(texture(material.normal_map, fs_in.coord)) : fs_in.normal);
+    vec3 norm = normalize(useMap && material.has_normal_map ? vec3(texture(material.normal_map, fs_in.coord)) : fs_in.normal);
     vec3 viewDir = normalize(fs_in.viewPos - fs_in.position);
 
     vec4 diffuse = material.has_diffuse_map ? texture(material.diffuse_map, fs_in.coord) : material.diffuse_col;

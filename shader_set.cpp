@@ -7,7 +7,8 @@ TSceneShaderSet::TSceneShaderSet(TSceneShader *scene,
                                  TCubeTexture spotShadow,
                                  TCubeTexture spotShadow2,
                                  glm::mat4 lightMatrix,
-                                 glm::vec3 position)
+                                 glm::vec3 position,
+                                 bool useMap)
     : SceneShader(scene)
       , ParticlesShader(particles)
       , Sky(std::move(sky))
@@ -15,7 +16,8 @@ TSceneShaderSet::TSceneShaderSet(TSceneShader *scene,
       , SpotShadow(std::move(spotShadow))
       , SpotShadow2(std::move(spotShadow2))
       , LightMatrix(lightMatrix)
-      , Position(position) {
+      , Position(position)
+      , UseMap(useMap) {
 }
 
 void TSceneShaderSet::Particles(glm::mat4 model, glm::mat4 single, const TMesh &mesh) {
@@ -37,7 +39,8 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
         .SetSpotShadow(SpotShadow)
         .SetSpotShadow2(SpotShadow2)
         .SetLightMatrix(LightMatrix)
-        .SetExplosion(explosion);
+        .SetExplosion(explosion)
+        .SetUseMap(UseMap);
     mat.DrawWith(setup, mesh);
 }
 
@@ -51,7 +54,8 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
         .SetSpotShadow(SpotShadow)
         .SetSpotShadow2(SpotShadow2)
         .SetLightMatrix(LightMatrix)
-        .SetExplosion(explosion);
+        .SetExplosion(explosion)
+        .SetUseMap(UseMap);
     obj.Draw(setup);
 }
 

@@ -188,7 +188,7 @@ public:
             TRenderBuffer(ETextureUsage::Depth, width, height, 4)) {
     }
 
-    void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position, float interval);
+    void Draw(glm::mat4 project, glm::mat4 view, glm::vec3 position, float interval, bool useMap);
 
 private:
     void DrawScene(IShaderSet &&set);

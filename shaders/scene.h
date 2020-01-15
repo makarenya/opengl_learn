@@ -13,6 +13,7 @@ private:
     GLint ViewPos;
     GLint Explosion;
     GLint Opaque;
+    GLint UseMap;
 public:
     TSceneShader(const TUniformBindingBase &matrices, const TUniformBindingBase &lights, const TUniformBindingBase &lightsPos)
         : TShaderProgram(
@@ -41,7 +42,8 @@ public:
           , LightMatrix(DefineProp("lightMatrix"))
           , ViewPos(DefineProp("viewPos"))
           , Explosion(DefineProp("explosion"))
-          , Opaque(DefineProp("opaque")) {
+          , Opaque(DefineProp("opaque"))
+          , UseMap(DefineProp("useMap")) {
     }
 
     friend class TSceneSetup;
@@ -118,6 +120,11 @@ public:
 
     TSceneSetup &&SetSkyBox(TCubeTexture &texture) {
         Set(Shader->SkyBox, texture);
+        return std::move(*this);
+    }
+
+    TSceneSetup &&SetUseMap(bool useMap) {
+        Set(Shader->UseMap, useMap);
         return std::move(*this);
     }
 };

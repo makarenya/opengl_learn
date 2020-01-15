@@ -84,7 +84,11 @@ void program() {
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        auto window = glfwCreateWindow(mode->width, mode->height, "OpenGL example", monitors[monitorsCount - 1], nullptr);
+        auto window = glfwCreateWindow(mode->width,
+                                       mode->height,
+                                       "OpenGL example",
+                                       monitors[monitorsCount - 1],
+                                       nullptr);
         if (window == nullptr) {
             throw TGlfwError("create window");
         }
@@ -117,6 +121,8 @@ void program() {
         glfwSetCursorPosCallback(window, MouseMoveCallback);
 
         TScene scene(mode->width, mode->height);
+        bool useMap = false;
+        bool spaceHit = false;
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
 
@@ -154,13 +160,17 @@ void program() {
             if (Keys[GLFW_KEY_A] || Keys[GLFW_KEY_LEFT]) {
                 movement -= cross(flatDir, up);
             }
+            if (Keys[GLFW_KEY_SPACE] && !spaceHit) {
+                useMap = !useMap;
+            }
+            spaceHit = Keys[GLFW_KEY_SPACE];
             if (movement != vec3(0, 0, 0)) {
                 position += normalize(movement) * interval * speed;
             }
 
             mat4 view = lookAt(vec3(position), vec3(position + direction), up);
             mat4 project = perspective(radians(45.0f), 1.0f * mode->width / mode->height, 0.1f, 300.0f);
-            scene.Draw(project, view, position, interval);
+            scene.Draw(project, view, position, interval, useMap);
 
             glfwSwapBuffers(window);
         }
@@ -176,7 +186,7 @@ int main() {
     } catch (TGlBaseError &e) {
         cout << e.what() << endl;
         return 1;
-    } catch(std::exception &e) {
+    } catch (std::exception &e) {
         cout << e.what() << endl;
         return 3;
     } catch (...) {
