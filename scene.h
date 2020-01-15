@@ -61,10 +61,10 @@ private:
 
     TMaterial Asphalt{
         TMaterialBuilder()
-            .SetColor(EMaterialProp::Specular, glm::vec4(0.1f, 0.1f, 0.1f, 1.0f))
+            .SetColor(EMaterialProp::Specular, glm::vec4(0.03f, 0.03f, 0.03f, 1.0f))
             .SetTexture(EMaterialProp::Diffuse, AsphaltTex)
             .SetTexture(EMaterialProp::Normal, AsphaltBump)
-            .SetConstant(EMaterialProp::Shininess, .5)};
+            .SetConstant(EMaterialProp::Shininess, 8)};
     TMaterial Container{
         TMaterialBuilder()
             .SetTexture(EMaterialProp::Diffuse,
@@ -138,6 +138,13 @@ private:
                                    6 * Particles.size())
                      .AddLayout(EDataType::Float, 3, 1)
                      .AddLayout(EDataType::Float, 3, 1)};
+
+    TMesh Sp{TMeshBuilder()
+                 .SetVertices(EBufferUsage::Static, Sphere<true, true, false, 3>(
+                     TGeomBuilder().SetSize(1)))
+                 .AddLayout(EDataType::Float, 3)
+                 .AddLayout(EDataType::Float, 3)
+                 .AddLayout(EDataType::Float, 2)};
     glm::vec3 Directional{0.6f, -1.0f, 1.0f};
     float SpotAngle = 0;
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {

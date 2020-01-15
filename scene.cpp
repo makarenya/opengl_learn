@@ -132,6 +132,7 @@ mat4 Place(vec3 position, vec3 axis, float angle, vec3 s) {
 }
 
 void TScene::DrawObjects(IShaderSet &set) {
+    set.Scene(NConstMath::Translate(-10.0f, 12.0f, 0.0f), false, 0, Asphalt, Sp);
     set.Scene(scale(NConstMath::Translate(0.0f, -100.0f, 0.0f), vec3(200.0f)),
               false, 0, Asphalt, GroundCube);
 

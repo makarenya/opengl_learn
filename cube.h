@@ -33,11 +33,110 @@ namespace Impl {
         std::tuple{glm::vec2{-1.0f, 1.0f}, glm::vec2{0, 0}}, // upper left
     };
 
+    constexpr std::array<glm::vec3, 6> Octo = {
+        glm::vec3{0.0f, 1.0f, 0.0f},
+        glm::vec3{0.0f, 0.0f, 1.0f},
+        glm::vec3{1.0f, 0.0f, 0.0f},
+
+        glm::vec3{0.0f, -1.0f, 0.0f},
+        glm::vec3{1.0f, 0.0f, 0.0f},
+        glm::vec3{0.0f, 0.0f, 1.0f},
+    };
+
     constexpr glm::vec3 Tangent{NConstMath::Normalize(std::get<0>(QuadPoints[0]) - std::get<0>(QuadPoints[1])), 0};
     constexpr glm::vec3 BiTangent{NConstMath::Normalize(std::get<0>(QuadPoints[5]) - std::get<0>(QuadPoints[1])), 0};
-    constexpr glm::vec3 Normal { 0, 0, 1 };
+    constexpr glm::vec3 Normal{0, 0, 1};
 }
 
+template<int Level>
+constexpr auto SphereMesh() {
+    if constexpr (Level == 0) {
+        std::array<glm::vec3, Impl::Octo.size() * 4> result{};
+        size_t k = 0;
+        for (size_t i = 0; i < 4; i++) {
+            auto rot = NConstMath::RotateY3(i * M_PI_2);
+            for (auto v : Impl::Octo) {
+                result[k++] = rot * v;
+            }
+        }
+        return result;
+    } else {
+        auto up = SphereMesh<Level - 1>();
+        std::array<glm::vec3, up.size() * 4> result{};
+        size_t k = 0;
+        for (size_t i = 0; i < up.size(); i += 3) {
+            glm::vec3 center[3]{
+                NConstMath::Normalize(up[i] + up[i + 1]),
+                NConstMath::Normalize(up[i + 1] + up[i + 2]),
+                NConstMath::Normalize(up[i + 2] + up[i])};
+            result[k++] = center[0];
+            result[k++] = center[1];
+            result[k++] = center[2];
+            result[k++] = up[i];
+            result[k++] = center[0];
+            result[k++] = center[2];
+            result[k++] = up[i + 1];
+            result[k++] = center[1];
+            result[k++] = center[0];
+            result[k++] = up[i + 2];
+            result[k++] = center[2];
+            result[k++] = center[1];
+        }
+        return result;
+    }
+}
+
+#include <iostream>
+
+template<bool Normals = true, bool Texture = true, bool Tangents = false, int Level = 3>
+constexpr auto Sphere(TGeomBuilder builder = {}) {
+    using namespace std;
+    using namespace glm;
+    auto mesh = SphereMesh<Level>();
+    constexpr int stride = (Normals ? 3 : 0) + (Texture ? 2 : 0) + (Tangents ? 6 : 0) + 3 * 1.0f;
+    std::array<GLfloat, mesh.size() * stride> vertices{};
+    size_t k = 0;
+    for (int i = 0; i < mesh.size(); i += 3) {
+        for (int j = 0; j < 3; ++j) {
+            auto point = mesh[i + j];
+            vertices[k++] = builder.Size_ * point.x;
+            vertices[k++] = builder.Size_ * point.y;
+            vertices[k++] = builder.Size_ * point.z;
+            if (Normals) {
+                vertices[k++] = point.x;
+                vertices[k++] = point.y;
+                vertices[k++] = point.z;
+            }
+            vec2 radial = NConstMath::Normalize(glm::vec2(point.x, point.z));
+            if (Texture) {
+                double x = 0;
+                if (point.z < 0) x = 0.5 - NConstMath::Asin(radial.x) / M_PI / 2.0;
+                else if (point.x < 0) x = 1.0 + NConstMath::Asin(radial.x) / M_PI / 2.0;
+                else x = NConstMath::Asin(radial.x) / M_PI / 2.0;
+                if (x == 0) {
+                    for (size_t l = 0; l < 3; ++l) {
+                        if (mesh[i + l].x < 0)
+                            x = 1.0;
+                    }
+                }
+                double y = 0.5 + NConstMath::Asin(point.y) / M_PI;
+                vertices[k++] = static_cast<float>(x);
+                vertices[k++] = static_cast<float>(y);
+            }
+            if (Tangents) {
+                vec3 tg {-radial.y, 0, radial.x};
+                vec3 btg = glm::cross(point, tg);
+                vertices[k++] = tg.x;
+                vertices[k++] = tg.y;
+                vertices[k++] = tg.z;
+                vertices[k++] = btg.x;
+                vertices[k++] = btg.y;
+                vertices[k++] = btg.z;
+            }
+        }
+    }
+    return vertices;
+}
 
 template<bool Normals = true, bool Texture = true, bool Tangents = false>
 constexpr auto Quad(TGeomBuilder builder = {}) {

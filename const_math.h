@@ -58,13 +58,49 @@ namespace NConstMath {
         return Sin(x + M_PI_2);
     }
 
+    constexpr size_t BitLength(size_t x) {
+        if (x == 0) return 0;
+        else {
+            return BitLength(x >> 1U) + 1;
+        }
+    }
+
     constexpr double Sqrt(double x) {
         if (x == 0) return 0;
-        double a = x;
+        if (x < 0) return NAN;
+        double a = x >= 1 ? 1U << ((BitLength(x) - 1) / 2) : 1.0 / (1U << ((BitLength(1 / x) - 1) / 2));
         for (int i = 0; i < 20; i++) {
             a = (a + x / a) / 2.0;
         }
         return a;
+    }
+
+    constexpr double AtanInt(double x) {
+        const double SQRT3 = 1.73205080756887729352744634150587236;
+        if (x > M_PI / 12) {
+            return M_PI / 6 + AtanInt((x * SQRT3 - 1) / (x + SQRT3));
+        } else {
+            return x * (0.55913709 / (1.4087812 + x * x) + 0.60310579 - 0.05160454 * x * x);
+        }
+    }
+
+    constexpr double Atan(double x) {
+        if (x < 0) {
+            return -AtanInt(-x);
+        } else {
+            return AtanInt(x);
+        }
+    }
+
+    constexpr double Asin(double x) {
+        if (x > 1 || x < -1) return NAN;
+        if (x == 1) return M_PI_2;
+        if (x == -1) return -M_PI_2;
+        return Atan(x / Sqrt((1 - x * x)));
+    }
+
+    constexpr double Acos(double x) {
+        return M_PI_2 - Asin(x);
     }
 
     constexpr glm::vec2 Normalize(glm::vec2 v) {
@@ -142,7 +178,7 @@ namespace NConstMath {
             return glm::mat4{
                 d.y / c, d.x / c, 0, 0,
                 -d.x, d.y, d.z, 0,
-                d.x * d.z / c, - d.y * d.z / c, c, 0,
+                d.x * d.z / c, -d.y * d.z / c, c, 0,
                 0, 0, 0, 1
             };
         }
