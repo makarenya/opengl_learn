@@ -123,9 +123,6 @@ TModel LoadMesh(const std::string &filename) {
                 vertices[vi++] = bg.x;
                 vertices[vi++] = bg.y;
                 vertices[vi++] = bg.z;
-                //mmin = vec3{std::min(mmin.x, vertex.x), std::min(mmin.y, vertex.y), std::min(mmin.z, vertex.z)};
-                //mmax = vec3{std::max(mmax.x, vertex.x), std::max(mmax.y, vertex.y), std::max(mmax.z, vertex.z)};
-                //cout << vertex.x << ", " << vertex.y << ", " << vertex.z << std::endl;
             }
             int ii = 0;
             for (unsigned j = 0; j < mesh->mNumFaces; ++j) {

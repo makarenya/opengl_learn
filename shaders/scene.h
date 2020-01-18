@@ -28,6 +28,7 @@ public:
             .SetTexture(EMaterialProp::Specular, "material.specular_map", "material.has_specular_map")
             .SetTexture(EMaterialProp::Shininess, "material.shiness_map", "material.has_shiness_map")
             .SetTexture(EMaterialProp::Normal, "material.normal_map", "material.has_normal_map")
+            .SetTexture(EMaterialProp::Height, "material.height_map", "material.has_height_map")
             .SetColor(EMaterialProp::Diffuse, "material.diffuse_col")
             .SetColor(EMaterialProp::Specular, "material.specular_col")
             .SetConstant(EMaterialProp::Shininess, "material.shiness")

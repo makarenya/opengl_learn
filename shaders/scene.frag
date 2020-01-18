@@ -12,6 +12,8 @@ struct Material {
     float shiness;
     sampler2D normal_map;
     bool has_normal_map;
+    sampler2D height_map;
+    bool has_height_map;
     float reflection;
     float refraction;
 };
@@ -76,18 +78,32 @@ layout (std140) uniform Lights {
 
 out vec4 color;
 const vec3 gamma = vec3(1.0 / 2.2);
+const float depth = 0.01;
 
 vec3 CalcDirectionalLight(DirectionalLight light, vec3 dir, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
 vec3 CalcSpotLight(SpotLight light, vec3 pos, int i, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
 vec3 CalcProjectorLight(ProjectorLight light, ProjectorLightPos pos, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
 
 void main() {
-    vec3 norm = normalize(useMap && material.has_normal_map ? vec3(texture(material.normal_map, fs_in.coord)) : fs_in.normal);
+    vec2 coord = fs_in.coord;
     vec3 viewDir = normalize(fs_in.viewPos - fs_in.position);
+    if (material.has_height_map && useMap) {
+        vec2 toBottom = -depth * viewDir.xy / viewDir.z;
+        float c = 0;
+        float s = 0.5;
+        for (int i = 0; i < 5; ++i) {
+            float cd = texture(material.height_map, fs_in.coord + toBottom * (c + s)).r;
+            if (cd > c + s)
+                c += s;
+            s /= 2;
+        }
+        coord += toBottom * c;
+    }
+    vec3 norm = normalize(material.has_normal_map ? vec3(texture(material.normal_map, coord)) : fs_in.normal);
 
-    vec4 diffuse = material.has_diffuse_map ? texture(material.diffuse_map, fs_in.coord) : material.diffuse_col;
-    vec4 specular = material.has_specular_map ? texture(material.specular_map, fs_in.coord) : material.specular_col;
-    float shiness = material.has_shiness_map ? float(texture(material.shiness_map, fs_in.coord)) : material.shiness;
+    vec4 diffuse = material.has_diffuse_map ? texture(material.diffuse_map, coord) : material.diffuse_col;
+    vec4 specular = material.has_specular_map ? texture(material.specular_map, coord) : material.specular_col;
+    float shiness = material.has_shiness_map ? float(texture(material.shiness_map, coord)) : material.shiness;
 
     vec3 result = CalcDirectionalLight(directional, fs_in.directional, norm, viewDir, diffuse.rgb, specular.rgb, shiness);
     for (int i = 0; i < spotCount; i++) {

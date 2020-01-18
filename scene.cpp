@@ -65,7 +65,7 @@ void TScene::SetupLights(glm::vec3 position, float interval) {
     TLights lights{};
     TLightsPos pos{};
     pos.directional = vec4(Directional, 1.0);
-    lights.directional = {vec3(.05), vec3(.3), vec3(.4)};
+    lights.directional = {vec3(.005), vec3(.02), vec3(.2)};
 
     lights.spots[0] = {vec3(0.01f), vec3(0.3f), vec3(0.0f), 0.00, 0.03};
     pos.spots[0] = {position.x, 16.0, position.z, 1.0};
@@ -132,7 +132,6 @@ mat4 Place(vec3 position, vec3 axis, float angle, vec3 s) {
 }
 
 void TScene::DrawObjects(IShaderSet &set) {
-    set.Scene(NConstMath::Translate(-10.0f, 12.0f, 0.0f), false, 0, Asphalt, Sp);
     set.Scene(scale(NConstMath::Translate(0.0f, -100.0f, 0.0f), vec3(200.0f)),
               false, 0, Asphalt, GroundCube);
 

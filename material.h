@@ -16,6 +16,7 @@ enum EMaterialProp {
     Reflection,
     Refraction,
     Normal,
+    Height,
     MATERIAL_PROPS_COUNT
 };
 

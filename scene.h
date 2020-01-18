@@ -45,7 +45,7 @@ private:
     TFlatTexture AsphaltBump{
         TTextureBuilder()
             .SetFile("images/asphalt_height.png")
-            .SetUsage(ETextureUsage::Height)
+            .SetUsage(ETextureUsage::Normals)
             .SetMipmap(ETextureMipmap::Linear)
     };
 
@@ -75,9 +75,13 @@ private:
                         TTextureBuilder()
                             .SetUsage(ETextureUsage::SRgb)
                             .SetFile("images/container2_specular.png"))
-            .SetTexture(EMaterialProp::Normal,
+            .SetTexture(EMaterialProp::Height,
                         TTextureBuilder()
                             .SetUsage(ETextureUsage::Height)
+                            .SetFile("images/container2_specular2.png"))
+            .SetTexture(EMaterialProp::Normal,
+                        TTextureBuilder()
+                            .SetUsage(ETextureUsage::Normals)
                             .SetFile("images/container2_specular2.png"))
             .SetConstant(EMaterialProp::Reflection, .01)
             .SetConstant(EMaterialProp::Shininess, 64)};
@@ -139,12 +143,6 @@ private:
                      .AddLayout(EDataType::Float, 3, 1)
                      .AddLayout(EDataType::Float, 3, 1)};
 
-    TMesh Sp{TMeshBuilder()
-                 .SetVertices(EBufferUsage::Static, Sphere<true, true, false, 3>(
-                     TGeomBuilder().SetSize(1)))
-                 .AddLayout(EDataType::Float, 3)
-                 .AddLayout(EDataType::Float, 3)
-                 .AddLayout(EDataType::Float, 2)};
     glm::vec3 Directional{0.6f, -1.0f, 1.0f};
     float SpotAngle = 0;
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {

@@ -19,10 +19,9 @@ GLenum TextureUsageType(ETextureUsage usage) {
         case ETextureUsage::Rgba: return GL_RGBA;
         case ETextureUsage::SRgb: return GL_SRGB;
         case ETextureUsage::SRgba: return GL_SRGB_ALPHA;
-        case ETextureUsage::Depth:
-        case ETextureUsage::FloatDepth: return GL_DEPTH_COMPONENT;
+        case ETextureUsage::Depth: return GL_DEPTH_COMPONENT;
         case ETextureUsage::DepthStencil: return GL_DEPTH24_STENCIL8;
-        case ETextureUsage::Height:
+        case ETextureUsage::Height: return GL_DEPTH_COMPONENT;
         case ETextureUsage::Normals: return GL_RGB;
     }
 }
@@ -33,10 +32,10 @@ int SoilFormat(ETextureUsage usage) {
         case ETextureUsage::Rgb: return SOIL_LOAD_RGB;
         case ETextureUsage::SRgba:
         case ETextureUsage::Rgba: return SOIL_LOAD_RGBA;
-        case ETextureUsage::Depth:
-        case ETextureUsage::Height: return SOIL_LOAD_L;
-        case ETextureUsage::Normals: return SOIL_LOAD_RGB;
-        default:throw TGlBaseError("invalid value for load image");
+        case ETextureUsage::Depth: return SOIL_LOAD_L;
+        case ETextureUsage::Height:
+        case ETextureUsage::Normals: return SOIL_LOAD_AUTO;
+        default:throw TGlBaseError("invalid value for load image " + std::to_string((int)usage));
     }
 }
 
@@ -47,10 +46,9 @@ GLenum ByteFormat(ETextureUsage usage) {
         case ETextureUsage::SRgb:
         case ETextureUsage::SRgba:
         case ETextureUsage::Depth: return GL_UNSIGNED_BYTE;
-        case ETextureUsage::FloatDepth: return GL_FLOAT;
         case ETextureUsage::DepthStencil: return GL_UNSIGNED_INT_24_8;
         case ETextureUsage::Height:
-        case ETextureUsage::Normals: return GL_FLOAT;
+        case ETextureUsage::Normals: return GL_UNSIGNED_BYTE;
     }
 }
 
@@ -62,56 +60,125 @@ GLenum OuterFormat(ETextureUsage usage) {
     }
 }
 
+template<typename T>
+T ChannelDeviation(const void *data, int pixels, int channels) {
+    const T *scan = static_cast<const T *>(data);
+    long deviation = 0;
+    for (int i = 0; i < pixels; ++i) {
+        int sum = 0;
+        int sq = 0;
+        for (int c = 0; c < channels; ++c) {
+            auto u = *scan++;
+            sum += u;
+            sq += u * u;
+        }
+        deviation += (sq * channels - sum * sum) / (channels * channels);
+    }
+    return static_cast<T>(sqrt(deviation / pixels));
+}
+
+std::vector<std::tuple<uint8_t, uint8_t>> Limits(const uint8_t *scan, int pixels, int channels) {
+    using namespace std;
+    vector<tuple<uint8_t, uint8_t>> limits(channels);
+    for (int c = 0; c < channels; ++c) {
+        auto p = *scan++;
+        limits[c] = make_tuple(p, p);
+    }
+    for (int i = 1; i < pixels; ++i) {
+        for (int c = 0; c < channels; ++c) {
+            auto p = *scan++;
+            limits[c] = make_tuple(min(get<0>(limits[c]), p), max(get<1>(limits[c]), p));
+        }
+    }
+    return limits;
+}
+
+std::vector<uint8_t> HeightMapToNormalMap(const uint8_t *data, int width, int height, int channels, float strength) {
+    std::vector<uint8_t> result(width * height * 3);
+    uint8_t *p = result.data();
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int l = x == 0 ? data[channels * (x + y * width)] : data[channels * (x - 1 + y * width)];
+            int r = x == width - 1 ? data[channels * (x + y * width)] : data[channels * (x + 1 + y * width)];
+            int t = y == 0 ? data[channels * (x + y * width)] : data[channels * (x + (y - 1) * width)];
+            int b = y == height - 1 ? data[channels * (x + y * width)] : data[channels * (x + (y + 1) * width)];
+            int dx = l - r;
+            int dy = t - b;
+            auto length = sqrt(dx * dx + dy * dy + strength * strength);
+            *p++ = 127 + static_cast<uint8_t>(127 * dx / length);
+            *p++ = 127 + static_cast<uint8_t>(127 * dy / length);
+            *p++ = 127 + static_cast<uint8_t>(127 * strength / length);
+        }
+    }
+    return result;
+}
+
+std::vector<uint8_t> ReadHeightMap(const uint8_t *data, int width, int height, int channels) {
+    std::vector<uint8_t> result(width * height);
+    uint8_t *p = result.data();
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            *p++ = 255 - *data;
+            data += channels;
+        }
+    }
+    return result;
+}
+
+std::vector<uint8_t> ReadNormalMap(const uint8_t *data, int width, int height, int channels,
+                               unsigned char xm, float xd, unsigned char ym, float yd, unsigned char zm, float zd) {
+    std::vector<uint8_t> result(width * height * 3);
+    uint8_t *p = result.data();
+    for (int i = 0; i < height * width * 3; i += 3) {
+        *p++ = 127 + 127 * (data[0] - xm) / xd;
+        *p++ = 127 + 127 * (data[1] - ym) / yd;
+        *p++ = 127 + 127 * (data[2] - zm) / zd;
+        data += channels;
+    }
+    return result;
+}
+
 void LoadTextureImage(const std::string &file, GLenum what, int &width, int &height, ETextureUsage usage) {
     auto format = TextureUsageType(usage);
     if (file.empty()) {
         GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, format, ByteFormat(usage), nullptr));
     } else {
-        unsigned char *data = SOIL_load_image(file.c_str(), &width, &height, nullptr, SoilFormat(usage));
+        int channels;
+        unsigned char *const data = SOIL_load_image(file.c_str(), &width, &height, &channels, SoilFormat(usage));
         if (data == nullptr) {
             throw TGlBaseError("can't load file " + file);
         }
         try {
-            if (usage == ETextureUsage::Height) {
-                std::vector<GLfloat> result(width * height * 3 + 4);
-                GLfloat *p = result.data();
-                const int h = 20;
-                for (int y = 0; y < height; ++y) {
-                    for (int x = 0; x < width; ++x) {
-                        int dx, dy;
-                        if (x == 0)
-                            dx = data[x + y * width] - data[x + 1 + y * width];
-                        else if (x == width - 1)
-                            dx = data[x - 1 + y * width] - data[x + y * width];
-                        else
-                            dx = data[x - 1 + y * width] - data[x + 1 + y * width];
-                        if (y == 0)
-                            dy = data[x + y * width] - data[x + (y + 1) * width];
-                        else if (y == height - 1)
-                            dy = data[x + (y - 1) * width] - data[x + y * width];
-                        else
-                            dy = data[x + (y - 1) * width] - data[x + (y + 1) * width];
-                        float length = sqrt(dx * dx + dy * dy + h * h);
-                        *p++ = dx / length;
-                        *p++ = dy / length;
-                        *p++ = h / length;
+            if (usage == ETextureUsage::Height || usage == ETextureUsage::Normals) {
+                std::vector<uint8_t> result;
+                if (channels < 3 || ChannelDeviation<unsigned char>(data, width * height, channels) < 2) {
+                    // It`s height map.
+                    if (usage == ETextureUsage::Height) {
+                        result = ReadHeightMap(data, width, height, channels);
+                    } else {
+                        result = HeightMapToNormalMap(data, width, height, channels, 20.0f);
+                    }
+                } else {
+                    auto limits = Limits(data, width * height, channels);
+                    if (std::get<0>(limits[0]) >= 127 && std::get<0>(limits[1]) >= 127
+                        && std::get<0>(limits[2]) >= 191) {
+                        if (usage == ETextureUsage::Height) {
+                            throw TGlBaseError("can't convert normal map to height map");
+                        } else {
+                            result = ReadNormalMap(data, width, height, channels, 191, 64, 191, 64, 191, 64);
+                        }
+                    } else {
+                        throw TGlBaseError("can't detect format");
                     }
                 }
-                GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), result.data()));
-            } else if (usage == ETextureUsage::Normals) {
-                std::vector<GLfloat> result(width * height * 3 + 4);
-                GLfloat *p = result.data();
-                for (int i = 0; i < height * width * 3; i += 3) {
-                    *p++ = (data[i] - 191) / 64.0;
-                    *p++ = (data[i + 1] - 191) / 64.0;
-                    *p++ = (data[i + 2] - 191) / 64.0;
-                }
-                GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), result.data()));
+                GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage),
+                                       ByteFormat(usage), result.data()));
             } else {
                 GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), data));
             }
         } catch (...) {
             SOIL_free_image_data(data);
+            throw;
         }
         SOIL_free_image_data(data);
     }
