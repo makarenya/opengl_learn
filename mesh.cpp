@@ -115,9 +115,9 @@ void TMesh::Draw(EDrawType type) const {
                 GL_ASSERT(glDrawElements(t, IndexCount, GL_UNSIGNED_INT, nullptr));
             }
         }
+        GL_ASSERT(glBindVertexArray(0));
     } catch (...) {
         glBindVertexArray(0);
         throw;
     }
-    GL_ASSERT(glBindVertexArray(0));
 }

@@ -13,7 +13,6 @@ public:
     }
     [[nodiscard]] GLuint GetIndex() const { return BoundIndex; }
     void Write(const void* data);
-    void Read(void* data);
 
     friend class TUniformBuffer;
 };

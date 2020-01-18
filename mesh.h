@@ -83,8 +83,11 @@ public:
     void Draw(EDrawType type = EDrawType::Triangles) const;
 
     [[nodiscard]] const TArrayBuffer &GetVertices() const { return Vertices; }
+    [[nodiscard]] TArrayBuffer &GetVertices() { return Vertices; }
     [[nodiscard]] const TIndexBuffer &GetIndices() const { return Indices; }
+    [[nodiscard]] TIndexBuffer &GetIndices() { return Indices; }
     [[nodiscard]] const TArrayBuffer &GetInstances() const { return Instances; }
+    [[nodiscard]] TArrayBuffer &GetInstances() { return Instances; }
     [[nodiscard]] unsigned GetVertexCount() const { return VertexCount; }
     [[nodiscard]] unsigned GetIndexCount() const { return IndexCount; }
     [[nodiscard]] unsigned GetInstanceCount() const { return InstanceCount; }

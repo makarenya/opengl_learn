@@ -2,35 +2,13 @@
 
 void TUniformBindingBase::Write(const void *data) {
     GL_ASSERT(glBindBuffer(GL_UNIFORM_BUFFER, Buffer));
-
-    void* mapped{};
     try {
-        mapped = GL_ASSERTR(glMapBufferRange(GL_UNIFORM_BUFFER, Offset, Size, GL_MAP_WRITE_BIT));
-        memcpy(mapped, data, Size);
-        glUnmapBuffer(GL_UNIFORM_BUFFER);
+        GL_ASSERT(glBufferSubData(GL_UNIFORM_BUFFER, Offset, Size, data));
     } catch (...) {
-        if (mapped != nullptr) {
-            glUnmapBuffer(GL_UNIFORM_BUFFER);
-        }
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
         throw;
     }
-}
-
-void TUniformBindingBase::Read(void *data) {
-    GL_ASSERT(glBindBuffer(GL_UNIFORM_BUFFER, Buffer));
-    const void* mapped{};
-    try {
-        mapped = GL_ASSERTR(glMapBufferRange(GL_UNIFORM_BUFFER, Offset, Size, GL_MAP_READ_BIT));
-        memcpy(data, mapped, Size);
-        GL_ASSERT(glUnmapBuffer(GL_UNIFORM_BUFFER));
-    } catch (...) {
-        if (mapped != nullptr) {
-            glUnmapBuffer(GL_UNIFORM_BUFFER);
-        }
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-        throw;
-    }
+    GL_ASSERT(glBindBuffer(GL_UNIFORM_BUFFER, 0));
 }
 
 TUniformBuffer::TUniformBuffer(std::initializer_list<TUniformBindingBase *> buffers) {

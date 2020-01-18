@@ -107,8 +107,6 @@ void TScene::UpdateFountain(float interval) {
     for (int i = 0; i < 30 && CurrentParticles < Particles.size(); ++i) {
         Particles[CurrentParticles++] = Injector.Inject();
     }
-    TArrayBufferMapper<vec3> mapper(Points.GetInstances());
-    auto p = *mapper;
     for (int i = 0; i < CurrentParticles; ++i) {
         auto[pos, speed] = Particles[i];
         speed = vec3(speed.x, speed.y - gravity * interval, speed.z);
@@ -117,10 +115,8 @@ void TScene::UpdateFountain(float interval) {
         } else {
             Particles[i] = make_tuple(pos + speed * interval, speed);
         }
-        *p++ = pos;
-        *p++ = speed;
     }
-    mapper.Unmap();
+    Points.GetInstances().Write(Particles.data(), 0, Particles.size() * 6 * sizeof(float));
 }
 
 void TScene::DrawFountain(IShaderSet &set) {

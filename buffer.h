@@ -15,6 +15,7 @@ enum struct EBufferUsage {
 namespace Impl {
     std::shared_ptr<GLuint> Create(GLenum type, EBufferUsage usage, const void *data, size_t size);
     void Change(GLenum type, GLuint buffer, EBufferUsage usage, const void *data, size_t size);
+    void Write(GLenum type, GLuint buffer, const void *data, size_t offset, size_t size);
     void *MapBuffer(GLenum type, GLuint buffer, bool write = true);
     void *MapBuffer(GLenum type, GLuint buffer, size_t offset, size_t size, bool write = true);
     void UnmapBuffer(GLenum type);
@@ -37,7 +38,10 @@ public:
 
     template<typename T>
     TBuffer(EBufferUsage usage, T &&src)
-        : Buffer(Impl::Create(static_cast<GLenum>(Type), usage, src.data(), sizeof(typename std::remove_reference<T>::type::value_type) * src.size()))
+        : Buffer(Impl::Create(static_cast<GLenum>(Type),
+                              usage,
+                              src.data(),
+                              sizeof(typename std::remove_reference<T>::type::value_type) * src.size()))
           , Size(sizeof(T) * src.size()) {
     }
 
@@ -47,18 +51,22 @@ public:
           , Size(sizeof(T) * N) {
     }
 
-    void Update(EBufferUsage usage, const void *data, size_t size) {
+    void Change(EBufferUsage usage, const void *data, size_t size) {
         Impl::Change(Type, *Buffer, usage, data, size);
     }
 
     template<typename T>
-    void Update(EBufferUsage usage, T &&src) {
+    void Change(EBufferUsage usage, T &&src) {
         Impl::Change(Type, *Buffer, usage, src.data(), sizeof(typename T::value_type) * src.size());
     }
 
     template<typename T, size_t N>
-    void Update(EBufferUsage usage, T src[N]) {
+    void Change(EBufferUsage usage, T src[N]) {
         Impl::Change(Type, *Buffer, usage, src, sizeof(T) * N);
+    }
+
+    void Write(void *data, int offset, int length) {
+        Impl::Write(Type, *Buffer, data, offset, length);
     }
 
     [[nodiscard]] bool Empty() const {
@@ -87,20 +95,8 @@ public:
         : Data(Impl::MapBuffer(static_cast<GLenum>(Type), *buffer.Buffer, offset, size, write)) {
     }
 
-    TBufferMapper(TBufferMapper &&src) noexcept
-        : Data(src.Data) {
-        src.Data = nullptr;
-    }
-
-    void Unmap() {
-        if (Data != nullptr) {
-            Data = nullptr;
-            Impl::UnmapBuffer(static_cast<GLenum>(Type));
-        }
-    }
-
     ~TBufferMapper() {
-        Unmap();
+        Impl::UnmapBuffer(static_cast<GLenum>(Type));
     }
 
     TBufferMapper(const TBufferMapper &) = delete;
@@ -127,10 +123,6 @@ public:
         if (Bound) {
             Impl::UnBindBuffer(static_cast<GLenum>(Type));
         }
-    }
-    TBufferBinder(TBufferBinder &&src) noexcept
-        : Bound(src.Bound) {
-        src.Bound = false;
     }
     TBufferBinder(const TBufferBinder &) = delete;
     TBufferBinder &operator=(const TBufferBinder &) = delete;

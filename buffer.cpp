@@ -13,24 +13,35 @@ namespace Impl {
         try {
             GL_ASSERT(glBindBuffer(type, buffer));
             GL_ASSERT(glBufferData(type, size, data, static_cast<GLenum>(usage)));
+            GL_ASSERT(glBindBuffer(type, 0));
+            return std::shared_ptr<GLuint>(new GLuint(buffer), FreeBuffer);
         } catch (...) {
             glBindBuffer(type, 0);
             glDeleteBuffers(1, &buffer);
             throw;
         }
-        GL_ASSERT(glBindBuffer(type, 0));
-        return std::shared_ptr<GLuint>(new GLuint(buffer), FreeBuffer);
     }
 
     void Change(GLenum type, GLuint buffer, EBufferUsage usage, const void *data, size_t size) {
         GL_ASSERT(glBindBuffer(type, buffer));
         try {
             GL_ASSERT(glBufferData(type, size, data, static_cast<GLenum>(usage)));
+            GL_ASSERT(glBindBuffer(type, 0));
         } catch (...) {
             glBindBuffer(type, 0);
             throw;
         }
-        GL_ASSERT(glBindBuffer(type, 0));
+    }
+
+    void Write(GLenum type, GLuint buffer, const void *data, size_t offset, size_t size) {
+        GL_ASSERT(glBindBuffer(type, buffer));
+        try {
+            GL_ASSERT(glBufferSubData(type, offset, size, data));
+            GL_ASSERT(glBindBuffer(type, 0));
+        } catch (...) {
+            glBindBuffer(type, 0);
+            throw;
+        }
     }
 
     void *MapBuffer(GLenum type, GLuint buffer, bool write) {
@@ -54,6 +65,7 @@ namespace Impl {
 
     void UnBindBuffer(GLenum type) {
         glBindBuffer(type, 0);
+        TGlError::Skip();
     }
 }
 

@@ -111,10 +111,13 @@ void TFrameBuffer::CopyTo(TFrameBuffer &target) {
     GL_ASSERT(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, *target.FrameBuffer));
     GL_ASSERT(glBindFramebuffer(GL_READ_FRAMEBUFFER, *FrameBuffer));
     GL_ASSERT(glBlitFramebuffer(0, 0, dst.x, dst.y, 0, 0, src.x, src.y, copy, GL_NEAREST));
+    GL_ASSERT(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+    GL_ASSERT(glBindFramebuffer(GL_READ_FRAMEBUFFER, 0));
     GL_ASSERT(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 
-TFrameBufferBinder::TFrameBufferBinder(const TFrameBuffer &framebuffer) {
+TFrameBufferBinder::TFrameBufferBinder(const TFrameBuffer &framebuffer)
+    : Bound(true) {
     GLint current;
     GL_ASSERT(glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current));
     GLint viewport[4];
@@ -143,6 +146,9 @@ TFrameBufferBinder::~TFrameBufferBinder() {
 }
 
 void TFrameBufferBinder::Unbind() {
-    glBindFramebuffer(GL_FRAMEBUFFER, OldBuffer);
-    glViewport(OldViewport[0], OldViewport[1], OldViewport[2], OldViewport[3]);
+    if (Bound) {
+        Bound = false;
+        glBindFramebuffer(GL_FRAMEBUFFER, OldBuffer);
+        glViewport(OldViewport[0], OldViewport[1], OldViewport[2], OldViewport[3]);
+    }
 }

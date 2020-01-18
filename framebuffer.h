@@ -41,6 +41,7 @@ public:
 };
 
 class TFrameBufferBinder {
+    bool Bound;
     GLuint OldBuffer{};
     glm::ivec4 OldViewport{};
 public:

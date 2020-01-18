@@ -237,7 +237,7 @@ std::shared_ptr<std::tuple<GLuint,
         auto format = TextureUsageType(builder.Usage_);
         auto[width, height]= builder.Size_;
         GL_ASSERT(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, builder.Samples_, format, width, height, GL_TRUE));
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        GL_ASSERT(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
         if (width == 0 || height == 0) {
             throw TGlBaseError("width or height is 0");
         }
@@ -273,7 +273,7 @@ std::shared_ptr<std::tuple<GLuint, int, int, int>> Impl::CreateCubeTexture(const
         if (builder.Mipmap_ != ETextureMipmap::None) {
             GL_ASSERT(glGenerateMipmap(GL_TEXTURE_CUBE_MAP));
         }
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        GL_ASSERT(glBindTexture(GL_TEXTURE_CUBE_MAP, 0));
         if (width == 0 || height == 0 || depth == 0) {
             throw TGlBaseError("width, height or depth is 0");
         }
