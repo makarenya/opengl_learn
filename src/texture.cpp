@@ -1,6 +1,6 @@
 #include "texture.h"
 #include "errors.h"
-#include "stb/stb_image.h"
+#include "stb_image.h"
 
 GLenum MagFilter(bool magLinear) {
     return magLinear ? GL_LINEAR : GL_NEAREST;
