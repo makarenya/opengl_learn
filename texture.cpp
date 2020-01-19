@@ -1,6 +1,6 @@
 #include "texture.h"
 #include "errors.h"
-#include <SOIL/SOIL.h>
+#include "stb/stb_image.h"
 
 GLenum MagFilter(bool magLinear) {
     return magLinear ? GL_LINEAR : GL_NEAREST;
@@ -26,15 +26,15 @@ GLenum TextureUsageType(ETextureUsage usage) {
     }
 }
 
-int SoilFormat(ETextureUsage usage) {
+int StbiFormat(ETextureUsage usage) {
     switch (usage) {
         case ETextureUsage::SRgb:
-        case ETextureUsage::Rgb: return SOIL_LOAD_RGB;
+        case ETextureUsage::Rgb: return STBI_rgb;
         case ETextureUsage::SRgba:
-        case ETextureUsage::Rgba: return SOIL_LOAD_RGBA;
-        case ETextureUsage::Depth: return SOIL_LOAD_L;
+        case ETextureUsage::Rgba: return STBI_rgb_alpha;
+        case ETextureUsage::Depth: return STBI_grey;
         case ETextureUsage::Height:
-        case ETextureUsage::Normals: return SOIL_LOAD_AUTO;
+        case ETextureUsage::Normals: return STBI_default;
         default:throw TGlBaseError("invalid value for load image " + std::to_string((int)usage));
     }
 }
@@ -126,7 +126,7 @@ std::vector<uint8_t> ReadHeightMap(const uint8_t *data, int width, int height, i
 }
 
 std::vector<uint8_t> ReadNormalMap(const uint8_t *data, int width, int height, int channels,
-                               unsigned char xm, float xd, unsigned char ym, float yd, unsigned char zm, float zd) {
+                                   unsigned char xm, float xd, unsigned char ym, float yd, unsigned char zm, float zd) {
     std::vector<uint8_t> result(width * height * 3);
     uint8_t *p = result.data();
     for (int i = 0; i < height * width * 3; i += 3) {
@@ -144,7 +144,7 @@ void LoadTextureImage(const std::string &file, GLenum what, int &width, int &hei
         GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, format, ByteFormat(usage), nullptr));
     } else {
         int channels;
-        unsigned char *const data = SOIL_load_image(file.c_str(), &width, &height, &channels, SoilFormat(usage));
+        unsigned char *const data = stbi_load(file.c_str(), &width, &height, &channels, StbiFormat(usage));
         if (data == nullptr) {
             throw TGlBaseError("can't load file " + file);
         }
@@ -176,11 +176,11 @@ void LoadTextureImage(const std::string &file, GLenum what, int &width, int &hei
             } else {
                 GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), data));
             }
+            stbi_image_free(data);
         } catch (...) {
-            SOIL_free_image_data(data);
+            stbi_image_free(data);
             throw;
         }
-        SOIL_free_image_data(data);
     }
 }
 

@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.15)
 project(opengl)
-add_subdirectory(soil)
-include_directories(soil/inc)
-include_directories(glm)
+
+set(ASSIMP_BUILD_SHARED_LIBS, TRUE)
+add_subdirectory(assimp)
+add_subdirectory(glfw)
+add_subdirectory(glm)
+add_subdirectory(glew/build/cmake)
+include_directories(CImg)
+include_directories(glew/include)
+add_compile_definitions(STB_IMAGE_IMPLEMENTATION)
 
 set(CMAKE_CXX_STANDARD 17)
 set(GLEW_USE_STATIC_LIBS TRUE)
@@ -40,13 +46,6 @@ add_executable(opengl
         shaders/silhouette.h
         )
 
-find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(GLEW REQUIRED)
-set(ASSIMP_BUILD_SHARED_LIBS, TRUE)
-
-find_package(assimp REQUIRED)
-find_library(CORE CoreFoundation REQUIRED)
-target_include_directories(opengl PUBLIC ${OPENGL_INCLUDE_DIR} ${GLEW_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS})
-find_library(ASSIMP ${ASSIMP_LIBRARIES})
-target_link_libraries(opengl glfw GLEW::glew ${OPENGL_gl_LIBRARY} soil pthread ${ASSIMP} ${CORE})
+target_include_directories(opengl PUBLIC ${OPENGL_INCLUDE_DIR})
+target_link_libraries(opengl glm glfw glew pthread assimp ${OPENGL_gl_LIBRARY} )
