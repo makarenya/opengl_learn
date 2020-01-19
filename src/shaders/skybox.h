@@ -9,8 +9,8 @@ public:
     explicit TSkyboxShader(const TUniformBindingBase &matrices)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex("shaders/skybox.vert")
-            .SetFragment("shaders/skybox.frag")
+            .SetVertex(&shaders_skybox_vert, shaders_skybox_vert_len)
+            .SetFragment(&shaders_skybox_frag, shaders_skybox_frag_len)
             .SetBlock("Matrices", matrices))
           , SkyBox(DefineTexture("skybox")) {
     }

@@ -6,9 +6,9 @@
 
 class TShaderBuilder {
 public:
-    BUILDER_PROPERTY(std::string, Vertex);
-    BUILDER_PROPERTY(std::string, Fragment);
-    BUILDER_PROPERTY(std::string, Geometry);
+    BUILDER_PROPERTY2(const unsigned char *, size_t, Vertex);
+    BUILDER_PROPERTY2(const unsigned char *, size_t, Fragment);
+    BUILDER_PROPERTY2(const unsigned char *, size_t, Geometry);
     BUILDER_MAP2(EMaterialProp, std::string, std::string, Texture){};
     BUILDER_MAP(EMaterialProp, std::string, Color){};
     BUILDER_MAP(EMaterialProp, std::string, Constant){};
@@ -40,7 +40,7 @@ protected:
     GLint DefineProp(const std::string &name, bool skip = false);
 
 private:
-    static GLuint CreateShader(GLenum type, const std::string &name, const std::string &filename);
+    static GLuint CreateShader(GLenum type, const std::string &name, const unsigned char *body, size_t length);
     friend class TShaderSetup;
 };
 

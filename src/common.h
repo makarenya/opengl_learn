@@ -6,8 +6,8 @@
 #include <array>
 
 #define BUILDER_PROPERTY2(T1, T2, NAME) \
-auto &Set##NAME(const T1 &v1, const T2 &v2) { \
-    NAME##_ = std::make_tuple(v1, v2); \
+auto &Set##NAME(T1 v1, T2 v2) { \
+    NAME##_ = std::make_tuple(std::move(v1), std::move(v2)); \
     return *this; \
 } \
 std::tuple<T1, T2> NAME##_

@@ -15,8 +15,8 @@ public:
                               const TUniformBindingBase &lightsPos)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex("shaders/particles.vert")
-            .SetFragment("shaders/particles.frag")
+            .SetVertex(&shaders_particles_vert, shaders_particles_vert_len)
+            .SetFragment(&shaders_particles_frag, shaders_particles_frag_len)
             .SetBlock("Matrices", matrices)
             .SetBlock("Lights", lights)
             .SetBlock("LightsPos", lightsPos))

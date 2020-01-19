@@ -6,6 +6,7 @@
 
 TShaderProgram::TShaderProgram(const TShaderBuilder &builder)
     : Program(glCreateProgram()) {
+    using namespace std;
     if (Program == 0) {
         throw TGlError("create program");
     }
@@ -14,14 +15,14 @@ TShaderProgram::TShaderProgram(const TShaderBuilder &builder)
     GLuint geometry{};
 
     try {
-        vertex = CreateShader(GL_VERTEX_SHADER, "vertex", builder.Vertex_);
+        vertex = CreateShader(GL_VERTEX_SHADER, "vertex", get<0>(builder.Vertex_), get<1>(builder.Vertex_));
         GL_ASSERT(glAttachShader(Program, vertex));
 
-        fragment = CreateShader(GL_FRAGMENT_SHADER, "fragment", builder.Fragment_);
+        fragment = CreateShader(GL_FRAGMENT_SHADER, "fragment", get<0>(builder.Fragment_), get<1>(builder.Fragment_));
         GL_ASSERT(glAttachShader(Program, fragment));
 
-        if (!builder.Geometry_.empty()) {
-            geometry = CreateShader(GL_GEOMETRY_SHADER, "geometry", builder.Geometry_);
+        if (get<1>(builder.Geometry_) > 0) {
+            geometry = CreateShader(GL_GEOMETRY_SHADER, "geometry", get<0>(builder.Geometry_), get<1>(builder.Geometry_));
             GL_ASSERT(glAttachShader(Program, geometry));
         }
         GL_ASSERT(glLinkProgram(Program));
@@ -95,21 +96,15 @@ GLint TShaderProgram::DefineProp(const std::string &name, bool skip) {
     return location;
 }
 
-GLuint TShaderProgram::CreateShader(GLenum type, const std::string &name, const std::string &filename) {
+GLuint TShaderProgram::CreateShader(GLenum type, const std::string &name, const unsigned char *body, size_t length) {
     GLuint shader = glCreateShader(type);
     if (shader == 0) {
         throw TGlError("vertex shader");
     }
     try {
-        std::string code;
-        try {
-            std::ifstream fileStream{filename};
-            code = {std::istreambuf_iterator<char>{fileStream}, std::istreambuf_iterator<char>{}};
-        } catch (std::istream::failure &e) {
-            throw TGlBaseError("error loading " + name + " while " + e.what());
-        }
-        const char *line = code.c_str();
-        GL_ASSERT(glShaderSource(shader, 1, &line, nullptr));
+        auto src = reinterpret_cast<const char*>(body);
+        auto len = static_cast<GLint>(length);
+        GL_ASSERT(glShaderSource(shader, 1, &src, &len));
         GL_ASSERT(glCompileShader(shader));
         GLint status;
         GL_ASSERT(glGetShaderiv(shader, GL_COMPILE_STATUS, &status));

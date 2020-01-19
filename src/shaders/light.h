@@ -9,8 +9,8 @@ public:
     explicit TLightShader(const TUniformBindingBase &matrices)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex("shaders/light.vert")
-            .SetFragment("shaders/light.frag"))
+            .SetVertex(&shaders_light_vert, shaders_light_vert_len)
+            .SetFragment(&shaders_light_frag, shaders_light_frag_len))
           , Model(DefineProp("model"))
           , Color(DefineProp("lightColor")) {
     }

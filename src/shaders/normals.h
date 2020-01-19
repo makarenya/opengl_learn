@@ -9,9 +9,9 @@ public:
     explicit TNormalsShader(const TUniformBindingBase &matrices)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex("shaders/normals.vert")
-            .SetFragment("shaders/normals.frag")
-            .SetGeometry("shaders/normals.geom")
+            .SetVertex(&shaders_normals_vert, shaders_normals_vert_len)
+            .SetFragment(&shaders_normals_frag, shaders_normals_frag_len)
+            .SetGeometry(&shaders_normals_geom, shaders_normals_geom_len)
             .SetBlock("Matrices", matrices))
           , Model(DefineProp("model")) {
     }

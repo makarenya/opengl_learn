@@ -9,8 +9,8 @@ public:
     TDepthShader()
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex("shaders/border.vert")
-            .SetFragment("shaders/depth.frag"))
+            .SetVertex(&shaders_border_vert, shaders_border_vert_len)
+            .SetFragment(&shaders_depth_frag, shaders_depth_frag_len))
           , Depth(DefineTexture("depthTexture")) {
     }
     friend class TDepthSetup;

@@ -14,9 +14,9 @@ public:
     explicit TShadowShader()
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex("shaders/shadow.vert")
-            .SetFragment("shaders/shadow.frag")
-            .SetGeometry("shaders/shadow.geom")
+            .SetVertex(&shaders_shadow_vert, shaders_shadow_vert_len)
+            .SetFragment(&shaders_shadow_frag, shaders_shadow_frag_len)
+            .SetGeometry(&shaders_shadow_geom, shaders_shadow_geom_len)
             .SetTexture(EMaterialProp::Diffuse, "diffuse"))
           , LightMatrices(DefineProp("lightMatrices"))
           , Direct(DefineProp("direct"))

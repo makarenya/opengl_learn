@@ -9,8 +9,8 @@ public:
     explicit TSilhouetteShader(const TUniformBindingBase &matrices)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex("shaders/silhouette.vert")
-            .SetFragment("shaders/silhouette.frag")
+            .SetVertex(&shaders_silhouette_vert, shaders_silhouette_vert_len)
+            .SetFragment(&shaders_silhouette_frag, shaders_silhouette_frag_len)
             .SetBlock("Matrices", matrices))
           , Model(DefineProp("model")) {
     }
