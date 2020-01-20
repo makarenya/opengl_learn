@@ -2,7 +2,6 @@
 #include "shader_program.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <array>
-#include <fstream>
 
 TShaderProgram::TShaderProgram(const TShaderBuilder &builder)
     : Program(glCreateProgram()) {
@@ -15,14 +14,16 @@ TShaderProgram::TShaderProgram(const TShaderBuilder &builder)
     GLuint geometry{};
 
     try {
-        vertex = CreateShader(GL_VERTEX_SHADER, "vertex", get<0>(builder.Vertex_), get<1>(builder.Vertex_));
-        GL_ASSERT(glAttachShader(Program, vertex));
-
-        fragment = CreateShader(GL_FRAGMENT_SHADER, "fragment", get<0>(builder.Fragment_), get<1>(builder.Fragment_));
-        GL_ASSERT(glAttachShader(Program, fragment));
-
-        if (get<1>(builder.Geometry_) > 0) {
-            geometry = CreateShader(GL_GEOMETRY_SHADER, "geometry", get<0>(builder.Geometry_), get<1>(builder.Geometry_));
+        if (builder.Vertex_ != nullptr) {
+            vertex = CreateShader(GL_VERTEX_SHADER, "vertex", builder.Vertex_);
+            GL_ASSERT(glAttachShader(Program, vertex));
+        }
+        if (builder.Fragment_ != nullptr) {
+            fragment = CreateShader(GL_FRAGMENT_SHADER, "fragment", builder.Fragment_);
+            GL_ASSERT(glAttachShader(Program, fragment));
+        }
+        if (builder.Geometry_ != nullptr) {
+            geometry = CreateShader(GL_GEOMETRY_SHADER, "geometry", builder.Geometry_);
             GL_ASSERT(glAttachShader(Program, geometry));
         }
         GL_ASSERT(glLinkProgram(Program));
@@ -96,14 +97,14 @@ GLint TShaderProgram::DefineProp(const std::string &name, bool skip) {
     return location;
 }
 
-GLuint TShaderProgram::CreateShader(GLenum type, const std::string &name, const unsigned char *body, size_t length) {
+GLuint TShaderProgram::CreateShader(GLenum type, const std::string &name, const NResource::TResource *body) {
     GLuint shader = glCreateShader(type);
     if (shader == 0) {
         throw TGlError("vertex shader");
     }
     try {
-        auto src = reinterpret_cast<const char*>(body);
-        auto len = static_cast<GLint>(length);
+        auto src = reinterpret_cast<const char*>(body->data());
+        int len = body->size();
         GL_ASSERT(glShaderSource(shader, 1, &src, &len));
         GL_ASSERT(glCompileShader(shader));
         GLint status;

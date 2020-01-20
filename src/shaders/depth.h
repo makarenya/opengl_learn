@@ -1,5 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "../shader_program.h"
+#include "../resource.h"
 
 class TDepthShader: public TShaderProgram {
 private:
@@ -9,8 +11,8 @@ public:
     TDepthShader()
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_border_vert, shaders_border_vert_len)
-            .SetFragment(&shaders_depth_frag, shaders_depth_frag_len))
+            .SetVertex(&NResource::shaders_border_vert)
+            .SetFragment(&NResource::shaders_depth_frag))
           , Depth(DefineTexture("depthTexture")) {
     }
     friend class TDepthSetup;

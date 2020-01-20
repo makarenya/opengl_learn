@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "resource.h"
+#include "../shader_program.h"
+#include "../resource.h"
 
 class TBlurShader: public TShaderProgram {
 private:
@@ -10,8 +11,8 @@ public:
     TBlurShader()
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_border_vert, shaders_border_vert_len)
-            .SetFragment(&shaders_blur_frag, shaders_blur_frag_len))
+            .SetVertex(&NResource::shaders_border_vert)
+            .SetFragment(&NResource::shaders_blur_frag))
           , Screen(DefineTexture("screenTexture"))
           , Depth(DefineTexture("depthTexture")) {
     }

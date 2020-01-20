@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "../shader_program.h"
+#include "../resource.h"
 
 class TSkyboxShader: public TShaderProgram {
 private:
@@ -9,8 +10,8 @@ public:
     explicit TSkyboxShader(const TUniformBindingBase &matrices)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_skybox_vert, shaders_skybox_vert_len)
-            .SetFragment(&shaders_skybox_frag, shaders_skybox_frag_len)
+            .SetVertex(&NResource::shaders_skybox_vert)
+            .SetFragment(&NResource::shaders_skybox_frag)
             .SetBlock("Matrices", matrices))
           , SkyBox(DefineTexture("skybox")) {
     }

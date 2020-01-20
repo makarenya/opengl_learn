@@ -13,12 +13,13 @@ add_compile_definitions(STB_IMAGE_IMPLEMENTATION)
 
 function(ADD_RESOURCES out_var root)
     set(result)
-    set(sources "#pragma once\n")
+    set(sources "namespace NResource {\n    namespace NImpl { extern \"C\" {\n")
+    set(defines)
     foreach(in_f ${ARGN})
         file(RELATIVE_PATH src_f "${CMAKE_CURRENT_SOURCE_DIR}/${root}" "${CMAKE_CURRENT_SOURCE_DIR}/${in_f}")
         string(REPLACE "/" "_" fs_flat ${src_f})
         string(REPLACE "." "_" fs_flat ${fs_flat})
-        set(out_f "${PROJECT_BINARY_DIR}/${fs_flat}.cpp")
+        set(out_f "${PROJECT_BINARY_DIR}/${fs_flat}.c")
         add_custom_command(OUTPUT ${out_f}
                 COMMAND xxd -i ${src_f} ${out_f}
                 DEPENDS ${in_f}
@@ -26,10 +27,13 @@ function(ADD_RESOURCES out_var root)
                 COMMENT "Building GLSL object ${out_f}"
                 VERBATIM
                 )
-        list(APPEND sources "extern unsigned char ${fs_flat}\;\nextern unsigned int ${fs_flat}_len\;\n")
+        list(APPEND sources "        extern unsigned char ${fs_flat}\;\n        extern unsigned int ${fs_flat}_len\;\n")
+        list(APPEND defines "    const TResource ${fs_flat}(&NImpl::${fs_flat}, NImpl::${fs_flat}_len)\;\n")
         list(APPEND result ${out_f})
     endforeach()
-    file(WRITE "${PROJECT_BINARY_DIR}/resource.h" ${sources})
+    list(APPEND sources "    }}\n")
+    list(APPEND defines "}\n")
+    file(WRITE "${PROJECT_BINARY_DIR}/resource_def.h" ${sources}${defines})
     set(${out_var} "${result}" PARENT_SCOPE)
 endfunction()
 
@@ -98,6 +102,6 @@ add_executable(opengl
 
 find_package(OpenGL REQUIRED)
 target_include_directories(opengl PUBLIC ${PROJECT_BINARY_DIR} ${OPENGL_INCLUDE_DIR})
-target_link_libraries(opengl glm glfw glew pthread assimp ${OPENGL_gl_LIBRARY})
+target_link_libraries(opengl glm glfw glew_s assimp ${OPENGL_gl_LIBRARY})
 
 add_compile_options(-fvisibility=hidden)

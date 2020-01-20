@@ -3,12 +3,13 @@
 #include "uniform_buffer.h"
 #include "texture.h"
 #include "material.h"
+#include "resource.h"
 
 class TShaderBuilder {
 public:
-    BUILDER_PROPERTY2(const unsigned char *, size_t, Vertex);
-    BUILDER_PROPERTY2(const unsigned char *, size_t, Fragment);
-    BUILDER_PROPERTY2(const unsigned char *, size_t, Geometry);
+    BUILDER_PROPERTY(const NResource::TResource*, Vertex);
+    BUILDER_PROPERTY(const NResource::TResource*, Fragment);
+    BUILDER_PROPERTY(const NResource::TResource*, Geometry);
     BUILDER_MAP2(EMaterialProp, std::string, std::string, Texture){};
     BUILDER_MAP(EMaterialProp, std::string, Color){};
     BUILDER_MAP(EMaterialProp, std::string, Constant){};
@@ -40,7 +41,7 @@ protected:
     GLint DefineProp(const std::string &name, bool skip = false);
 
 private:
-    static GLuint CreateShader(GLenum type, const std::string &name, const unsigned char *body, size_t length);
+    static GLuint CreateShader(GLenum type, const std::string &name, const NResource::TResource *body);
     friend class TShaderSetup;
 };
 

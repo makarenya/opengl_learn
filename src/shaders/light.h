@@ -1,5 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "../shader_program.h"
+#include "../resource.h"
 
 class TLightShader: public TShaderProgram {
 private:
@@ -9,8 +11,8 @@ public:
     explicit TLightShader(const TUniformBindingBase &matrices)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_light_vert, shaders_light_vert_len)
-            .SetFragment(&shaders_light_frag, shaders_light_frag_len))
+            .SetVertex(&NResource::shaders_light_vert)
+            .SetFragment(&NResource::shaders_light_frag))
           , Model(DefineProp("model"))
           , Color(DefineProp("lightColor")) {
     }

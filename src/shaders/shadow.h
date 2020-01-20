@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include "../shader_program.h"
+#include "../resource.h"
 
 class TShadowShader: public TShaderProgram {
 private:
@@ -14,9 +14,9 @@ public:
     explicit TShadowShader()
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_shadow_vert, shaders_shadow_vert_len)
-            .SetFragment(&shaders_shadow_frag, shaders_shadow_frag_len)
-            .SetGeometry(&shaders_shadow_geom, shaders_shadow_geom_len)
+            .SetVertex(&NResource::shaders_shadow_vert)
+            .SetFragment(&NResource::shaders_shadow_frag)
+            .SetGeometry(&NResource::shaders_shadow_geom)
             .SetTexture(EMaterialProp::Diffuse, "diffuse"))
           , LightMatrices(DefineProp("lightMatrices"))
           , Direct(DefineProp("direct"))

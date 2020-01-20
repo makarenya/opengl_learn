@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "resource.h"
+#include "../shader_program.h"
+#include "../resource.h"
 
 class TSceneShader: public TShaderProgram {
 private:
@@ -19,9 +20,9 @@ public:
     TSceneShader(const TUniformBindingBase &matrices, const TUniformBindingBase &lights, const TUniformBindingBase &lightsPos)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_scene_vert, shaders_scene_vert_len)
-            .SetFragment(&shaders_scene_frag, shaders_scene_frag_len)
-            .SetGeometry(&shaders_scene_geom, shaders_scene_geom_len)
+            .SetVertex(&NResource::shaders_scene_vert)
+            .SetFragment(&NResource::shaders_scene_frag)
+            .SetGeometry(&NResource::shaders_scene_geom)
             .SetBlock("Matrices", matrices)
             .SetBlock("Lights", lights)
             .SetBlock("LightsPos", lightsPos)

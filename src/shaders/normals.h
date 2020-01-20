@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "../shader_program.h"
+#include "../resource.h"
 
 class TNormalsShader: public TShaderProgram {
 private:
@@ -9,9 +10,9 @@ public:
     explicit TNormalsShader(const TUniformBindingBase &matrices)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_normals_vert, shaders_normals_vert_len)
-            .SetFragment(&shaders_normals_frag, shaders_normals_frag_len)
-            .SetGeometry(&shaders_normals_geom, shaders_normals_geom_len)
+            .SetVertex(&NResource::shaders_normals_vert)
+            .SetFragment(&NResource::shaders_normals_frag)
+            .SetGeometry(&NResource::shaders_normals_geom)
             .SetBlock("Matrices", matrices))
           , Model(DefineProp("model")) {
     }

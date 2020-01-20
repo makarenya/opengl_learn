@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "../shader_program.h"
+#include "../resource.h"
 
 class TSilhouetteShader: public TShaderProgram {
 private:
@@ -9,8 +10,8 @@ public:
     explicit TSilhouetteShader(const TUniformBindingBase &matrices)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_silhouette_vert, shaders_silhouette_vert_len)
-            .SetFragment(&shaders_silhouette_frag, shaders_silhouette_frag_len)
+            .SetVertex(&NResource::shaders_silhouette_vert)
+            .SetFragment(&NResource::shaders_silhouette_frag)
             .SetBlock("Matrices", matrices))
           , Model(DefineProp("model")) {
     }

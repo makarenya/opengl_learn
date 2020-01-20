@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "../framebuffer.h"
-#include "resource.h"
+#include "../shader_program.h"
+#include "../resource.h"
 
 class TBorderShader: public TShaderProgram {
     GLint Screen;
@@ -15,8 +15,8 @@ public:
     TBorderShader()
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_border_vert, shaders_border_vert_len)
-            .SetFragment(&shaders_border_frag, shaders_border_frag_len))
+            .SetVertex(&NResource::shaders_border_vert)
+            .SetFragment(&NResource::shaders_border_frag))
           , Screen(DefineTexture("screenTexture"))
           , Depth(DefineTexture("depthTexture"))
           , Color(DefineProp("borderColor"))

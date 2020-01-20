@@ -1,6 +1,9 @@
 #include "errors.h"
 #include "scene.h"
 #include "framebuffer.h"
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 
 using namespace std;
 using namespace glm;
@@ -12,7 +15,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval, bool u
 
     mat4 lightMatrix = ortho(-70.0f, 70.0f, -70.0f, 70.0f, 0.01f, 150.0f) *
         lookAt(-normalize(Directional) * 60.0f, vec3(0, 0, 0), vec3(0, 1, 0));
-    glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.02f, 100.0f);
+    glm::mat4 proj = perspective(glm::radians(90.0f), 1.0f, 0.02f, 100.0f);
 
     glCullFace(GL_FRONT);
     {

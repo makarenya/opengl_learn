@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "../shader_program.h"
+#include "../resource.h"
 
 class TParticlesShader: public TShaderProgram {
 private:
@@ -15,8 +16,8 @@ public:
                               const TUniformBindingBase &lightsPos)
         : TShaderProgram(
         TShaderBuilder()
-            .SetVertex(&shaders_particles_vert, shaders_particles_vert_len)
-            .SetFragment(&shaders_particles_frag, shaders_particles_frag_len)
+            .SetVertex(&NResource::shaders_particles_vert)
+            .SetFragment(&NResource::shaders_particles_frag)
             .SetBlock("Matrices", matrices)
             .SetBlock("Lights", lights)
             .SetBlock("LightsPos", lightsPos))
