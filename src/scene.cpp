@@ -71,7 +71,7 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval, bool u
 void TScene::SetupLights(glm::vec3 position, float interval) {
     SpotAngle += interval;
     float radius = 5;
-    Spots[0] = std::make_tuple(glm::vec3{-4.0f + sin(SpotAngle) * radius, 13.0f, -6.0f + cos(SpotAngle) * radius},
+    Spots[0] = std::make_pair(glm::vec3{-4.0f + sin(SpotAngle) * radius, 13.0f, -6.0f + cos(SpotAngle) * radius},
                                get<1>(Spots[0]));
     TLights lights{};
     TLightsPos pos{};

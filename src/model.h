@@ -2,6 +2,7 @@
 #include "mesh.h"
 #include "material.h"
 #include "shader_program.h"
+#include <functional>
 
 class TModel {
 private:

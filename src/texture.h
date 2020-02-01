@@ -1,6 +1,7 @@
 #pragma once
 #include "common.h"
 #include <array>
+#include <optional>
 
 enum struct ETextureType {
     Flat = GL_TEXTURE_2D,

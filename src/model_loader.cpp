@@ -7,7 +7,9 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <algorithm>
-
+#ifndef __OSX__
+#include <filesystem>
+#endif
 using namespace std;
 using namespace glm;
 
@@ -59,11 +61,17 @@ bool LoadConstantTexture(const aiMaterial *material,
 }
 
 TModel LoadMesh(const std::string &filename) {
+#ifdef __OSX__
     std::array<char, PATH_MAX> real{};
     realpath(filename.c_str(), real.data());
     std::string fullpath(real.data());
     size_t pos = fullpath.rfind('/');
     std::string directory = fullpath.substr(0, pos);
+#else
+    auto canonical = std::filesystem::canonical(filename);
+    auto fullpath = canonical.string();
+    auto directory = canonical.parent_path().string();
+#endif
 
     Assimp::Importer importer;
     auto scene = importer.ReadFile(fullpath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);

@@ -6,7 +6,7 @@ add_subdirectory(assimp)
 add_subdirectory(glfw)
 add_subdirectory(glm)
 add_subdirectory(glew/build/cmake)
-add_compile_definitions(STB_IMAGE_IMPLEMENTATION)
+add_compile_definitions(STB_IMAGE_IMPLEMENTATION _USE_MATH_DEFINES)
 
 function(ADD_RESOURCES out_var root)
     set(result)

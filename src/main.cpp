@@ -36,7 +36,7 @@ void PrintMat(glm::mat4 mat) {
 }
 
 double gauss(double x, double mu, double sigma) {
-    return 1.0 / (sigma * std::sqrt(M_2_PI)) * std::exp(-(x - mu) * (x - mu) / (2 * sigma * sigma));
+    return 1.0 / (sigma * std::sqrt(2 * M_PI)) * std::exp(-(x - mu) * (x - mu) / (2 * sigma * sigma));
 }
 
 void kernel() {

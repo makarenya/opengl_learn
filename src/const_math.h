@@ -1,3 +1,4 @@
+#include <cmath>
 namespace NConstMath {
     constexpr double Fact(int n) {
         if (n == 0) return 1;
@@ -28,7 +29,7 @@ namespace NConstMath {
     }
 
     constexpr double Norm(double x) {
-        while (x >= M_2_PI) {
+        while (x >= 2 * M_PI) {
             x -= 2 * M_PI;
         }
         while (x < 0) {
@@ -51,7 +52,7 @@ namespace NConstMath {
         if (x < 7 * M_PI / 4) {
             return -CosInt(x - 3 * M_PI / 2);
         }
-        return SinInt(x - M_2_PI);
+        return SinInt(x - 2 * M_PI);
     }
 
     constexpr double Cos(double x) {

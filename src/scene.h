@@ -34,7 +34,7 @@ private:
     TSkyboxShader SkyboxShader{ProjectionView};
     TParticlesShader ParticlesShader{ProjectionView, LightSetup, LightsPos};
     TNormalsShader NormalsShader{ProjectionView};
-    std::array<std::tuple<glm::vec3, glm::vec3>, 2000> Particles;
+    std::vector<std::tuple<glm::vec3, glm::vec3>> Particles{ 2000 };
     TParticleInjector Injector;
     int CurrentParticles = 0;
     float ExplosionTime = 0;
@@ -148,8 +148,8 @@ private:
     glm::vec3 Directional{0.6f, -1.0f, 1.0f};
     float SpotAngle = 0;
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {
-        std::forward_as_tuple(glm::vec3{-4.0f, 13.0f, -6.0f}, glm::vec3{2.0f, 0.2f, 0.1f}),
-        std::forward_as_tuple(glm::vec3{2.0f, 2.0f, 40.0f}, glm::vec3{2.0f, 1.0f, 0.1f})
+        std::make_pair(glm::vec3{-4.0f, 13.0f, -6.0f}, glm::vec3{2.0f, 0.2f, 0.1f}),
+        std::make_pair(glm::vec3{2.0f, 2.0f, 40.0f}, glm::vec3{2.0f, 1.0f, 0.1f})
     };
 
     using OpaqueType = std::tuple<glm::vec3, glm::mat4, TMaterial &, TMesh &>;
