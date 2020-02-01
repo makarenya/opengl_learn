@@ -34,7 +34,7 @@ private:
     TSkyboxShader SkyboxShader{ProjectionView};
     TParticlesShader ParticlesShader{ProjectionView, LightSetup, LightsPos};
     TNormalsShader NormalsShader{ProjectionView};
-    std::vector<std::tuple<glm::vec3, glm::vec3>> Particles{ 2000 };
+    std::vector<std::pair<glm::vec3, glm::vec3>> Particles{ 2000 };
     TParticleInjector Injector;
     int CurrentParticles = 0;
     float ExplosionTime = 0;

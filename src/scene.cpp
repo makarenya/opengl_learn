@@ -124,7 +124,7 @@ void TScene::UpdateFountain(float interval) {
         if (speed.y < -2 * meter) {
             Particles[i] = Injector.Inject();
         } else {
-            Particles[i] = make_tuple(pos + speed * interval, speed);
+            Particles[i] = make_pair(pos + speed * interval, speed);
         }
     }
     Points.GetInstances().Write(Particles.data(), 0, Particles.size() * 6 * sizeof(float));

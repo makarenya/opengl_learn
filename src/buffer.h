@@ -102,6 +102,10 @@ public:
     TBufferMapper(const TBufferMapper &) = delete;
     TBufferMapper &operator=(const TBufferMapper &) = delete;
 
+    T* Ptr() {
+        return static_cast<T*>(Data);
+    }
+
     T *operator*() {
         return static_cast<T *>(Data);
     }

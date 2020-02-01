@@ -104,12 +104,12 @@ private:
     std::normal_distribution<> VDist{5 * Meter, .5 * Meter};
 
 public:
-    std::tuple<glm::vec3, glm::vec3> Inject() {
+    std::pair<glm::vec3, glm::vec3> Inject() {
         glm::vec3 add = 3.0f * glm::vec3(Currents - Maxims / 2) / glm::vec3(Maxims);
         glm::vec3 dir{std::round(Dist(E2)), std::round(VDist(E2)), std::round(Dist(E2))};
         Currents = {Currents.x >= Maxims.x - 1 ? 0 : Currents.x + 1,
                     Currents.y >= Maxims.y - 1 ? 0 : Currents.y + 1,
                     Currents.z >= Maxims.z - 1 ? 0 : Currents.z + 1};
-        return std::make_tuple(glm::vec3(0, std::round(Dist(E2)), 0), dir + add);
+        return std::make_pair(glm::vec3(0, std::round(Dist(E2)), 0), dir + add);
     }
 };
