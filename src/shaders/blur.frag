@@ -1,34 +1,21 @@
 #version 330 core
 in vec2 fragmentCoord;
 uniform sampler2D screenTexture;
-uniform sampler2D depthTexture;
+uniform bool vertical;
+uniform int size;
+uniform float kernel[16];
+uniform float threshold;
 out vec4 color;
-
-const int size = 3;
 
 void main() {
     ivec2 sz = textureSize(screenTexture, 0);
-    vec2 dpi = vec2(1.0 / sz.x, 1.0 / sz.y);
-
-    float kernel[size * size * 4 + 4 * size + 1] = float[] (
-        0.0005, 0.0023, 0.0054, 0.0072, 0.0054, 0.0023, 0.0005,
-        0.0023, 0.0096, 0.0225, 0.0299, 0.0225, 0.0096, 0.0023,
-        0.0054, 0.0225, 0.0521, 0.0684, 0.0521, 0.0225, 0.0054,
-        0.0072, 0.0299, 0.0684, 0.0869, 0.0684, 0.0299, 0.0072,
-        0.0054, 0.0225, 0.0521, 0.0684, 0.0521, 0.0225, 0.0054,
-        0.0023, 0.0096, 0.0225, 0.0299, 0.0225, 0.0096, 0.0023,
-        0.0005, 0.0023, 0.0054, 0.0072, 0.0054, 0.0023, 0.0005
-    );
-
-    vec4 result = vec4(0);
-    float depth = 1.0f;
-    for (int y = 0; y < size * 2 + 1; y++) {
-        for (int x = 0; x < size * 2 + 1; x++) {
-            vec2 offset = vec2(x - size, y - size) * dpi;
-            result += texture(screenTexture, fragmentCoord + offset) * kernel[y * (2 * size + 1) + x];
-            depth = min(depth, texture(depthTexture, fragmentCoord + offset).r);
-        }
+    vec2 dir = vertical ? vec2(0.0f, 1.0f / sz.y) : vec2(1.0f / sz.x, 0.0f);
+    vec3 result = vec3(0.0f);
+    for (int i = -size; i <= size; i++) {
+        vec3 tc = texture(screenTexture, fragmentCoord + dir * i).rgb;
+        float brightness = dot(tc, vec3(0.2126, 0.7152, 0.0722));
+        if (brightness >= threshold)
+            result += tc * kernel[abs(i)];
     }
-    gl_FragDepth = depth;
-    color = result;
+    color = vec4(result, 1.0f);
 }

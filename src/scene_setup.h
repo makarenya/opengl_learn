@@ -25,7 +25,7 @@ struct TSpotLight {
     glm::vec3 Specular;
     float Linear;
     float Quadratic;
-    float tmp[3];
+    float tmp[3]{};
     TSpotLight() = default;
     TSpotLight(glm::vec3 ambient,
                glm::vec3 diffuse,
@@ -76,7 +76,8 @@ struct TProjectorLight {
           , InnerCutoff(std::cos(glm::radians(innerCutoff)))
           , OuterCutoff(std::cos(glm::radians(outerCutoff)))
           , Linear(linear)
-          , Quadratic(quadratic) {
+          , Quadratic(quadratic)
+          , tmp{} {
     }
 };
 

@@ -14,6 +14,7 @@ GLenum MinFilter(bool minLinear, ETextureMipmap mipmap) {
         case ETextureMipmap::Nearest: return minLinear ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST;
         case ETextureMipmap::Linear: return minLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR;
     }
+    throw std::exception();
 }
 GLenum TextureInternalFormat(ETextureUsage usage) {
     switch (usage) {
@@ -27,6 +28,7 @@ GLenum TextureInternalFormat(ETextureUsage usage) {
         case ETextureUsage::Height: return GL_DEPTH_COMPONENT;
         case ETextureUsage::Normals: return GL_RGB;
     }
+    throw std::exception();
 }
 
 int StbiFormat(ETextureUsage usage) {
@@ -55,6 +57,7 @@ GLenum ByteFormat(ETextureUsage usage) {
         case ETextureUsage::Height: return GL_UNSIGNED_BYTE;
         case ETextureUsage::Normals: return GL_UNSIGNED_BYTE;
     }
+    throw std::exception();
 }
 
 GLenum DataFormat(ETextureUsage usage) {

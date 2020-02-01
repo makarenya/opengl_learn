@@ -20,6 +20,7 @@ namespace {
             case EDataType::Float: return sizeof(GLfloat);
             case EDataType::Double: return sizeof(GLdouble);
         }
+        throw std::exception();
     }
 
     std::shared_ptr<GLuint> CreateVertexArrayObject(

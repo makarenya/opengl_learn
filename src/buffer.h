@@ -27,7 +27,7 @@ template<EBufferType Type>
 class TBuffer {
 private:
     std::shared_ptr<GLuint> Buffer;
-    size_t Size;
+    size_t Size = 0;
 
 public:
     TBuffer() = default;

@@ -68,8 +68,8 @@ namespace NConstMath {
 
     constexpr double Sqrt(double x) {
         if (x == 0) return 0;
-        if (x < 0) return NAN;
-        double a = x >= 1 ? 1U << ((BitLength(x) - 1) / 2) : 1.0 / (1U << ((BitLength(1 / x) - 1) / 2));
+        if (x < 0) return static_cast<double>(NAN);
+        double a = x >= 1 ? 1ULL << ((BitLength(x) - 1) / 2) : 1.0 / (1ULL << ((BitLength(1 / x) - 1) / 2));
         for (int i = 0; i < 20; i++) {
             a = (a + x / a) / 2.0;
         }

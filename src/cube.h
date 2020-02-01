@@ -7,9 +7,9 @@ public:
     constexpr TGeomBuilder() = default;
     BUILDER_PROPERTY(float, Size){.5};
     BUILDER_PROPERTY(bool, Backward){false};
-    BUILDER_PROPERTY3(float, float, float, Position){0, 0, 0};
-    BUILDER_PROPERTY2(float, float, TextureMul){1, 1};
-    BUILDER_PROPERTY2(float, float, TextureOffset){0, 0};
+    BUILDER_PROPERTY3(float, float, float, Position){0.0f, 0.0f, 0.0f};
+    BUILDER_PROPERTY2(float, float, TextureMul){1.0f, 1.0f};
+    BUILDER_PROPERTY2(float, float, TextureOffset){0.0f, 0.0f};
 };
 
 namespace Impl {

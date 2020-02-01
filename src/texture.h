@@ -46,8 +46,8 @@ public:
     BUILDER_PROPERTY(ETextureWrap, WrapS){ETextureWrap::Undefined};
     BUILDER_PROPERTY(ETextureWrap, WrapT){ETextureWrap::Undefined};
     BUILDER_PROPERTY(ETextureUsage, Usage){ETextureUsage::Rgba};
-    BUILDER_PROPERTY(std::string, File);
-    BUILDER_PROPERTY(glm::vec4, BorderColor);
+    BUILDER_PROPERTY(std::string, File) {};
+    BUILDER_PROPERTY(glm::vec4, BorderColor) {};
     BUILDER_PROPERTY2(int, int, Empty){0, 0};
 };
 
@@ -57,12 +57,12 @@ public:
     BUILDER_PROPERTY(bool, MinLinear){true};
     BUILDER_PROPERTY(ETextureMipmap, Mipmap){ETextureMipmap::None};
     BUILDER_PROPERTY(ETextureUsage, Usage){ETextureUsage::Rgba};
-    BUILDER_PROPERTY(std::string, PosX);
-    BUILDER_PROPERTY(std::string, NegX);
-    BUILDER_PROPERTY(std::string, PosY);
-    BUILDER_PROPERTY(std::string, NegY);
-    BUILDER_PROPERTY(std::string, PosZ);
-    BUILDER_PROPERTY(std::string, NegZ);
+    BUILDER_PROPERTY(std::string, PosX) {};
+    BUILDER_PROPERTY(std::string, NegX) {};
+    BUILDER_PROPERTY(std::string, PosY) {};
+    BUILDER_PROPERTY(std::string, NegY) {};
+    BUILDER_PROPERTY(std::string, PosZ) {};
+    BUILDER_PROPERTY(std::string, NegZ) {};
     BUILDER_PROPERTY3(int, int, int, Empty){0, 0, 0};
 };
 
@@ -70,7 +70,7 @@ class TMultiSampleTextureBuilder {
 public:
     BUILDER_PROPERTY(ETextureUsage, Usage){ETextureUsage::Rgba};
     BUILDER_PROPERTY(int, Samples){4};
-    BUILDER_PROPERTY2(int, int, Size);
+    BUILDER_PROPERTY2(int, int, Size) {};
 };
 
 namespace Impl {

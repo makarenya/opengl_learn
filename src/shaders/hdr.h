@@ -6,6 +6,7 @@
 class THdrShader: public TShaderProgram {
     GLint Screen;
     GLint Depth;
+    GLint Bloom;
     GLint Exposure;
 
 public:
@@ -16,6 +17,7 @@ public:
             .SetFragment(&NResource::shaders_hdr_frag))
           , Screen(DefineTexture("screenTexture"))
           , Depth(DefineTexture("depthTexture"))
+          , Bloom(DefineTexture("bloomTexture"))
           , Exposure(DefineProp("exposure")) {
     }
     friend class THdrSetup;
@@ -36,6 +38,11 @@ public:
 
     THdrSetup &&SetDepth(const TFlatTexture &texture) {
         Set(Shader->Depth, texture);
+        return std::move(*this);
+    }
+
+    THdrSetup&& SetBloom(const TFlatTexture& texture) {
+        Set(Shader->Bloom, texture);
         return std::move(*this);
     }
 

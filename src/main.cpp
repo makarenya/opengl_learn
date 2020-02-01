@@ -35,34 +35,7 @@ void PrintMat(glm::mat4 mat) {
          << endl;
 }
 
-double gauss(double x, double mu, double sigma) {
-    return 1.0 / (sigma * std::sqrt(2 * M_PI)) * std::exp(-(x - mu) * (x - mu) / (2 * sigma * sigma));
-}
 
-void kernel() {
-    double sigma = 1.3;
-    double flat = 0.1;
-    int size = 3;
-
-    double top = gauss(0, 0, sigma);
-
-    double total = 0.0;
-    for (int y = 0; y < 2 * size + 1; y++) {
-        for (int x = 0; x < 2 * size + 1; x++) {
-            double length = std::sqrt((y - size) * (y - size) + (x - size) * (x - size));
-            total += length < flat ? top : gauss(length, flat, sigma);
-        }
-    }
-
-    for (int y = 0; y < 2 * size + 1; y++) {
-        for (int x = 0; x < 2 * size + 1; x++) {
-            double length = std::sqrt((y - size) * (y - size) + (x - size) * (x - size));
-            double value = length < flat ? top : gauss(length, flat, sigma);
-            cout << fixed << setprecision(4) << value / total << ", ";
-        }
-        cout << endl;
-    }
-}
 
 void program() {
     if (glfwInit() != GLFW_TRUE) {

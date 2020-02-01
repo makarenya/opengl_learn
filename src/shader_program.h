@@ -7,9 +7,9 @@
 
 class TShaderBuilder {
 public:
-    BUILDER_PROPERTY(const NResource::TResource*, Vertex);
-    BUILDER_PROPERTY(const NResource::TResource*, Fragment);
-    BUILDER_PROPERTY(const NResource::TResource*, Geometry);
+    BUILDER_PROPERTY(const NResource::TResource*, Vertex) {};
+    BUILDER_PROPERTY(const NResource::TResource*, Fragment) {};
+    BUILDER_PROPERTY(const NResource::TResource*, Geometry) {};
     BUILDER_MAP2(EMaterialProp, std::string, std::string, Texture){};
     BUILDER_MAP(EMaterialProp, std::string, Color){};
     BUILDER_MAP(EMaterialProp, std::string, Constant){};
@@ -23,10 +23,10 @@ public:
 class TShaderProgram {
 private:
     GLuint Program;
-    std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Textures{};
-    std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> TextureSwitches{};
-    std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Colors{};
-    std::array<GLint, EMaterialProp::MATERIAL_PROPS_COUNT> Constants{};
+    std::array<GLint, MATERIAL_PROPS_COUNT> Textures{};
+    std::array<GLint, MATERIAL_PROPS_COUNT> TextureSwitches{};
+    std::array<GLint, MATERIAL_PROPS_COUNT> Colors{};
+    std::array<GLint, MATERIAL_PROPS_COUNT> Constants{};
     std::array<GLint, 32> Bound{};
     int TexturesCount = 1;
 

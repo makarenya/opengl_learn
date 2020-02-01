@@ -8,7 +8,7 @@
 
 class TMaterial;
 
-enum EMaterialProp {
+enum class EMaterialProp {
     Ambient,
     Diffuse,
     Specular,
@@ -17,8 +17,10 @@ enum EMaterialProp {
     Refraction,
     Normal,
     Height,
-    MATERIAL_PROPS_COUNT
+    
 };
+
+constexpr size_t MATERIAL_PROPS_COUNT = static_cast<size_t>(EMaterialProp::Height) + 1;
 
 using TMaterialTexture = std::variant<bool, TFlatTexture, TCubeTexture>;
 
@@ -39,9 +41,9 @@ public:
 
 class TMaterial {
 private:
-    std::array<TMaterialTexture, EMaterialProp::MATERIAL_PROPS_COUNT> Textures{};
-    std::array<glm::vec4, EMaterialProp::MATERIAL_PROPS_COUNT> Colors{};
-    std::array<float, EMaterialProp::MATERIAL_PROPS_COUNT> Constants{};
+    std::array<TMaterialTexture, MATERIAL_PROPS_COUNT> Textures{};
+    std::array<glm::vec4, MATERIAL_PROPS_COUNT> Colors{};
+    std::array<float, MATERIAL_PROPS_COUNT> Constants{};
 
 public:
     TMaterial(const TMaterialBuilder &builder);

@@ -58,10 +58,29 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval, bool u
     }
     AliasedFrameBuffer.CopyTo(FrameBuffer);
     {
+        TFrameBufferBinder binder(BloomBuffers[0]);
+        auto setup = TBlurSetup(&BlurShader)
+            .SetScreen(std::get<TFlatTexture>(FrameBuffer.GetScreen()))
+            .SetVertical(false)
+            .SetSigma(2.3f)
+            .SetThreshold(1.0f);
+        ScreenQuad.Draw();
+    }
+    for(int i = 0; i < 5; i++) {
+        TFrameBufferBinder binder(BloomBuffers[(i + 1) % 2]);
+        auto setup = TBlurSetup(&BlurShader)
+            .SetScreen(std::get<TFlatTexture>(BloomBuffers[i % 2].GetScreen()))
+            .SetVertical((i % 2) == 0)
+            .SetSigma(2.3f)
+            .SetThreshold(0.0f);
+        ScreenQuad.Draw();
+    }
+    {
         auto setup = THdrSetup(&HdrShader)
             .SetScreen(std::get<TFlatTexture>(FrameBuffer.GetScreen()))
             .SetDepth(std::get<TFlatTexture>(FrameBuffer.GetDepth()))
-            .SetExposure(useMap ? 0.2 : 6);
+            .SetBloom(std::get<TFlatTexture>(BloomBuffers[1].GetScreen()))
+            .SetExposure(0.9);
         glDepthFunc(GL_LEQUAL);
         ScreenQuad.Draw();
         glDepthFunc(GL_LESS);
@@ -145,7 +164,7 @@ void TScene::DrawObjects(IShaderSet &set) {
 
     set.Scene(Place(vec3(6, 7.0, 44.0), vec3(.2, .4, -.1), 30.0f, vec3(10.0f)),
               false, 0, Container, SimpleCube);
-    float explosion = ExplosionTime <= 14 ? 0.0f : static_cast<float>(std::sin((ExplosionTime - 14) * M_PI) * 20.0f);
+    float explosion = ExplosionTime <= 14 ? 0.0f : static_cast<float>(std::sin((ExplosionTime - 14.0f) * M_PI) * 20.0f);
     set.Scene(NConstMath::Translate(0, 0, -15), false, explosion, Suit);
 }
 
