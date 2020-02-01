@@ -50,8 +50,6 @@ layout (std140) uniform LightsPos {
     ProjectorLightPos projectorPos;
 };
 
-const vec3 gamma = vec3(1.0 / 2.2);
-
 vec3 CalcDirectionalLight(DirectionalLight light, vec3 dir, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
 vec3 CalcSpotLight(SpotLight light, vec3 pos, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
 vec3 CalcProjectorLight(ProjectorLight light, ProjectorLightPos pos, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
@@ -69,7 +67,7 @@ void main() {
         result += CalcSpotLight(spots[i], spotsPos[i], norm, viewDir, diffuse, specular.rgb, shiness);
     }
     result += CalcProjectorLight(projector, projectorPos, norm, viewDir, diffuse, specular.rgb, shiness);
-    color = vec4(pow(result * .3 + vec3(texture(skybox, skyCoord)) * 0.7, gamma), 1.0);
+    color = vec4(result * .3 + vec3(texture(skybox, skyCoord)) * 0.7, 1.0);
 }
 
 vec3 CalcDirectionalLight(DirectionalLight light, vec3 dir, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {

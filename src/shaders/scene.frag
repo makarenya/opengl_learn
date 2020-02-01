@@ -77,7 +77,6 @@ layout (std140) uniform Lights {
 
 
 out vec4 color;
-const vec3 gamma = vec3(1.0 / 2.2);
 const float depth = 0.01;
 
 vec3 CalcDirectionalLight(DirectionalLight light, vec3 dir, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness);
@@ -125,9 +124,9 @@ void main() {
     }
 
     if (opaque) {
-        color = vec4(pow(result, gamma), diffuse.a);
+        color = vec4(result, diffuse.a);
     } else {
-        color = vec4(pow(result, gamma), 1.0f);
+        color = vec4(result, 1.0f);
     }
 }
 

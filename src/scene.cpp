@@ -54,13 +54,14 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval, bool u
                                   std::get<TFlatTexture>(GlobalLightShadow.GetDepth()),
                                   std::get<TCubeTexture>(SpotLightShadow.GetDepth()),
                                   std::get<TCubeTexture>(SpotLightShadow2.GetDepth()),
-                                  lightMatrix, position, useMap});
+                                  lightMatrix, position, true});
     }
     AliasedFrameBuffer.CopyTo(FrameBuffer);
     {
         auto setup = THdrSetup(&HdrShader)
             .SetScreen(std::get<TFlatTexture>(FrameBuffer.GetScreen()))
-            .SetDepth(std::get<TFlatTexture>(FrameBuffer.GetDepth()));
+            .SetDepth(std::get<TFlatTexture>(FrameBuffer.GetDepth()))
+            .SetExposure(useMap ? 0.2 : 6);
         glDepthFunc(GL_LEQUAL);
         ScreenQuad.Draw();
         glDepthFunc(GL_LESS);

@@ -148,7 +148,7 @@ private:
     glm::vec3 Directional{0.6f, -1.0f, 1.0f};
     float SpotAngle = 0;
     std::array<std::pair<glm::vec3, glm::vec3>, 2> Spots = {
-        std::make_pair(glm::vec3{-4.0f, 13.0f, -6.0f}, glm::vec3{2.0f, 0.2f, 0.1f}),
+        std::make_pair(glm::vec3{-4.0f, 13.0f, -6.0f}, glm::vec3{20.0f, 0.2f, 0.1f}),
         std::make_pair(glm::vec3{2.0f, 2.0f, 40.0f}, glm::vec3{2.0f, 1.0f, 0.1f})
     };
 
@@ -188,10 +188,10 @@ private:
 public:
     TScene(int width, int height)
         : FrameBuffer(
-        TTextureBuilder().SetEmpty(width, height).SetWrap(ETextureWrap::ClampToEdge),
-        TTextureBuilder().SetEmpty(width, height).SetWrap(ETextureWrap::ClampToEdge).SetUsage(ETextureUsage::Depth))
-          , AliasedFrameBuffer(
-            TRenderBuffer(ETextureUsage::Rgba, width, height, 4),
+            TTextureBuilder().SetEmpty(width, height).SetWrap(ETextureWrap::ClampToEdge).SetUsage(ETextureUsage::FloatRgba),
+            TTextureBuilder().SetEmpty(width, height).SetWrap(ETextureWrap::ClampToEdge).SetUsage(ETextureUsage::Depth))
+        , AliasedFrameBuffer(
+            TRenderBuffer(ETextureUsage::FloatRgba, width, height, 4),
             TRenderBuffer(ETextureUsage::Depth, width, height, 4)) {
     }
 

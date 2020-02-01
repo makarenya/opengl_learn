@@ -6,6 +6,7 @@
 class THdrShader: public TShaderProgram {
     GLint Screen;
     GLint Depth;
+    GLint Exposure;
 
 public:
     THdrShader()
@@ -14,7 +15,8 @@ public:
             .SetVertex(&NResource::shaders_border_vert)
             .SetFragment(&NResource::shaders_hdr_frag))
           , Screen(DefineTexture("screenTexture"))
-          , Depth(DefineTexture("depthTexture")) {
+          , Depth(DefineTexture("depthTexture"))
+          , Exposure(DefineProp("exposure")) {
     }
     friend class THdrSetup;
 };
@@ -34,6 +36,11 @@ public:
 
     THdrSetup &&SetDepth(const TFlatTexture &texture) {
         Set(Shader->Depth, texture);
+        return std::move(*this);
+    }
+
+    THdrSetup&& SetExposure(float exposure) {
+        Set(Shader->Exposure, exposure);
         return std::move(*this);
     }
 };
