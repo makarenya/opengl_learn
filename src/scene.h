@@ -9,6 +9,7 @@
 #include "shaders/normals.h"
 #include "shaders/blur.h"
 #include "shaders/depth.h"
+#include "shaders/hdr.h"
 #include "cube.h"
 #include "framebuffer.h"
 #include "scene_setup.h"
@@ -27,6 +28,7 @@ private:
     TLightShader LightShader{ProjectionView};
     TShadowShader ShadowShader{};
     TDepthShader DepthShader{};
+    THdrShader HdrShader{};
     TSilhouetteShader SilhouetteShader{ProjectionView};
     TBorderShader BorderShader{};
     TSkyboxShader SkyboxShader{ProjectionView};

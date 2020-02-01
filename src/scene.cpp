@@ -45,18 +45,26 @@ void TScene::Draw(mat4 project, mat4 view, vec3 position, float interval, bool u
         DrawScene(TShadowShaderSet(&ShadowShader, spotMatrices, Spots[1].first, position));
     }
     glCullFace(GL_BACK);
-
-    //auto setup = TDepthSetup(&DepthShader).SetDepth(std::get<TCubeTexture>(SpotLightShadow.GetDepth()));
-    //ScreenQuad.Draw();
-
-    ProjectionView = {project, view};
-    DrawSkybox();
-    DrawLightCubes();
-    DrawScene(TSceneShaderSet{&SceneShader, &ParticlesShader, SkyTex,
-                              std::get<TFlatTexture>(GlobalLightShadow.GetDepth()),
-                              std::get<TCubeTexture>(SpotLightShadow.GetDepth()),
-                              std::get<TCubeTexture>(SpotLightShadow2.GetDepth()),
-                              lightMatrix, position, useMap});
+    {
+        TFrameBufferBinder binder(AliasedFrameBuffer);
+        ProjectionView = {project, view};
+        DrawSkybox();
+        DrawLightCubes();
+        DrawScene(TSceneShaderSet{&SceneShader, &ParticlesShader, SkyTex,
+                                  std::get<TFlatTexture>(GlobalLightShadow.GetDepth()),
+                                  std::get<TCubeTexture>(SpotLightShadow.GetDepth()),
+                                  std::get<TCubeTexture>(SpotLightShadow2.GetDepth()),
+                                  lightMatrix, position, useMap});
+    }
+    AliasedFrameBuffer.CopyTo(FrameBuffer);
+    {
+        auto setup = THdrSetup(&HdrShader)
+            .SetScreen(std::get<TFlatTexture>(FrameBuffer.GetScreen()))
+            .SetDepth(std::get<TFlatTexture>(FrameBuffer.GetDepth()));
+        glDepthFunc(GL_LEQUAL);
+        ScreenQuad.Draw();
+        glDepthFunc(GL_LESS);
+    }
     DrawBorder();
 }
 

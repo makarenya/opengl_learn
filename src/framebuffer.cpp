@@ -7,7 +7,7 @@ void FreeRenderBuffer(GLuint *buffer) {
 
 std::shared_ptr<GLuint> CreateRenderBuffer(ETextureUsage usage, unsigned width, unsigned height, unsigned samples) {
     GLuint buffer;
-    auto type = TextureUsageType(usage);
+    auto type = TextureInternalFormat(usage);
     GL_ASSERT(glGenRenderbuffers(1, &buffer));
     try {
         GL_ASSERT(glBindRenderbuffer(GL_RENDERBUFFER, buffer));

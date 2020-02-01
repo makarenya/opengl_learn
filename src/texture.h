@@ -25,6 +25,7 @@ enum struct ETextureWrap {
 enum struct ETextureUsage {
     Rgb,
     Rgba,
+    FloatRgba,
     SRgb,
     SRgba,
     Depth,
@@ -33,7 +34,7 @@ enum struct ETextureUsage {
     Normals
 };
 
-GLenum TextureUsageType(ETextureUsage usage);
+GLenum TextureInternalFormat(ETextureUsage usage);
 
 class TTextureBuilder {
 public:

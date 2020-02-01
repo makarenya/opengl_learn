@@ -37,7 +37,7 @@ public:
     ~TLightSetup() override {
         if (Shader != nullptr) {
             try {
-                Set(Shader->Color, glm::vec4(0));
+                Set(Shader->Color, glm::vec3(0));
                 Set(Shader->Model, glm::mat4(0));
             } catch (...) {
             }

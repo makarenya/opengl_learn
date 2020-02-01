@@ -2,6 +2,8 @@
 #include "errors.h"
 #include "stb_image.h"
 
+using namespace std;
+
 GLenum MagFilter(bool magLinear) {
     return magLinear ? GL_LINEAR : GL_NEAREST;
 }
@@ -13,10 +15,11 @@ GLenum MinFilter(bool minLinear, ETextureMipmap mipmap) {
         case ETextureMipmap::Linear: return minLinear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR;
     }
 }
-GLenum TextureUsageType(ETextureUsage usage) {
+GLenum TextureInternalFormat(ETextureUsage usage) {
     switch (usage) {
         case ETextureUsage::Rgb: return GL_RGB;
         case ETextureUsage::Rgba: return GL_RGBA;
+        case ETextureUsage::FloatRgba: return GL_RGBA32F;
         case ETextureUsage::SRgb: return GL_SRGB;
         case ETextureUsage::SRgba: return GL_SRGB_ALPHA;
         case ETextureUsage::Depth: return GL_DEPTH_COMPONENT;
@@ -28,35 +31,38 @@ GLenum TextureUsageType(ETextureUsage usage) {
 
 int StbiFormat(ETextureUsage usage) {
     switch (usage) {
-        case ETextureUsage::SRgb:
+        case ETextureUsage::SRgb: return STBI_rgb;
         case ETextureUsage::Rgb: return STBI_rgb;
-        case ETextureUsage::SRgba:
+        case ETextureUsage::SRgba: return STBI_rgb_alpha;
+        case ETextureUsage::FloatRgba: return STBI_rgb_alpha;
         case ETextureUsage::Rgba: return STBI_rgb_alpha;
         case ETextureUsage::Depth: return STBI_grey;
-        case ETextureUsage::Height:
+        case ETextureUsage::Height: return STBI_default;
         case ETextureUsage::Normals: return STBI_default;
-        default:throw TGlBaseError("invalid value for load image " + std::to_string((int)usage));
+        default:throw TGlBaseError("invalid value for load image " + to_string((int) usage));
     }
 }
 
 GLenum ByteFormat(ETextureUsage usage) {
     switch (usage) {
-        case ETextureUsage::Rgb:
-        case ETextureUsage::Rgba:
-        case ETextureUsage::SRgb:
-        case ETextureUsage::SRgba:
+        case ETextureUsage::Rgb: return GL_UNSIGNED_BYTE;
+        case ETextureUsage::Rgba: return GL_UNSIGNED_BYTE;
+        case ETextureUsage::FloatRgba: return GL_FLOAT;
+        case ETextureUsage::SRgb: return GL_UNSIGNED_BYTE;
+        case ETextureUsage::SRgba: return GL_UNSIGNED_BYTE;
         case ETextureUsage::Depth: return GL_UNSIGNED_BYTE;
         case ETextureUsage::DepthStencil: return GL_UNSIGNED_INT_24_8;
-        case ETextureUsage::Height:
+        case ETextureUsage::Height: return GL_UNSIGNED_BYTE;
         case ETextureUsage::Normals: return GL_UNSIGNED_BYTE;
     }
 }
 
-GLenum OuterFormat(ETextureUsage usage) {
+GLenum DataFormat(ETextureUsage usage) {
     switch (usage) {
+        case ETextureUsage::FloatRgba: return GL_RGBA;
         case ETextureUsage::SRgb: return GL_RGB;
         case ETextureUsage::SRgba: return GL_RGBA;
-        default: return TextureUsageType(usage);
+        default: return TextureInternalFormat(usage);
     }
 }
 
@@ -77,7 +83,7 @@ T ChannelDeviation(const void *data, int pixels, int channels) {
     return static_cast<T>(sqrt(deviation / pixels));
 }
 
-std::vector<std::tuple<uint8_t, uint8_t>> Limits(const uint8_t *scan, int pixels, int channels) {
+vector<tuple<uint8_t, uint8_t>> Limits(const uint8_t *scan, int pixels, int channels) {
     using namespace std;
     vector<tuple<uint8_t, uint8_t>> limits(channels);
     for (int c = 0; c < channels; ++c) {
@@ -93,8 +99,8 @@ std::vector<std::tuple<uint8_t, uint8_t>> Limits(const uint8_t *scan, int pixels
     return limits;
 }
 
-std::vector<uint8_t> HeightMapToNormalMap(const uint8_t *data, int width, int height, int channels, float strength) {
-    std::vector<uint8_t> result(width * height * 3);
+vector<uint8_t> HeightMapToNormalMap(const uint8_t *data, int width, int height, int channels, double strength) {
+    vector<uint8_t> result(width * height * 3);
     uint8_t *p = result.data();
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -104,17 +110,17 @@ std::vector<uint8_t> HeightMapToNormalMap(const uint8_t *data, int width, int he
             int b = y == height - 1 ? data[channels * (x + y * width)] : data[channels * (x + (y + 1) * width)];
             int dx = l - r;
             int dy = t - b;
-            auto length = sqrt(dx * dx + dy * dy + strength * strength);
-            *p++ = 127 + static_cast<uint8_t>(127 * dx / length);
-            *p++ = 127 + static_cast<uint8_t>(127 * dy / length);
-            *p++ = 127 + static_cast<uint8_t>(127 * strength / length);
+            auto length = sqrt(static_cast<double>(dx * dx + dy * dy) + strength * strength);
+            *p++ = 127 + static_cast<uint8_t>(127.0 * dx / length);
+            *p++ = 127 + static_cast<uint8_t>(127.0 * dy / length);
+            *p++ = 127 + static_cast<uint8_t>(127.0 * strength / length);
         }
     }
     return result;
 }
 
-std::vector<uint8_t> ReadHeightMap(const uint8_t *data, int width, int height, int channels) {
-    std::vector<uint8_t> result(width * height);
+vector<uint8_t> ReadHeightMap(const uint8_t *data, int width, int height, int channels) {
+    vector<uint8_t> result(width * height);
     uint8_t *p = result.data();
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
@@ -125,23 +131,34 @@ std::vector<uint8_t> ReadHeightMap(const uint8_t *data, int width, int height, i
     return result;
 }
 
-std::vector<uint8_t> ReadNormalMap(const uint8_t *data, int width, int height, int channels,
+vector<uint8_t> ReadNormalMap(const uint8_t *data, int width, int height, int channels,
                                    unsigned char xm, float xd, unsigned char ym, float yd, unsigned char zm, float zd) {
-    std::vector<uint8_t> result(width * height * 3);
+    vector<uint8_t> result(width * height * 3);
     uint8_t *p = result.data();
     for (int i = 0; i < height * width * 3; i += 3) {
-        *p++ = 127 + 127 * (data[0] - xm) / xd;
-        *p++ = 127 + 127 * (data[1] - ym) / yd;
-        *p++ = 127 + 127 * (data[2] - zm) / zd;
+        *p++ = 127 + 127.0f * static_cast<float>(data[0] - xm) / xd;
+        *p++ = 127 + 127.0f * static_cast<float>(data[1] - ym) / yd;
+        *p++ = 127 + 127.0f * static_cast<float>(data[2] - zm) / zd;
         data += channels;
     }
     return result;
 }
 
-void LoadTextureImage(const std::string &file, GLenum what, int &width, int &height, ETextureUsage usage) {
-    auto format = TextureUsageType(usage);
+vector<GLfloat> ReadAsFloat(const uint8_t *data, int width, int height, int channels) {
+    vector<GLfloat> result(width * height * 3);
+    GLfloat *p = result.data();
+    for (int i = 0; i < height * width * channels; ++i, ++data, ++p) {
+        *p = *data / 255.0;
+    }
+    return result;
+}
+
+void LoadTextureImage(const string &file, GLenum what, int &width, int &height, ETextureUsage usage) {
+    auto internalFormat = TextureInternalFormat(usage);
+    auto format = DataFormat(usage);
+    auto byteFormat = ByteFormat(usage);
     if (file.empty()) {
-        GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, format, ByteFormat(usage), nullptr));
+        GL_ASSERT(glTexImage2D(what, 0, internalFormat, width, height, 0, format, byteFormat, nullptr));
     } else {
         int channels;
         unsigned char *const data = stbi_load(file.c_str(), &width, &height, &channels, StbiFormat(usage));
@@ -150,7 +167,7 @@ void LoadTextureImage(const std::string &file, GLenum what, int &width, int &hei
         }
         try {
             if (usage == ETextureUsage::Height || usage == ETextureUsage::Normals) {
-                std::vector<uint8_t> result;
+                vector<uint8_t> result;
                 if (channels < 3 || ChannelDeviation<unsigned char>(data, width * height, channels) < 2) {
                     // It`s height map.
                     if (usage == ETextureUsage::Height) {
@@ -160,8 +177,8 @@ void LoadTextureImage(const std::string &file, GLenum what, int &width, int &hei
                     }
                 } else {
                     auto limits = Limits(data, width * height, channels);
-                    if (std::get<0>(limits[0]) >= 127 && std::get<0>(limits[1]) >= 127
-                        && std::get<0>(limits[2]) >= 191) {
+                    if (get<0>(limits[0]) >= 127 && get<0>(limits[1]) >= 127
+                        && get<0>(limits[2]) >= 191) {
                         if (usage == ETextureUsage::Height) {
                             throw TGlBaseError("can't convert normal map to height map");
                         } else {
@@ -171,10 +188,12 @@ void LoadTextureImage(const std::string &file, GLenum what, int &width, int &hei
                         throw TGlBaseError("can't detect format");
                     }
                 }
-                GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage),
-                                       ByteFormat(usage), result.data()));
+                GL_ASSERT(glTexImage2D(what, 0, internalFormat, width, height, 0, format, byteFormat, result.data()));
+            } else if (ByteFormat(usage) == GL_FLOAT) {
+                vector<GLfloat> result = ReadAsFloat(data, width, height, channels);
+                GL_ASSERT(glTexImage2D(what, 0, internalFormat, width, height, 0, format, byteFormat, result.data()));
             } else {
-                GL_ASSERT(glTexImage2D(what, 0, format, width, height, 0, OuterFormat(usage), ByteFormat(usage), data));
+                GL_ASSERT(glTexImage2D(what, 0, internalFormat, width, height, 0, format, byteFormat, data));
             }
             stbi_image_free(data);
         } catch (...) {
@@ -184,15 +203,15 @@ void LoadTextureImage(const std::string &file, GLenum what, int &width, int &hei
     }
 }
 
-void FreeTexture(std::tuple<GLuint, int, int> *texture) {
-    glDeleteTextures(1, &std::get<0>(*texture));
+void FreeTexture(tuple<GLuint, int, int> *texture) {
+    glDeleteTextures(1, &get<0>(*texture));
 }
 
-void FreeCubeTexture(std::tuple<GLuint, int, int, int> *texture) {
-    glDeleteTextures(1, &std::get<0>(*texture));
+void FreeCubeTexture(tuple<GLuint, int, int, int> *texture) {
+    glDeleteTextures(1, &get<0>(*texture));
 }
 
-std::shared_ptr<std::tuple<GLuint, int, int>> Impl::CreateFlatTexture(const TTextureBuilder &builder) {
+shared_ptr<tuple<GLuint, int, int>> Impl::CreateFlatTexture(const TTextureBuilder &builder) {
     GLuint texture;
     GL_ASSERT(glGenTextures(1, &texture));
     try {
@@ -218,8 +237,8 @@ std::shared_ptr<std::tuple<GLuint, int, int>> Impl::CreateFlatTexture(const TTex
         if (width == 0 || height == 0) {
             throw TGlBaseError("width or height is 0");
         }
-        return std::shared_ptr<std::tuple<GLuint, int, int>>(
-            new std::tuple<GLuint, int, int>(texture, width, height), FreeTexture);
+        return shared_ptr<tuple<GLuint, int, int>>(
+            new tuple<GLuint, int, int>(texture, width, height), FreeTexture);
     } catch (...) {
         glBindTexture(GL_TEXTURE_2D, 0);
         glDeleteTextures(1, &texture);
@@ -227,22 +246,20 @@ std::shared_ptr<std::tuple<GLuint, int, int>> Impl::CreateFlatTexture(const TTex
     }
 }
 
-std::shared_ptr<std::tuple<GLuint,
-                           int,
-                           int>> Impl::CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder) {
+shared_ptr<tuple<GLuint, int, int>> Impl::CreateMultisampleTexture(const TMultiSampleTextureBuilder &builder) {
     GLuint texture;
     GL_ASSERT(glGenTextures(1, &texture));
     try {
         GL_ASSERT(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture));
-        auto format = TextureUsageType(builder.Usage_);
+        auto format = TextureInternalFormat(builder.Usage_);
         auto[width, height]= builder.Size_;
         GL_ASSERT(glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, builder.Samples_, format, width, height, GL_TRUE));
         GL_ASSERT(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
         if (width == 0 || height == 0) {
             throw TGlBaseError("width or height is 0");
         }
-        return std::shared_ptr<std::tuple<GLuint, int, int>>(
-            new std::tuple<GLuint, int, int>(texture, width, height), FreeTexture);
+        return shared_ptr<tuple<GLuint, int, int>>(
+            new tuple<GLuint, int, int>(texture, width, height), FreeTexture);
     } catch (...) {
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
         glDeleteTextures(1, &texture);
@@ -250,7 +267,7 @@ std::shared_ptr<std::tuple<GLuint,
     }
 }
 
-std::shared_ptr<std::tuple<GLuint, int, int, int>> Impl::CreateCubeTexture(const TCubeTextureBuilder &builder) {
+shared_ptr<tuple<GLuint, int, int, int>> Impl::CreateCubeTexture(const TCubeTextureBuilder &builder) {
     GLuint texture;
     GL_ASSERT(glGenTextures(1, &texture));
     try {
@@ -277,8 +294,8 @@ std::shared_ptr<std::tuple<GLuint, int, int, int>> Impl::CreateCubeTexture(const
         if (width == 0 || height == 0 || depth == 0) {
             throw TGlBaseError("width, height or depth is 0");
         }
-        return std::shared_ptr<std::tuple<GLuint, int, int, int>>(
-            new std::tuple<GLuint, int, int, int>(texture, width, height, depth), FreeCubeTexture);
+        return shared_ptr<tuple<GLuint, int, int, int>>(
+            new tuple<GLuint, int, int, int>(texture, width, height, depth), FreeCubeTexture);
     } catch (...) {
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
         glDeleteTextures(1, &texture);
