@@ -7,7 +7,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <algorithm>
-#ifndef __OSX__
+#ifndef __APPLE__
 #include <filesystem>
 #endif
 using namespace std;
@@ -61,7 +61,7 @@ bool LoadConstantTexture(const aiMaterial *material,
 }
 
 TModel LoadMesh(const std::string &filename) {
-#ifdef __OSX__
+#ifdef __APPLE__
     std::array<char, PATH_MAX> real{};
     realpath(filename.c_str(), real.data());
     std::string fullpath(real.data());
