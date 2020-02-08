@@ -1,5 +1,6 @@
 #pragma once
 #include "common.h"
+#include <memory>
 
 enum EBufferType {
     Array = GL_ARRAY_BUFFER,

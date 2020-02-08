@@ -2,6 +2,7 @@
 #include "common.h"
 #include <array>
 #include <optional>
+#include <memory>
 
 enum struct ETextureType {
     Flat = GL_TEXTURE_2D,
