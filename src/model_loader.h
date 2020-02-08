@@ -2,5 +2,5 @@
 #include <string>
 #include "model.h"
 
-TModel LoadMesh(const std::string &filename);
+TModel LoadModel(const std::string &filename);
 

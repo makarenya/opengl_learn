@@ -137,8 +137,8 @@ private:
             .AddLayout(EDataType::Float, 3)
             .AddLayout(EDataType::Float, 2)};
 
-    TModel Suit{LoadMesh("nanosuit/nanosuit.obj")};
-    TModel Drop{LoadMesh("images/drop.obj")};
+    TModel Suit{LoadModel("nanosuit/nanosuit.obj")};
+    TModel Drop{LoadModel("images/drop.obj")};
     TMesh Points{Drop.GetMesh(0),
                  TInstanceMeshBuilder()
                      .SetInstances(TArrayBuffer(EBufferUsage::Stream, nullptr, sizeof(float) * 6 * Particles.size()),

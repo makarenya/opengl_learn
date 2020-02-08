@@ -3,8 +3,8 @@
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 coord;
-layout (location = 5) in vec3 offset;
-layout (location = 6) in vec3 speed;
+layout (location = 3) in vec3 offset;
+layout (location = 4) in vec3 speed;
 out VS_OUT {
     vec3 normal;
     vec3 position;
@@ -31,10 +31,10 @@ void main() {
     } else {
         float c = sqrt(1 - d.z * d.z);
         rot = mat4(
-                   d.y / c,        -d.x / c,   0, 0,
-                       d.x,             d.y, d.z, 0,
-            -d.x * d.z / c, - d.y * d.z / c,   c, 0,
-                         0,               0,   0, 1
+                   d.y / c,       -d.x / c,   0, 0,
+                       d.x,            d.y, d.z, 0,
+            -d.x * d.z / c, -d.y * d.z / c,   c, 0,
+                         0,              0,   0, 1
         );
     }
     vs_out.position = vec3(model * (rot * single * vec4(position, 1.0) + vec4(offset, 0.0)));

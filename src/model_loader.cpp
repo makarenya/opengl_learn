@@ -60,7 +60,9 @@ bool LoadConstantTexture(const aiMaterial *material,
     return false;
 }
 
-TModel LoadMesh(const std::string &filename) {
+TMeshBuilder LoadMesh(aiMesh *mesh);
+
+TModel LoadModel(const std::string &filename) {
 #ifdef __APPLE__
     std::array<char, PATH_MAX> real{};
     realpath(filename.c_str(), real.data());
@@ -74,7 +76,7 @@ TModel LoadMesh(const std::string &filename) {
 #endif
 
     Assimp::Importer importer;
-    auto scene = importer.ReadFile(fullpath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+    auto scene = importer.ReadFile(fullpath, aiProcess_Triangulate | aiProcess_FlipUVs);
     if (!scene || !scene->mRootNode || scene->mFlags & static_cast<unsigned>(AI_SCENE_FLAGS_INCOMPLETE)) {
         throw TGlBaseError("Can't import scene");
     }
@@ -96,8 +98,6 @@ TModel LoadMesh(const std::string &filename) {
         model.Material(builder);
     }
 
-    vector<GLfloat> vertices;
-    vector<GLuint> indexes;
     for (deque<aiNode *> nodes{scene->mRootNode}; !nodes.empty(); nodes.pop_back()) {
         auto node = nodes.back();
         for (unsigned i = 0; i < node->mNumChildren; ++i) {
@@ -106,54 +106,45 @@ TModel LoadMesh(const std::string &filename) {
         for (unsigned i = 0; i < node->mNumMeshes; ++i) {
             auto mesh = scene->mMeshes[node->mMeshes[i]];
             auto material = mesh->mMaterialIndex;
-
-            vertices.resize(mesh->mNumVertices * 14);
-            indexes.resize(mesh->mNumFaces * 3);
-
-            int vi = 0;
-            for (unsigned j = 0; j < mesh->mNumVertices; j++) {
-                auto vertex = mesh->mVertices[j];
-                auto norm = mesh->mNormals[j];
-                auto tg = mesh->mTangents[j];
-                auto bg = mesh->mBitangents[j];
-                auto tex = mesh->mTextureCoords[0][j];
-                vertices[vi++] = vertex.x;
-                vertices[vi++] = vertex.y;
-                vertices[vi++] = vertex.z;
-                vertices[vi++] = norm.x;
-                vertices[vi++] = norm.y;
-                vertices[vi++] = norm.z;
-                vertices[vi++] = tex.x;
-                vertices[vi++] = tex.y;
-                vertices[vi++] = tg.x;
-                vertices[vi++] = tg.y;
-                vertices[vi++] = tg.z;
-                vertices[vi++] = bg.x;
-                vertices[vi++] = bg.y;
-                vertices[vi++] = bg.z;
-            }
-            int ii = 0;
-            for (unsigned j = 0; j < mesh->mNumFaces; ++j) {
-                auto face = mesh->mFaces[j];
-                if (face.mNumIndices != 3) {
-                    throw TGlBaseError("invalid file format");
-                }
-                for (unsigned k = 0; k < face.mNumIndices; ++k) {
-                    indexes[ii++] = face.mIndices[k];
-                }
-            }
-            model.Mesh(mesh->mName.C_Str(),
-                       TMeshBuilder()
-                           .SetVertices(EBufferUsage::Static, vertices)
-                           .SetIndices(EBufferUsage::Static, indexes)
-                           .AddLayout(EDataType::Float, 3)
-                           .AddLayout(EDataType::Float, 3)
-                           .AddLayout(EDataType::Float, 2)
-                           .AddLayout(EDataType::Float, 3)
-                           .AddLayout(EDataType::Float, 3),
-                       material);
+            model.Mesh(mesh->mName.C_Str(), LoadMesh(mesh), material);
         }
     }
     return model;
+}
+
+TMeshBuilder LoadMesh(aiMesh *mesh) {
+    vector<GLfloat> vertices(mesh->mNumVertices * 8);
+    vector<GLuint> indexes(mesh->mNumFaces * 3);
+
+    int vi = 0;
+    for (unsigned j = 0; j < mesh->mNumVertices; j++) {
+        auto vertex = mesh->mVertices[j];
+        auto norm = mesh->mNormals[j];
+        auto tex = mesh->mTextureCoords[0][j];
+        vertices[vi++] = vertex.x;
+        vertices[vi++] = vertex.y;
+        vertices[vi++] = vertex.z;
+        vertices[vi++] = norm.x;
+        vertices[vi++] = norm.y;
+        vertices[vi++] = norm.z;
+        vertices[vi++] = tex.x;
+        vertices[vi++] = tex.y;
+    }
+    int ii = 0;
+    for (unsigned j = 0; j < mesh->mNumFaces; ++j) {
+        auto face = mesh->mFaces[j];
+        if (face.mNumIndices != 3) {
+            throw TGlBaseError("invalid file format");
+        }
+        for (unsigned k = 0; k < face.mNumIndices; ++k) {
+            indexes[ii++] = face.mIndices[k];
+        }
+    }
+    return TMeshBuilder()
+            .SetVertices(EBufferUsage::Static, vertices)
+            .SetIndices(EBufferUsage::Static, indexes)
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 3)
+            .AddLayout(EDataType::Float, 2);
 }
 

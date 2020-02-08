@@ -7,8 +7,6 @@ struct Material {
     sampler2D specular_map;
     bool has_specular_map;
     vec4 specular_col;
-    sampler2D shiness_map;
-    bool has_shiness_map;
     float shiness;
     sampler2D normal_map;
     bool has_normal_map;
@@ -102,7 +100,7 @@ void main() {
 
     vec4 diffuse = material.has_diffuse_map ? texture(material.diffuse_map, coord) : material.diffuse_col;
     vec4 specular = material.has_specular_map ? texture(material.specular_map, coord) : material.specular_col;
-    float shiness = material.has_shiness_map ? float(texture(material.shiness_map, coord)) : material.shiness;
+    float shiness = material.shiness;
 
     vec3 result = CalcDirectionalLight(directional, fs_in.directional, norm, viewDir, diffuse.rgb, specular.rgb, shiness);
     for (int i = 0; i < spotCount; i++) {

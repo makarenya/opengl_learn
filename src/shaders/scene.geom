@@ -24,8 +24,6 @@ in VS_OUT {
     vec3 position;
     vec4 lightPos;
     vec2 coord;
-    vec3 tangent;
-    vec3 bitangent;
 } gs_in[];
 
 out GS_OUT {
@@ -62,31 +60,21 @@ void main() {
         gl_Position = projection * view * (gl_in[i].gl_Position + offset);
         gs_out.lightPos = gs_in[i].lightPos;
         gs_out.coord = gs_in[i].coord;
-        if (gs_in[i].tangent != vec3(0) || gs_in[i].bitangent != vec3(0)) {
-            vec3 n = normalize(gs_in[i].normal);
-            vec3 t = normalize(tg - dot(tg, n) * n);
-            vec3 b = normalize(btg - dot(btg, n) * n);
-            mat3 tbn = mat3(t, b, n);
-            mat3 itbn = transpose(tbn);
-            gs_out.tbn = tbn;
-            gs_out.normal = itbn * gs_in[i].normal;
-            gs_out.position = itbn * gs_in[i].position;
-            gs_out.directional = itbn * directional;
-            for (int j = 0; j < 4; ++j) {
-                gs_out.spots[j] = itbn * spots[j];
-            }
-            gs_out.projector.position = itbn * projector.position;
-            gs_out.projector.target = itbn * projector.target;
-            gs_out.viewPos = itbn * viewPos;
-        } else {
-            gs_out.tbn = mat3(1, 0, 0, 0, 1, 0, 0, 0, 1);
-            gs_out.normal = gs_in[i].normal;
-            gs_out.position = gs_in[i].position;
-            gs_out.directional = directional;
-            gs_out.spots = spots;
-            gs_out.projector = projector;
-            gs_out.viewPos = viewPos;
+        vec3 n = normalize(gs_in[i].normal);
+        vec3 t = normalize(tg - dot(tg, n) * n);
+        vec3 b = normalize(btg - dot(btg, n) * n);
+        mat3 tbn = mat3(t, b, n);
+        mat3 itbn = transpose(tbn);
+        gs_out.tbn = tbn;
+        gs_out.normal = itbn * gs_in[i].normal;
+        gs_out.position = itbn * gs_in[i].position;
+        gs_out.directional = itbn * directional;
+        for (int j = 0; j < 4; ++j) {
+            gs_out.spots[j] = itbn * spots[j];
         }
+        gs_out.projector.position = itbn * projector.position;
+        gs_out.projector.target = itbn * projector.target;
+        gs_out.viewPos = itbn * viewPos;
         EmitVertex();
     }
 
