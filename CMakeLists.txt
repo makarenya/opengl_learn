@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.30)
 project(opengl_learn)
 
 set(BUILD_SHARED_LIBS OFF)
@@ -6,6 +6,7 @@ add_subdirectory(assimp)
 add_subdirectory(glfw)
 add_subdirectory(glm)
 add_subdirectory(glew/build/cmake)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_definitions(STB_IMAGE_IMPLEMENTATION _USE_MATH_DEFINES)
 
 function(ADD_RESOURCES out_var root)
@@ -60,7 +61,7 @@ add_resources(RES src
         )
 
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(GLEW_USE_STATIC_LIBS TRUE)
 add_executable(opengl_learn
         src/main.cpp

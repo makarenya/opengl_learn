@@ -12,8 +12,6 @@ struct Material {
     bool has_normal_map;
     sampler2D height_map;
     bool has_height_map;
-    float reflection;
-    float refraction;
 };
 
 struct DirectionalLight {
@@ -48,19 +46,18 @@ struct ProjectorLight {
 };
 
 in GS_OUT {
-    mat3 tbn;
     vec3 normal;
     vec3 position;
     vec4 lightPos;
     vec2 coord;
     vec3 directional;
     vec3 spots[4];
+    vec3 shadows[4];
     ProjectorLightPos projector;
     vec3 viewPos;
 } fs_in;
 
 uniform Material material;
-uniform samplerCube skybox;
 uniform sampler2D shadow;
 uniform samplerCube spotShadow;
 uniform samplerCube spotShadow2;
@@ -108,19 +105,6 @@ void main() {
     }
     result += CalcProjectorLight(projector, fs_in.projector, norm, viewDir, diffuse.rgb, specular.rgb, shiness);
 
-    if (material.reflection > 0) {
-        vec3 reflectDir = fs_in.tbn * reflect(-viewDir, norm);
-        vec3 sky = vec3(texture(skybox, reflectDir));
-        float r = material.reflection;
-        result = sky * r + result * (1.0 - r);
-    }
-
-    if (material.refraction > 0) {
-        float ratio = 1.00 / 1.33;
-        vec3 ref = vec3(texture(skybox, fs_in.tbn * refract(-viewDir, norm, ratio)));
-        result = ref * material.refraction + result * (1.0 - material.refraction);
-    }
-
     if (opaque) {
         color = vec4(result, diffuse.a);
     } else {
@@ -153,12 +137,10 @@ vec3 CalcDirectionalLight(DirectionalLight light, vec3 dir, vec3 norm, vec3 view
     s * specular.rgb * spec * light.specular;
 }
 
-vec3 sampleOffsetDirections[20] = vec3[] (
-    vec3(1, 1, 1), vec3(1, -1, 1), vec3(-1, -1, 1), vec3(-1, 1, 1),
-    vec3(1, 1, -1), vec3(1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
-    vec3(1, 1, 0), vec3(1, -1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
-    vec3(1, 0, 1), vec3(-1, 0, 1), vec3(1, 0, -1), vec3(-1, 0, -1),
-    vec3(0, 1, 1), vec3(0, -1, 1), vec3(0, -1, -1), vec3(0, 1, -1)
+vec3 sampleOffsetDirections[9] = vec3[] (
+    vec3(0, 0, 0),
+    vec3(1, 1, 1), vec3(1, 1, -1), vec3(1, -1, 1), vec3(1, -1, -1),
+    vec3(-1, 1, 1), vec3(-1, 1, -1), vec3(-1, -1, 1), vec3(-1, -1, -1)
 );
 
 vec3 CalcSpotLight(SpotLight light, vec3 pos, int i, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {
@@ -171,24 +153,23 @@ vec3 CalcSpotLight(SpotLight light, vec3 pos, int i, vec3 norm, vec3 viewDir, ve
     float diff = max(dot(norm, lightNorm), 0.0f);
     float spec = dot(norm, lightNorm) >= 0 ? pow(max(dot(norm, halfLight), 0.0f), shiness) : 0;
     float s = 1.0f;
-    vec3 fragFromLight = fs_in.tbn * (fs_in.position - pos);
+    vec3 fragFromLight = fs_in.shadows[i];
     float dist = length(fragFromLight);
     if (i == 1) {
-        for (int j = 0; j < 10; j++) {
-            if (texture(spotShadow, fragFromLight + sampleOffsetDirections[j] * dist * 0.003).r * 100 < dist + .04) {
-                s -= 0.1;
-            }
+        for (int j = 0; j < 9; j++) {
+            if (texture(spotShadow, fragFromLight + sampleOffsetDirections[j] * dist * 0.003).r * 100 < dist + .04)
+                s -= 1.0f / 9.0f;
         }
     } else if (i == 2) {
-        for (int j = 0; j < 10; j++) {
-            if (texture(spotShadow2, fragFromLight + sampleOffsetDirections[j] * dist * 0.003).r * 100 < dist + .04) {
-                s -= 0.1;
-            }
+        for (int j = 0; j < 9; j++) {
+            if (texture(spotShadow2, fragFromLight + sampleOffsetDirections[j] * dist * 0.003).r * 100 < dist + .04)
+                s -= 1.0f / 9.0f;
         }
     }
+
     return (diffuse * light.ambient +
-    s * diffuse * diff * light.diffuse +
-    s * specular.rgb * spec * light.specular) * intensity;
+        s * diffuse * diff * light.diffuse +
+        s * specular.rgb * spec * light.specular) * intensity;
 }
 
 vec3 CalcProjectorLight(ProjectorLight light, ProjectorLightPos pos, vec3 norm, vec3 viewDir, vec3 diffuse, vec3 specular, float shiness) {

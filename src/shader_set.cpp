@@ -34,11 +34,10 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
         .SetViewPos(Position)
         .SetModel(model)
         .SetOpaque(opaque)
-        .SetSkyBox(Sky)
         .SetShadow(Shadow)
         .SetSpotShadow(SpotShadow)
         .SetSpotShadow2(SpotShadow2)
-        .SetLightMatrix(LightMatrix)
+        .SetLight(LightMatrix * model)
         .SetExplosion(explosion)
         .SetUseMap(UseMap);
     mat.DrawWith(setup, mesh);
@@ -49,11 +48,10 @@ void TSceneShaderSet::Scene(glm::mat4 model, bool opaque, float explosion, const
         .SetViewPos(Position)
         .SetModel(model)
         .SetOpaque(opaque)
-        .SetSkyBox(Sky)
         .SetShadow(Shadow)
         .SetSpotShadow(SpotShadow)
         .SetSpotShadow2(SpotShadow2)
-        .SetLightMatrix(LightMatrix)
+        .SetLight(LightMatrix * model)
         .SetExplosion(explosion)
         .SetUseMap(UseMap);
     obj.Draw(setup);

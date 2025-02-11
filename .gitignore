@@ -1,5 +1,3 @@
-.idea
 cmake-build-debug
-xcode
-out
-.vs
+compile_commands.json
+build

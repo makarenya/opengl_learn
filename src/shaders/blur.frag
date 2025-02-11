@@ -14,7 +14,7 @@ void main() {
     for (int i = -size; i <= size; i++) {
         vec3 tc = texture(screenTexture, fragmentCoord + dir * i).rgb;
         float brightness = dot(tc, vec3(0.2126, 0.7152, 0.0722));
-        if (brightness >= threshold)
+        if (brightness > threshold)
             result += tc * kernel[abs(i)];
     }
     color = vec4(result, 1.0f);

@@ -105,20 +105,16 @@ private:
                                                  .SetFile("images/window.png"))};
     TMesh GroundCube{
         TMeshBuilder()
-            .SetVertices(EBufferUsage::Static, Cube<true, true, true>(TGeomBuilder().SetTextureMul(10, 10)))
+            .SetVertices(EBufferUsage::Static, Cube<true, true>(TGeomBuilder().SetTextureMul(10, 10)))
             .AddLayout(EDataType::Float, 3)
             .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 2)
-            .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 3)};
+            .AddLayout(EDataType::Float, 2)};
     TMesh SimpleCube{
         TMeshBuilder()
-            .SetVertices(EBufferUsage::Static, Cube<true, true, true>())
+            .SetVertices(EBufferUsage::Static, Cube<true, true>())
             .AddLayout(EDataType::Float, 3)
             .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 2)
-            .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 3)};
+            .AddLayout(EDataType::Float, 2)};
 
     TMesh QuadPoly{
         TMeshBuilder()

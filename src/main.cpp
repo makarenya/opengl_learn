@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <string_view>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iomanip>
@@ -45,7 +46,11 @@ void program() {
     try {
         int monitorsCount = 0;
         auto monitors = glfwGetMonitors(&monitorsCount);
+        std::cerr << "monitors: " << monitorsCount << "\n";
         auto mode = glfwGetVideoMode(monitors[monitorsCount - 1]);
+        int width = mode->width;
+        int height = mode->height;
+        std::cerr << "size: " << width << " x " << height << "\n";
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -57,8 +62,8 @@ void program() {
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        auto window = glfwCreateWindow(mode->width,
-                                       mode->height,
+        auto window = glfwCreateWindow(width,
+                                       height,
                                        "OpenGL example",
                                        monitors[monitorsCount - 1],
                                        nullptr);
@@ -73,7 +78,7 @@ void program() {
             throw TGlewError(initResult, "init");
         }
 
-        GL_ASSERT(glViewport(0, 0, mode->width, mode->height));
+        GL_ASSERT(glViewport(0, 0, width * 2, height * 2));
         GL_ASSERT(glEnable(GL_DEPTH_TEST));
         GL_ASSERT(glEnable(GL_CULL_FACE));
         GL_ASSERT(glEnable(GL_BLEND));
@@ -93,7 +98,7 @@ void program() {
         glfwSetKeyCallback(window, KeyboardCallback);
         glfwSetCursorPosCallback(window, MouseMoveCallback);
 
-        TScene scene(mode->width, mode->height);
+        TScene scene(width, height);
         bool useMap = false;
         bool spaceHit = false;
         while (!glfwWindowShouldClose(window)) {
@@ -140,7 +145,7 @@ void program() {
             }
 
             mat4 view = lookAt(vec3(position), vec3(position + direction), up);
-            mat4 project = perspective(radians(45.0f), 1.0f * mode->width / mode->height, 0.1f, 300.0f);
+            mat4 project = perspective(radians(45.0f), 1.0f * width / height, 0.1f, 300.0f);
             scene.Draw(project, view, position, interval, useMap);
             glfwSwapInterval(0);
             glfwSwapBuffers(window);

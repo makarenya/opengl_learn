@@ -24,6 +24,7 @@ GLenum TextureInternalFormat(ETextureUsage usage) {
         case ETextureUsage::SRgb: return GL_SRGB;
         case ETextureUsage::SRgba: return GL_SRGB_ALPHA;
         case ETextureUsage::Depth: return GL_DEPTH_COMPONENT;
+        case ETextureUsage::FloatDepth: return GL_DEPTH_COMPONENT;
         case ETextureUsage::DepthStencil: return GL_DEPTH24_STENCIL8;
         case ETextureUsage::Height: return GL_DEPTH_COMPONENT;
         case ETextureUsage::Normals: return GL_RGB;
@@ -39,6 +40,7 @@ int StbiFormat(ETextureUsage usage) {
         case ETextureUsage::FloatRgba: return STBI_rgb_alpha;
         case ETextureUsage::Rgba: return STBI_rgb_alpha;
         case ETextureUsage::Depth: return STBI_grey;
+        case ETextureUsage::FloatDepth: return STBI_grey;
         case ETextureUsage::Height: return STBI_default;
         case ETextureUsage::Normals: return STBI_default;
         default:throw TGlBaseError("invalid value for load image " + to_string((int) usage));
@@ -53,6 +55,7 @@ GLenum ByteFormat(ETextureUsage usage) {
         case ETextureUsage::SRgb: return GL_UNSIGNED_BYTE;
         case ETextureUsage::SRgba: return GL_UNSIGNED_BYTE;
         case ETextureUsage::Depth: return GL_UNSIGNED_BYTE;
+        case ETextureUsage::FloatDepth: return GL_FLOAT;
         case ETextureUsage::DepthStencil: return GL_UNSIGNED_INT_24_8;
         case ETextureUsage::Height: return GL_UNSIGNED_BYTE;
         case ETextureUsage::Normals: return GL_UNSIGNED_BYTE;

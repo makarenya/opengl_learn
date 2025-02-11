@@ -31,6 +31,7 @@ enum struct ETextureUsage {
     SRgb,
     SRgba,
     Depth,
+    FloatDepth,
     DepthStencil,
     Height,
     Normals

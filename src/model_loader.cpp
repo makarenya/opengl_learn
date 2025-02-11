@@ -141,10 +141,10 @@ TMeshBuilder LoadMesh(aiMesh *mesh) {
         }
     }
     return TMeshBuilder()
-            .SetVertices(EBufferUsage::Static, vertices)
-            .SetIndices(EBufferUsage::Static, indexes)
-            .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 3)
-            .AddLayout(EDataType::Float, 2);
+        .SetVertices(EBufferUsage::Static, vertices)
+        .SetIndices(EBufferUsage::Static, indexes)
+        .AddLayout(EDataType::Float, 3)
+        .AddLayout(EDataType::Float, 3)
+        .AddLayout(EDataType::Float, 2);
 }
 

@@ -6,12 +6,12 @@
 class TSceneShader: public TShaderProgram {
 private:
     GLint Model;
-    GLint NormModel;
+    GLint Norm;
+    GLint Light;
     GLint SkyBox;
     GLint Shadow;
     GLint SpotShadow;
     GLint SpotShadow2;
-    GLint LightMatrix;
     GLint ViewPos;
     GLint Explosion;
     GLint Opaque;
@@ -32,16 +32,13 @@ public:
             .SetTexture(EMaterialProp::Height, "material.height_map", "material.has_height_map")
             .SetColor(EMaterialProp::Diffuse, "material.diffuse_col")
             .SetColor(EMaterialProp::Specular, "material.specular_col")
-            .SetConstant(EMaterialProp::Shininess, "material.shiness")
-            .SetConstant(EMaterialProp::Reflection, "material.reflection")
-            .SetConstant(EMaterialProp::Refraction, "material.refraction"))
+            .SetConstant(EMaterialProp::Shininess, "material.shiness"))
           , Model(DefineProp("model"))
-          , NormModel(DefineProp("normModel", true))
-          , SkyBox(DefineTexture("skybox"))
+          , Norm(DefineProp("norm"))
+          , Light(DefineProp("light"))
           , Shadow(DefineTexture("shadow"))
           , SpotShadow(DefineTexture("spotShadow"))
           , SpotShadow2(DefineTexture("spotShadow2"))
-          , LightMatrix(DefineProp("lightMatrix"))
           , ViewPos(DefineProp("viewPos"))
           , Explosion(DefineProp("explosion"))
           , Opaque(DefineProp("opaque"))
@@ -79,9 +76,12 @@ public:
 
     TSceneSetup &&SetModel(glm::mat4 model) {
         Set(Shader->Model, model);
-        if (Shader->NormModel >= 0) {
-            Set(Shader->NormModel, glm::transpose(glm::inverse(glm::mat3(model))));
-        }
+        Set(Shader->Norm, glm::transpose(glm::inverse(glm::mat3(model))));
+        return std::move(*this);
+    }
+
+    TSceneSetup &&SetLight(glm::mat4 matrix) {
+        Set(Shader->Light, matrix);
         return std::move(*this);
     }
 
@@ -112,16 +112,6 @@ public:
 
     TSceneSetup &&SetSpotShadow2(TCubeTexture &texture) {
         Set(Shader->SpotShadow2, texture);
-        return std::move(*this);
-    }
-
-    TSceneSetup &&SetLightMatrix(glm::mat4 matrix) {
-        Set(Shader->LightMatrix, matrix);
-        return std::move(*this);
-    }
-
-    TSceneSetup &&SetSkyBox(TCubeTexture &texture) {
-        Set(Shader->SkyBox, texture);
         return std::move(*this);
     }
 

@@ -27,13 +27,13 @@ in VS_OUT {
 } gs_in[];
 
 out GS_OUT {
-    mat3 tbn;
     vec3 normal;
     vec3 position;
     vec4 lightPos;
     vec2 coord;
     vec3 directional;
     vec3 spots[4];
+    vec3 shadows[4];
     ProjectorLightPos projector;
     vec3 viewPos;
 } gs_out;
@@ -63,14 +63,13 @@ void main() {
         vec3 n = normalize(gs_in[i].normal);
         vec3 t = normalize(tg - dot(tg, n) * n);
         vec3 b = normalize(btg - dot(btg, n) * n);
-        mat3 tbn = mat3(t, b, n);
-        mat3 itbn = transpose(tbn);
-        gs_out.tbn = tbn;
+        mat3 itbn = transpose(mat3(t, b, n));
         gs_out.normal = itbn * gs_in[i].normal;
         gs_out.position = itbn * gs_in[i].position;
         gs_out.directional = itbn * directional;
         for (int j = 0; j < 4; ++j) {
             gs_out.spots[j] = itbn * spots[j];
+            gs_out.shadows[j] = gs_in[i].position - spots[j];
         }
         gs_out.projector.position = itbn * projector.position;
         gs_out.projector.target = itbn * projector.target;
